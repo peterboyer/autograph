@@ -1,0 +1,20 @@
+{
+  "name": "@armix/server-graphql",
+  "version": "0.0.1",
+  "private": true,
+  "author": "Peter Boyer <@ptboyer>",
+  "description": "Use declarative schemas to generate database models and CRUD graphql.",
+  "repository": "https://github.com/armix-io/armix-server",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./scalars": "./src/scalars/index.js",
+    "./utils": "./src/utils.js"
+  },
+  "dependencies": {
+    "graphql": "^15.2.0",
+    "lodash": "^4.17.15"
+  }
+}
