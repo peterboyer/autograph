@@ -1,7 +1,6 @@
 {
   "name": "@armix/server-graphql",
   "version": "0.0.1",
-  "private": true,
   "author": "Peter Boyer <@ptboyer>",
   "description": "Use declarative schemas to generate database models and CRUD graphql.",
   "repository": "https://github.com/armix-io/armix-server",
@@ -17,10 +16,15 @@
   "engines": {
     "node": ">=14"
   },
+  "scripts": {
+    "debug": "nodemon --watch src --exec \"yalc push --changed\""
+  },
   "dependencies": {
-    "graphql": "^14.2.1",
-    "graphql-tools": "^6.0.12",
     "lodash": "^4.17.15",
     "node-fetch": "^2.6.0"
+  },
+  "peerDependency": {
+    "graphql": "^14.2.1",
+    "graphql-tools": "^6.0.12"
   }
 }
