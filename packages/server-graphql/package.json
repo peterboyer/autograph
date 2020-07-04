@@ -13,6 +13,9 @@
     "./scalars": "./src/scalars/index.js",
     "./utils": "./src/utils.js"
   },
+  "engines": {
+    "node": ">=14"
+  },
   "dependencies": {
     "graphql": "^15.2.0",
     "lodash": "^4.17.15"
