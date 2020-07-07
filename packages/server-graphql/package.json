@@ -2,7 +2,7 @@
   "name": "@armix/server-graphql",
   "version": "0.0.1",
   "author": "Peter Boyer <@ptboyer>",
-  "description": "Use declarative schemas to generate database models and CRUD graphql.",
+  "description": "Functions to help with graphql/knex backend projects.",
   "repository": "https://github.com/armix-io/armix-server",
   "license": "MIT",
   "type": "module",
@@ -17,14 +17,17 @@
     "node": ">=14"
   },
   "scripts": {
-    "debug": "nodemon --watch src --exec \"yalc push --changed\""
+    "debug": "nodemon --watch src --exec \"yalc push --changed\"",
+    "docs": "jsdoc src/index.js src/remote.js -d ./docs/"
   },
   "dependencies": {
-    "lodash": "^4.17.15",
-    "node-fetch": "^2.6.0"
+    "lodash": "^4.17.15"
   },
   "peerDependency": {
     "graphql": "^14.2.1",
     "graphql-tools": "^6.0.12"
+  },
+  "devDependencies": {
+    "jsdoc": "^3.6.4"
   }
 }
