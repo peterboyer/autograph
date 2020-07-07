@@ -1,131 +1,12 @@
 /**
  * @module Schema
  *
- * @description Use declarative schemas to generate database models and CRUD graphql.
+ * @description
+ *    Use declarative schemas to generate database models and CRUD graphql.
  */
 
 import lodash from "lodash";
 const { omit, defaults } = lodash;
-
-/**
- * @typedef {object} Config
- *
- * @property {object} [mapKnexType]
- *    Provides mappings for Schema types into knex column types.
- *
- * <pre>// defaults
- * ID -> integer
- * Int -> integer
- * String -> text
- * DateTime -> timestamp
- * Boolean -> boolean</pre>
- *
- * @property {object} [mapGraphType]
- *    Provides mappings for Schema types into alternate GraphQL types.
- *    Although Schema types are primarily compatible graph types, it provides
- *    a chance to remap types that, for example, might not have custom scalars
- *    defined yet, but are ultimately rendered as a String|Int|etc.
- *
- * <pre>// defaults
- * DateTime -> string</pre>
- *
- * @property {object} [mapKnexTypeSelect]
- *    Provides a chance for additional selector args to be added to
- *    `knex(table).select("*", ...args)` statements when resolvers fetch data.
- *    Motivated by cases where the certain columns used custom postgis geometry
- *    types and the data needed to be select/casted into JSON instead of it's
- *    raw binary type.
- *
- * <pre>// no defaults</pre>
- */
-
-/**
- * @typedef {object} Schema
- *    Descriptor used to generate database tables and graphql typedefs and
- *    resolvers.
- *
- * @property {string} name
- *    Entity name for database table and graph typedefs.
- *
- * @property {object} fields
- *    Field definitions for the database columns and graph typedefs.
- *
- * @property {string} fields.type
- *    Graph type (String|Boolean|etc.) or Schema name (User|etc.).
- *    This value is mapped to a knex database type via `config.mapKnexType` is
- *    this field will be a database column.
- *    If used with relationship, this value can be a Schema name for the
- *    generated resolver to resolve the data for this field.
- *
- * @property {boolean} [fields.virtual=false]
- *    If true, this field will not have a corresponding database column.
- *    It will only exist as a graph entity key.
- *    Use this for generated/virtual resolved values etc.
- *
- * @property {string} [fields.column=null]
- *    Use this value to change the database column name used for this field.
- *    All generated relationships and resolvers will automatically resolve this
- *    field's name to access the database column specified here instead.
- *
- * @property {boolean|string} [fields.relationship=false]
- *    Configures this field to resolve to a relationship to another entity.
- *    If set to true, the relationship will default to use `${field.type}.id`
- *    when querying the remote table via this field's type. A different column
- *    can be used if passed as a string instead of `true`.
- *    If `many` is not specified, this field will be considered a database column
- *    and a foreign key will be set using the `Table.column` value determined.
- *    If `many` is true, this field will be considered a virtual field.
- *
- * @property {boolean} [fields.many=false]
- *    If `true`, typedefs use `[]` and generated resolvers will use arrays.
- *    If `many` is used with a relationship field, this field is considered
- *    virtual.
- *
- * @property {boolean} [fields.nullable=true]
- *    If `false`, adds the `NOT NULL` constraint for the database column, and
- *    adds the `!` not nullable modifier to generated graph typedefs for this
- *    schema.
- *
- * @property {boolean} [fields.private=false]
- *    If `true`, does not expose this field on graph schema.
- *    Setting `setter` and `getter` to `false` has the same effect.
- *
- * @property {boolean} [fields.primary=false]
- *    Reserved `id` primary key column, which is automatically added to this
- *    schema when generated, and must only be used for one field.
- *    If `true`, resolves the database column type to "increments".
- *
- * @property {boolean} [fields.unique=false]
- *    If `true`, adds unique constraint for this field's database column.
- *
- * @property {*} [fields.default]
- *    If set, applies db column default for field.
- *
- * @property {boolean|string|GraphQL.Resolver} [fields.getter=true]
- *    Modifies the generated resolver for getting this field's value.
- *    If `true`, returned value is `obj[field.name]` (or `field.column` if set).
- *    If `string`, returned value is `obj[field.getter|string]`.
- *    If `GraphQL.Resolver`, returned value is the result of this resolver
- *    function, called with standard resolver parameters:
- *    `GraphQL.Resolver(parent, args, context, info)`.
- *    Has no effect if `virtual` is true.
- * @property {boolean|string|GraphQL.Resolver} [fields.setter=true]
- *    Modifies the generated resolver for setting this field's value.
- *    If `true`, returned value is `obj[field.name]` (or `field.column` if set).
- *    If `string`, value
- *    If `Resolver` function, will be called will Resolver args, and uses return
- *      as new value for create/update mutations.
- *    Has no effect if `virtual` is true.
- *
- * @property {object} [constraints={}]
- *    Allows database table-level constraints to be set for fields/columns.
- *
- * @property {string[][]} [constraints.unique=[]]
- *    An array of unique constraint sets of columns referenced by schema name
- *    (not by `column` alias!). An example value of e.g. `[["userA", "userB"]]`
- *    will ensure that no other database row can have the same two values set.
- *
- */
 
 const configDefault = {
   mapKnexType: {
@@ -159,7 +40,36 @@ const fieldDefaults = {
 /**
  * @function
  * @static
- * @param {Config} config
+ * @param {object} [config]
+ *    Configures universal schema generation options.
+ *
+ * @param {object} [config.mapKnexType]
+ *    Provides mappings for Schema types into knex column types.
+ *
+ * <pre>// defaults
+ * ID -> integer
+ * Int -> integer
+ * String -> text
+ * DateTime -> timestamp
+ * Boolean -> boolean</pre>
+ *
+ * @param {object} [config.mapGraphType]
+ *    Provides mappings for Schema types into alternate GraphQL types.
+ *    Although Schema types are primarily compatible graph types, it provides
+ *    a chance to remap types that, for example, might not have custom scalars
+ *    defined yet, but are ultimately rendered as a String|Int|etc.
+ *
+ * <pre>// defaults
+ * DateTime -> string</pre>
+ *
+ * @param {object} [config.mapKnexTypeSelect]
+ *    Provides a chance for additional selector args to be added to
+ *    `knex(table).select("*", ...args)` statements when resolvers fetch data.
+ *    Motivated by cases where the certain columns used custom postgis geometry
+ *    types and the data needed to be select/casted into JSON instead of it's
+ *    raw binary type.
+ *
+ * <pre>// no defaults</pre>
  * @returns {SchemaParser}
  *    Schema parsing function.
  */
@@ -173,8 +83,90 @@ export const Schema = (configOverride) => {
   /**
    * @function
    * @name SchemaParser
-   * @param {Schema} schema
+   * @param {Object} schema
    *    Input schema to be parsed.
+   * @param {string} schema.name
+   *    Entity name for database table and graph typedefs.
+   *
+   * @param {object} schema.fields
+   *    Object key is field name.
+   *    Field definitions for the database columns and graph typedefs.
+   *
+   * @param {string} schema.fields.type
+   *    Graph type (String|Boolean|etc.) or Schema name (User|etc.).
+   *    This value is mapped to a knex database type via `config.mapKnexType` is
+   *    this field will be a database column.
+   *    If used with relationship, this value can be a Schema name for the
+   *    generated resolver to resolve the data for this field.
+   *
+   * @param {boolean} [schema.fields.virtual=false]
+   *    If true, this field will not have a corresponding database column.
+   *    It will only exist as a graph entity key.
+   *    Use this for generated/virtual resolved values etc.
+   *
+   * @param {string} [schema.fields.column=null]
+   *    Use this value to change the database column name used for this field.
+   *    All generated relationships and resolvers will automatically resolve this
+   *    field's name to access the database column specified here instead.
+   *
+   * @param {boolean|string} [schema.fields.relationship=false]
+   *    Configures this field to resolve to a relationship to another entity.
+   *    If set to true, the relationship will default to use `${field.type}.id`
+   *    when querying the remote table via this field's type. A different column
+   *    can be used if passed as a string instead of `true`.
+   *    If `many` is not specified, this field will be considered a database column
+   *    and a foreign key will be set using the `Table.column` value determined.
+   *    If `many` is true, this field will be considered a virtual field.
+   *
+   * @param {boolean} [schema.fields.many=false]
+   *    If `true`, typedefs use `[]` and generated resolvers will use arrays.
+   *    If `many` is used with a relationship field, this field is considered
+   *    virtual.
+   *
+   * @param {boolean} [schema.fields.nullable=true]
+   *    If `false`, adds the `NOT NULL` constraint for the database column, and
+   *    adds the `!` not nullable modifier to generated graph typedefs for this
+   *    schema.
+   *
+   * @param {boolean} [schema.fields.private=false]
+   *    If `true`, does not expose this field on graph schema.
+   *    Setting `setter` and `getter` to `false` has the same effect.
+   *
+   * @param {boolean} [schema.fields.primary=false]
+   *    Reserved `id` primary key column, which is automatically added to this
+   *    schema when generated, and must only be used for one field.
+   *    If `true`, resolves the database column type to "increments".
+   *
+   * @param {boolean} [schema.fields.unique=false]
+   *    If `true`, adds unique constraint for this field's database column.
+   *
+   * @param {*} [schema.fields.default]
+   *    If set, applies db column default for field.
+   *
+   * @param {boolean|string|GraphQL.Resolver} [schema.fields.getter=true]
+   *    Modifies the generated resolver for getting this field's value.
+   *    If `true`, returned value is `obj[field.name]` (or `field.column` if set).
+   *    If `string`, returned value is `obj[field.getter|string]`.
+   *    If `GraphQL.Resolver`, returned value is the result of this resolver
+   *    function, called with standard resolver parameters:
+   *    `GraphQL.Resolver(parent, args, context, info)`.
+   *    Has no effect if `virtual` is true.
+   * @param {boolean|string|GraphQL.Resolver} [schema.fields.setter=true]
+   *    Modifies the generated resolver for setting this field's value.
+   *    If `true`, returned value is `obj[field.name]` (or `field.column` if set).
+   *    If `string`, value
+   *    If `Resolver` function, will be called will Resolver args, and uses return
+   *      as new value for create/update mutations.
+   *    Has no effect if `virtual` is true.
+   *
+   * @param {object} [schema.constraints={}]
+   *    Allows database table-level constraints to be set for fields/columns.
+   *
+   * @param {string[][]} [schema.constraints.unique=[]]
+   *    An array of unique constraint sets of columns referenced by schema name
+   *    (not by `column` alias!). An example value of e.g. `[["userA", "userB"]]`
+   *    will ensure that no other database row can have the same two values set.
+   *
    * @param {Object} ioc
    *    Object with references to knex and an ResolverError handler.
    * @param {Knex} ioc.knex
@@ -183,6 +175,7 @@ export const Schema = (configOverride) => {
    *    Reference to an error constructor used for resolver errors.
    *    (i.e. ApolloError) Called with `new ResolverError(message, code)`.
    *
+   * @returns {SchemaResult}
    */
   return (schema, ioc) => {
     const { knex, ResolverError } = ioc;
@@ -473,6 +466,53 @@ export const Schema = (configOverride) => {
       },
     };
 
+    /**
+     * @typedef {object} SchemaResult
+     * @property {object} name
+     *    Provided input schema's name.
+     * @property {object} fields
+     *    Provided input schema's fields object updated with any generated
+     *    fields and default property values.
+     * @property {object} constraints
+     *    Provided input schema's constraints objected (if provided).
+     * @property {object} knex
+     *    Object containing knex/database related generated objects.
+     * @property {function} knex.table
+     *    Function that accepts table as an argument, to be used with
+     *    `knex.schema.createTable`-like functions.
+     *    (e.g. await knex.schema.createTable(MySchema.knex.table))
+     * @property {object} graph
+     *    Object containing apollo/graphql related generated objects.
+     * @property {object} graph.typeDefs
+     *    Object containing `gql` typedefs objects under `.Root`, `.Query`, and
+     *    `.Mutation` keys, to be used with as-is, or nested in other typeDefs.
+     * <pre>// example
+     * const typeDefs = gql`
+     *   ${MySchema.graph.typeDefs.Root}
+     *   Query {
+     *     ${MySchema.graph.typeDefs.Query}
+     *   }
+     *   Mutation {
+     *     ${MySchema.graph.typeDefs.Mutation}
+     *   }
+     * `;
+     * </pre>
+     * @property {object} graph.resolvers
+     *    Object containing resolvers objects under `.Root`, `.Query`, and
+     *    `.Mutation` keys, to be used as-is, or destructured into other
+     *    resolver maps.
+     * <pre>// example
+     * const resolvers = {
+     *   ...MySchema.graph.resolvers.Root,
+     *   Query: {
+     *     ...MySchema.graph.resolvers.Query,
+     *   },
+     *   Mutation: {
+     *     MySchema.graph.resolvers.Mutation,
+     *   },
+     * };
+     * </pre>
+     */
     return {
       ...schema,
       fields,
@@ -495,10 +535,26 @@ export const Schema = (configOverride) => {
   };
 };
 
+/**
+ * Convenience function to return merge many schemas' typeDefs.
+ * @function
+ * @param {SchemaResult[]} schemas
+ *    Array of schemas to be iterated on.
+ * @param {string} [node="Root"]
+ *    TypeDefs node to reference when iterating over schemas.
+ */
 export const mergeTypeDefs = (schemas, node = "Root") => {
   return schemas.map((schema) => schema.graph.typeDefs[node]).join("\n");
 };
 
+/**
+ * Convenience function to return merge many schemas' resolvers.
+ * @function
+ * @param {SchemaResult[]} schemas
+ *    Array of schemas to be iterated on.
+ * @param {string} [node="Root"]
+ *    Resolvers node to reference when iterating over schemas.
+ */
 export const mergeResolvers = (schemas, node = "Root") => {
   return schemas.reduce((acc, schema) => {
     return Object.assign(acc, schema.graph.resolvers[node]);
