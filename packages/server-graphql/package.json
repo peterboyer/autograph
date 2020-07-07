@@ -9,16 +9,17 @@
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
+    "./schema": "./src/schema.js",
+    "./remote": "./src/remote.js",
     "./scalars": "./src/scalars/index.js",
-    "./utils": "./src/utils.js",
-    "./remote": "./src/remote.js"
+    "./utils": "./src/utils.js"
   },
   "engines": {
     "node": ">=14"
   },
   "scripts": {
     "debug": "nodemon --watch src --exec \"yalc push --changed\"",
-    "docs": "jsdoc src/index.js src/remote.js -d ./docs/"
+    "docs": "jsdoc src/*.js -d ./docs/"
   },
   "dependencies": {
     "lodash": "^4.17.15"
