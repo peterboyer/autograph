@@ -12,6 +12,7 @@ export {
 export {
   selectColumnsPush,
   selectColumnsPop,
+  schemaTableCreate,
 } from "./utils.js";
 
 export {
