@@ -73,7 +73,7 @@ const fieldDefaults = {
  * @returns {SchemaParser}
  *    Schema parsing function.
  */
-export const Schema = (configOverride) => {
+export const Schema = (knex) => (configOverride) => {
   const config = configOverride ? configOverride(configDefault) : configDefault;
   const { mapKnexType, mapGraphType, mapKnexTypeSelect } = config;
 
@@ -177,9 +177,7 @@ export const Schema = (configOverride) => {
    *
    * @returns {SchemaResult}
    */
-  return (schema, ioc) => {
-    const { knex, ResolverError } = ioc;
-
+  return (schema) => {
     const name = schema.name;
 
     const fields = Object.entries({
