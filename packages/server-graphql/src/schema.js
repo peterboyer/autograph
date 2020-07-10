@@ -40,10 +40,24 @@ const fieldDefaults = {
 /**
  * @function
  * @static
- * @param {object} [config]
- *    Configures universal schema generation options.
+ * @param {function} [configOverride]
+ *    Configures additional schema generation options.
+ *    Optional function called with (defaultConfig) returning a new config
+ *    object.
  *
- * @param {object} [config.mapKnexType]
+ * @example
+ * const schema = Schema(config => ({
+ *   ...config,
+ *   knex,
+ *   mapKnexType: {
+ *     ...config.mapKnexType,
+ *     Email: "text",
+ *   },
+ * }))
+ *
+ * @param {Knex} [configOverride.knex]
+ *
+ * @param {object} [configOverride.mapKnexType]
  *    Provides mappings for Schema types into knex column types.
  *
  * <pre>// defaults
@@ -53,7 +67,7 @@ const fieldDefaults = {
  * DateTime -> timestamp
  * Boolean -> boolean</pre>
  *
- * @param {object} [config.mapGraphType]
+ * @param {object} [configOverride.mapGraphType]
  *    Provides mappings for Schema types into alternate GraphQL types.
  *    Although Schema types are primarily compatible graph types, it provides
  *    a chance to remap types that, for example, might not have custom scalars
@@ -62,7 +76,7 @@ const fieldDefaults = {
  * <pre>// defaults
  * DateTime -> string</pre>
  *
- * @param {object} [config.mapKnexTypeSelect]
+ * @param {object} [configOverride.mapKnexTypeSelect]
  *    Provides a chance for additional selector args to be added to
  *    `knex(table).select("*", ...args)` statements when resolvers fetch data.
  *    Motivated by cases where the certain columns used custom postgis geometry
@@ -70,12 +84,13 @@ const fieldDefaults = {
  *    raw binary type.
  *
  * <pre>// no defaults</pre>
+ *
  * @returns {SchemaParser}
  *    Schema parsing function.
  */
-export const Schema = (knex) => (configOverride) => {
+export const Schema = (configOverride) => {
   const config = configOverride ? configOverride(configDefault) : configDefault;
-  const { mapKnexType, mapGraphType, mapKnexTypeSelect } = config;
+  const { knex, mapKnexType, mapGraphType, mapKnexTypeSelect } = config;
 
   const getKnexType = (type) => mapKnexType[type];
   const getGraphType = (type) => mapGraphType[type] || type;

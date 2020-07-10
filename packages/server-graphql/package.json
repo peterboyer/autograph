@@ -19,7 +19,8 @@
   },
   "scripts": {
     "debug": "nodemon --watch src --exec \"yalc push --changed\"",
-    "docs": "jsdoc src/*.js -d ./docs/"
+    "docs": "jsdoc src/*.js -d ./docs/",
+    "docs:open": "open ./docs/index.html"
   },
   "dependencies": {
     "lodash": "^4.17.15"
