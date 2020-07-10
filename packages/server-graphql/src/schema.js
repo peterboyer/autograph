@@ -38,6 +38,21 @@ const fieldDefaults = {
 };
 
 /**
+ * @typedef {object} Context.RequiredProperties
+ * @property {Knex} knex
+ *    Reference to initialised knex instance.
+ *    Used to create database queries from schema information.
+ * @property {Error} ResolverError
+ *    Reference to an error constructor used for resolver errors.
+ *    (i.e. ApolloError) Called with `new ResolverError(message, code)`.
+ */
+
+/**
+ * Generated GraphQL.Resolvers from a schema refer to properties from the
+ * context argument to a resolver. Ensure you pass valid values as according
+ * to the Context.RequiredProperties object typedef to your context property
+ * of your ApolloServer constructor.
+ *
  * @function
  * @static
  * @param {function} [configOverride]
@@ -56,6 +71,7 @@ const fieldDefaults = {
  * }))
  *
  * @param {Knex} [configOverride.knex]
+ *    Reference to initialised knex instance.
  *
  * @param {object} [configOverride.mapKnexType]
  *    Provides mappings for Schema types into knex column types.
@@ -181,14 +197,6 @@ export const Schema = (configOverride) => {
    *    An array of unique constraint sets of columns referenced by schema name
    *    (not by `column` alias!). An example value of e.g. `[["userA", "userB"]]`
    *    will ensure that no other database row can have the same two values set.
-   *
-   * @param {Object} ioc
-   *    Object with references to knex and an ResolverError handler.
-   * @param {Knex} ioc.knex
-   *    Reference to initialised knex instance.
-   * @param {function} ioc.ResolverError
-   *    Reference to an error constructor used for resolver errors.
-   *    (i.e. ApolloError) Called with `new ResolverError(message, code)`.
    *
    * @returns {SchemaResult}
    */
