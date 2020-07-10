@@ -37,6 +37,7 @@ const fieldDefaults = {
   getter: true,
 };
 
+// TODO: update context required to use errors instead of ResolverError;
 /**
  * @typedef {object} Context.RequiredProperties
  * @property {Knex} knex
@@ -366,18 +367,11 @@ export const Schema = (configOverride) => {
       return await knex(table).select("*", ...selectArgs).where({ id }).first();
     }
 
-    function NotFound(table, args) {
-      return new ResolverError(
-        `Cannot resolve '${table}' with ${args.toString()}.`,
-        "NOT_FOUND"
-      );
-    }
-
     queryById.throwNotFound = async (...args) => {
       const result = await queryById(...args);
       if (!result) {
-        const [table, id] = args;
-        throw NotFound(table, { id });
+        const [table, id, { errors }] = args;
+        throw errors.NotFound(table, { id });
       }
       return result;
     };
@@ -389,9 +383,10 @@ export const Schema = (configOverride) => {
 
         return Object.assign(acc, {
           [key]: async (obj, args, context) => {
+            const { errors } = context;
             if (typeof o.getter === "function") {
               const result = await o.getter(obj, args, context);
-              if (!result && o.nullable === false) throw NotFound(o.type, args);
+              if (!result && o.nullable === false) throw errors.NotFound(o.type, args);
               return result;
             }
 
@@ -401,7 +396,7 @@ export const Schema = (configOverride) => {
 
             if (o.relationship) {
               const result = await queryById(o.type, obj[path], context);
-              if (!result && o.nullable === false) throw NotFound(o.type, args);
+              if (!result && o.nullable === false) throw errors.NotFound(o.type, args);
               return result;
             }
 
