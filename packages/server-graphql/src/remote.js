@@ -7,10 +7,10 @@ const { print } = graphql;
 import graphqlTools from "graphql-tools";
 const {
   introspectSchema,
-  makeExecutableSchema,
   makeRemoteExecutableSchema,
-  mergeSchemas,
 } = graphqlTools;
+import lodash from "lodash";
+const { merge } = lodash;
 
 /**
  * Creates a GraphQL Executor for use with GraphQL Remote Executable Schemas.
@@ -20,40 +20,42 @@ const {
  * @param {object} config
  * @param {string} config.uri
  *    Target GraphQL API. (e.g. http://localhost:4000/graphql)
- * @param {(function|object)} [config.context={}]
- *    Callback that receives the execution context to be able to manipulate the
- *    fetch function. Currently only adding additional headers is supported. If
- *    passed an object, it is used as-is to provide manipulations to the fetch
- *    function.
- * @param {object} [config.context.headers={}]
- *    Object of [header]:[value] pairs to add to the fetch request.
+ * @param {(function|object)} [config.fetchOptions={}]
+ *    Object of properties to be merged into the fetch request's defaults.
+ *    If passed a function it will be evaluated, with `(context, fetchDefaults)`
+ *    passed as arguments.
  * @param {Fetch} config.fetch
  *    Fetch implementation. (i.e. node-fetch)
+ * @param {function} [config.onResponse]
+ *    Callback fired on executor response with args `(response, context)`;
  *
  * @returns {GraphQL.Executor}
  */
-export function Executor({ uri, context, fetch }) {
+export function Executor({ uri, fetch, fetchOptions, onResponse }) {
   return async (operation) => {
-    const {
-      headers = {}
-    } = (
-      typeof context === "function"
-        ? context(operation.context)
-        : context
-    ) || {};
-
     const { document, variables } = operation;
+
     const query = print(document);
-    const result = await fetch(uri, {
+    const fetchDefaults = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(headers || {}),
       },
       body: JSON.stringify({ query, variables })
-    });
+    };
 
-    return result.json();
+    const { context } = operation;
+    const fetchOverrides = (
+      typeof fetchOptions === "function"
+        ? fetchOptions(context, fetchDefaults)
+        : fetchOptions
+    ) || {};
+
+    const result = await fetch(uri, merge(fetchDefaults, fetchOverrides));
+
+    const response = await result.json();
+    onResponse && await onResponse(response, context);
+    return response;
   };
 }
 

@@ -112,6 +112,8 @@ export const Schema = (configOverride) => {
   const getKnexType = (type) => mapKnexType[type];
   const getGraphType = (type) => mapGraphType[type] || type;
 
+  // TODO: custom public id from other uuid field
+  // TODO: resolver mapping and resolution for getting if public id alias used
   /**
    * @function
    * @name SchemaParser
