@@ -6,31 +6,39 @@
   "repository": "https://github.com/armix-io/armix-server",
   "license": "MIT",
   "type": "module",
-  "main": "./src/index.js",
-  "exports": {
-    ".": "./src/index.js",
-    "./schema": "./src/schema.js",
-    "./remote": "./src/remote.js",
-    "./scalars": "./src/scalars/index.js",
-    "./utils": "./src/utils.js"
-  },
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "engines": {
     "node": ">=14"
   },
   "scripts": {
-    "debug": "nodemon --watch src --exec \"yalc push --changed\"",
+    "build": "yarn build:ts",
+    "build:ts": "tsc",
+    "watch:ts": "tsc -w",
+    "watch:yalc": "yalc push && nodemon --watch lib --exec \"yalc push --changed\"",
+    "develop": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
     "docs": "jsdoc src/*.js -d ./docs/",
     "docs:open": "open ./docs/index.html"
   },
   "dependencies": {
     "lodash": "^4.17.15"
   },
-  "peerDependency": {
+  "peerDependencies": {
     "graphql": "^14.2.1",
     "graphql-tools": "^6.0.12"
   },
   "devDependencies": {
-    "eslint": "^7.4.0",
-    "jsdoc": "^3.6.4"
+    "@types/lodash": "^4.14.159",
+    "@typescript-eslint/eslint-plugin": "^3.9.0",
+    "@typescript-eslint/parser": "^3.9.0",
+    "apollo-server": "^2.16.1",
+    "concurrently": "^5.3.0",
+    "eslint": "^7.6.0",
+    "jsdoc": "^3.6.4",
+    "knex": "^0.21.4",
+    "nodemon": "^2.0.4",
+    "prettier": "^2.0.5",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
   }
 }
