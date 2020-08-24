@@ -1,6 +1,8 @@
-type TypeDefsNodeType = "Root" | "Query" | "Mutation";
-type SchemaTypeDefs = { Root: string; Query: string; Mutation: string };
-type SchemaResolvers = { Root: {}; Query: {}; Mutation: {} };
+import {
+  TypeDefsNodeType,
+  SchemaTypeDefs,
+  SchemaResolvers,
+} from "./SchemaGraphQL.types";
 
 /**
  * Convenience function to return merge many schemas' typeDefs.

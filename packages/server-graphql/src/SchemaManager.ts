@@ -2,10 +2,13 @@ import lodash from "lodash";
 import { Schema, SchemaAdapter } from "./types";
 const { merge, defaults } = lodash;
 
-export default function SchemaManager(
-  schemas: Set<Schema>,
-  adapters: Map<string, SchemaAdapter<any>>
-) {
+export default function SchemaManager<T>(
+  _models: Schema[],
+  _adapters: { [key: string]: SchemaAdapter }
+): { [key: string]: T } {
+  const models = new Set(_models);
+  const adapters = new Map(Object.entries(_adapters));
+
   const fieldDefaults = {
     virtual: false,
     nullable: true,
@@ -17,34 +20,32 @@ export default function SchemaManager(
     relationship: false,
   };
 
-  // adapters add their defaults to affect all schemas
+  // adapters add their defaults to affect all models
   adapters.forEach((adapter) => {
     if (adapter.defaults) {
       merge(fieldDefaults, adapter.defaults());
     }
   });
 
-  const schemasCompiled: { [key: string]: Map<string, any> } = {};
+  const schemasCompiled: { [key: string]: any } = {};
 
-  schemas.forEach((schema) => {
-    // adapters mutate the current schema
+  models.forEach((model) => {
+    // adapters mutate the current model
     adapters.forEach((adapter) => {
-      adapter.mutate && adapter.mutate(schema);
+      adapter.mutate && adapter.mutate(model);
     });
 
-    // apply the defaults to all the fields of the current schema
-    Object.keys(schema.fields).forEach((fieldName) => {
-      defaults(schema.fields[fieldName], fieldDefaults);
+    // apply the defaults to all the fields of the current model
+    Object.keys(model.fields).forEach((fieldName) => {
+      defaults(model.fields[fieldName], fieldDefaults);
     });
 
-    // compile the schema with all the adapters
-    const schemaName = schema.name;
-
-    schemasCompiled[schemaName] = new Map(
-      [...adapters.entries()].map(([adapterName, adapter]) => [
-        adapterName,
-        adapter.compile(schema),
-      ])
+    // compile the model with all the adapters
+    const schemaName = model.name;
+    schemasCompiled[schemaName] = [...adapters.entries()].reduce(
+      (acc, [adapterName, adapter]) =>
+        Object.assign(acc, { [adapterName]: adapter.compile(model) }),
+      {}
     );
   });
 

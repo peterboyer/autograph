@@ -132,7 +132,7 @@ export default function Resolvers(ioc: {
 
         return results;
       },
-      [`${name}_delete`]: (_, args, context) => {
+      [`${name}_delete`]: async (_, args, context) => {
         // TODO: implement bulk deletion function
         console.log(_, args, context);
         return [];

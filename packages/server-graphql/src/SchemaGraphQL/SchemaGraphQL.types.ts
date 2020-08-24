@@ -13,6 +13,8 @@ export type SchemaGraphQL = {
   };
 };
 
+export type ISchemaGraphQL = SchemaGraphQL;
+
 export type IOC = {
   mapType: Map<string, string>;
   queryById: (tableName: string, id: any) => any;
@@ -49,3 +51,7 @@ export type SchemaGraphQLFieldAttributes = {
   getter?: GQLResolver | string | null;
   setter?: GQLResolver | string | null;
 };
+
+export type TypeDefsNodeType = "Root" | "Query" | "Mutation";
+export type SchemaTypeDefs = { Root: string; Query: string; Mutation: string };
+export type SchemaResolvers = { Root: {}; Query: {}; Mutation: {} };

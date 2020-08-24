@@ -20,10 +20,10 @@ export type Field<F = {}> = {
   type: string;
 } & F;
 
-export type SchemaAdapter<T> = {
+export type SchemaAdapter = {
   defaults?: () => {};
   mutate?: (schema: Schema) => void;
-  compile: (schema: Schema) => T;
+  compile: (schema: Schema) => any;
 };
 
 export type SchemaFieldName = string & {};

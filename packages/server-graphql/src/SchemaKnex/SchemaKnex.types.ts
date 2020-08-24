@@ -24,3 +24,8 @@ export type SchemaKnexFieldAttributes = {
   virtual?: boolean;
   relationship?: boolean | string;
 };
+
+export type ISchemaKnex = {
+  createTable: (rows?: {}[]) => Promise<{}[]>;
+  deleteTable: () => Promise<void>;
+};
