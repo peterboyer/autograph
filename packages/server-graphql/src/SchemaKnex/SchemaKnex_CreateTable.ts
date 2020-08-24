@@ -7,11 +7,13 @@ export default function CreateTable(ioc: IOC) {
     return async function <T = {}>(
       rows: Partial<T>[] = []
     ): Promise<T[] | false> {
-      const { name, fields, constraints } = schema;
+      const { name, fields: _fields, constraints } = schema;
 
       if (await knex.schema.hasTable(name)) {
         return false;
       }
+
+      const fields = new Map(Object.entries(_fields));
 
       await knex.schema.createTable(name, (table: any) => {
         fields.forEach((field, fieldName) => {
@@ -68,7 +70,7 @@ export default function CreateTable(ioc: IOC) {
         Object.entries(row).reduce(
           (acc, [fieldName, value]) =>
             Object.assign(acc, {
-              [schema.fields.get(fieldName)?.column || fieldName]: value,
+              [fields.get(fieldName)?.column || fieldName]: value,
             }),
           {}
         )

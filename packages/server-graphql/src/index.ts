@@ -1,9 +1,10 @@
 // export * from "./types";
 // export { default, mergeTypeDefs, mergeResolvers } from "./schema";
 
-export { default, default as SchemaManager } from "./Schema/SchemaManager";
-// export { default as SchemaGraphQL } from "./Schema/SchemaGraphQL";
-export { default as SchemaKnex } from "./Schema/SchemaKnex";
+export { default, default as SchemaManager } from "./SchemaManager";
+export * from "./types";
+export * from "./SchemaKnex/index";
+export * from "./SchemaGraphQL/index";
 
 // export { default as AdapterApollo } from "./AdapterApollo";
 // export { default as AdapterKnex } from "./AdapterKnex";

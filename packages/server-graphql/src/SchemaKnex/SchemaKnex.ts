@@ -1,3 +1,4 @@
+import { WithOptional } from "../types";
 import { SchemaAdapter, ISchema, IOC } from "./SchemaKnex.types";
 import _CreateTable from "./SchemaKnex_CreateTable";
 import _DeleteTable from "./SchemaKnex_DeleteTable";
@@ -12,9 +13,6 @@ const defaultsMapType = new Map<string, string>([
   ["Date", "date"],
   ["Time", "time"],
 ]);
-
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 type Config = WithOptional<IOC, "mapType">;
 
@@ -34,33 +32,24 @@ export default function SchemaKnex(config: Config) {
   }
 
   function mutate(schema: ISchema) {
-    schema.fields = new Map([
-      [
-        "id",
-        {
-          type: "ID",
-          primary: true,
-          nullable: false,
-        },
-      ],
-      ...schema.fields.entries(),
-      [
-        "createdAt",
-        {
-          type: "DateTime",
-          default: knex.fn.now(),
-          nullable: false,
-        },
-      ],
-      [
-        "updatedAt",
-        {
-          type: "DateTime",
-          default: knex.fn.now(),
-          nullable: false,
-        },
-      ],
-    ]);
+    schema.fields = {
+      id: {
+        type: "ID",
+        primary: true,
+        nullable: false,
+      },
+      ...schema.fields,
+      createdAt: {
+        type: "DateTime",
+        default: knex.fn.now(),
+        nullable: false,
+      },
+      updatedAt: {
+        type: "DateTime",
+        default: knex.fn.now(),
+        nullable: false,
+      },
+    };
   }
 
   const CreateTable = _CreateTable(ioc);

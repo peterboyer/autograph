@@ -24,7 +24,8 @@ export default function SchemaManager(
     }
   });
 
-  const schemasCompiled = new Map<string, Map<string, any>>();
+  const schemasCompiled: { [key: string]: Map<string, any> } = {};
+
   schemas.forEach((schema) => {
     // adapters mutate the current schema
     adapters.forEach((adapter) => {
@@ -32,21 +33,20 @@ export default function SchemaManager(
     });
 
     // apply the defaults to all the fields of the current schema
-    schema.fields.forEach((field) => {
-      defaults(field, fieldDefaults);
+    Object.keys(schema.fields).forEach((fieldName) => {
+      defaults(schema.fields[fieldName], fieldDefaults);
     });
 
     // compile the schema with all the adapters
     const schemaName = schema.name;
-    schemasCompiled.set(
-      schemaName,
-      new Map(
-        [...adapters.entries()].map(([adapterName, adapter]) => [
-          adapterName,
-          adapter.compile(schema),
-        ])
-      )
+
+    schemasCompiled[schemaName] = new Map(
+      [...adapters.entries()].map(([adapterName, adapter]) => [
+        adapterName,
+        adapter.compile(schema),
+      ])
     );
   });
+
   return schemasCompiled;
 }

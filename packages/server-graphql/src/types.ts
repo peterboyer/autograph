@@ -1,18 +1,9 @@
-export type Context = {};
+// utility
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+export type WithOptional<T, K extends keyof T> = Omit<T, K> &
+  Partial<Pick<T, K>>;
 
-export type Errors = {
-  NotFound: (schemaName: string, queryArgs?: {}) => Error;
-  NotValid: (details?: {}) => Error;
-};
-
-export type GraphScalarType = string & {};
-
-export type RawColumnType = string & {};
-
-export type Query = {};
-
-export type FieldName = string & {};
-
+// library
 export type FieldResolver = (
   parent: {} | null,
   args: {} | null,
@@ -20,33 +11,19 @@ export type FieldResolver = (
   info: {}
 ) => any;
 
-export type FieldArgs = Map<string, GraphScalarType>;
-
-export type Field<F = {}> = {
-  type: GraphScalarType;
-  virtual?: boolean;
-  relationship?: boolean | string;
-  many?: boolean;
-  nullable?: boolean;
-  private?: boolean;
-  default?: any;
-  args?: FieldArgs;
-  getter?: FieldResolver | string | null;
-  setter?: FieldResolver | string | null;
-} & F;
-
 export type Schema<S = {}, F = {}> = {
   name: string;
-  fields: Map<FieldName, Field<F>>;
+  fields: { [key: string]: Field<F> };
 } & S;
 
-export declare class Graph {
-  query: Query;
-  errors: Errors;
-  mapGraphAlias: Map<GraphScalarType, GraphScalarType>;
-  use: (adapter: GraphAdapter) => void;
-}
+export type Field<F = {}> = {
+  type: string;
+} & F;
 
-export declare class GraphAdapter {
-  _attach?: (graph: Graph) => void;
-}
+export type SchemaAdapter<T> = {
+  defaults?: () => {};
+  mutate?: (schema: Schema) => void;
+  compile: (schema: Schema) => T;
+};
+
+export type SchemaFieldName = string & {};

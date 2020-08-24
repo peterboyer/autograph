@@ -1,5 +1,5 @@
-export { SchemaAdapter } from "./types";
-import { Schema, SchemaFieldName } from "./types";
+export { SchemaAdapter } from "../types";
+import { Schema } from "../types";
 
 export type Knex = any;
 
@@ -12,11 +12,15 @@ export type ISchema = Schema<SchemaKnexAttributes, SchemaKnexFieldAttributes>;
 
 export type SchemaKnexAttributes = {
   constraints?: {
-    unique?: Set<Set<SchemaFieldName>>;
+    unique?: string[][];
   };
 };
 export type SchemaKnexFieldAttributes = {
   column?: string;
   primary?: boolean;
   unique?: boolean;
+  nullable?: boolean;
+  default?: any;
+  virtual?: boolean;
+  relationship?: boolean | string;
 };
