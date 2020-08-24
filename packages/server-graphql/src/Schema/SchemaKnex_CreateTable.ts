@@ -1,12 +1,12 @@
-import { Adapter, ISchema } from "./SchemaKnex.types";
+import { IOC, ISchema } from "./SchemaKnex.types";
 
-export default function CreateTable(adapter: Adapter) {
-  const { knex, mapType } = adapter;
+export default function CreateTable(ioc: IOC) {
+  const { knex, mapType } = ioc;
 
   return function (schema: ISchema) {
     return async function <T = {}>(
-      rows: Set<Partial<T>> = new Set()
-    ): Promise<Set<T> | false> {
+      rows: Partial<T>[] = []
+    ): Promise<T[] | false> {
       const { name, fields, constraints } = schema;
 
       if (await knex.schema.hasTable(name)) {
@@ -63,22 +63,19 @@ export default function CreateTable(adapter: Adapter) {
         }
       });
 
-      return new Set(
-        await knex(name)
-          .insert(
-            [...rows.values()].map((row) =>
-              // resolve field names into potentially set field column names
-              Object.entries(row).reduce(
-                (acc, [fieldName, value]) =>
-                  Object.assign(acc, {
-                    [schema.fields.get(fieldName)?.column || fieldName]: value,
-                  }),
-                {}
-              )
-            )
-          )
-          .returning("*")
+      // resolve field names into potentially set field column names
+      const rowsParsed = rows.map((row) =>
+        Object.entries(row).reduce(
+          (acc, [fieldName, value]) =>
+            Object.assign(acc, {
+              [schema.fields.get(fieldName)?.column || fieldName]: value,
+            }),
+          {}
+        )
       );
+
+      // insert rows and return results
+      return knex(name).insert(rowsParsed).returning("*");
     };
   };
 }

@@ -1,7 +1,7 @@
-import { Adapter, ISchema } from "./SchemaKnex.types";
+import { IOC, ISchema } from "./SchemaKnex.types";
 
-export default function DeleteTable(adapter: Adapter) {
-  const { knex, mapType } = adapter;
+export default function DeleteTable(ioc: IOC) {
+  const { knex } = ioc;
 
   return function (schema: ISchema) {
     return async function (): Promise<void> {
