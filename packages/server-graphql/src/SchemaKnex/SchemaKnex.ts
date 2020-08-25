@@ -29,6 +29,12 @@ export default function SchemaKnex(config: Config): ISchemaAdapter {
       column: undefined,
       primary: false,
       unique: false,
+      nullable: true,
+      default: undefined,
+      virtual: false,
+      relationship: false,
+      relationshipOnDelete: "CASCADE",
+      relationshipOnUpdate: "CASCADE",
     };
   }
 

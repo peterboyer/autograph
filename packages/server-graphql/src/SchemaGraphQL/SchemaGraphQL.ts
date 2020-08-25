@@ -13,6 +13,21 @@ export default function SchemaGraphQL(config: Config): ISchemaAdapter {
     mapType: new Map([...mapType.entries()]),
   };
 
+  function defaults() {
+    return {
+      column: undefined,
+      virtual: false,
+      relationship: undefined,
+      many: false,
+      primary: false,
+      nullable: true,
+      private: false,
+      args: undefined,
+      setter: undefined,
+      getter: undefined,
+    };
+  }
+
   const TypeDefs = _TypeDefs(ioc);
   const Resolvers = _Resolvers(ioc);
 
@@ -27,6 +42,7 @@ export default function SchemaGraphQL(config: Config): ISchemaAdapter {
   }
 
   return {
+    defaults,
     compile,
   };
 }

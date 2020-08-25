@@ -9,16 +9,7 @@ export default function SchemaManager<T>(
   const models = new Set(_models);
   const adapters = new Map(Object.entries(_adapters));
 
-  const fieldDefaults = {
-    virtual: false,
-    nullable: true,
-    default: undefined,
-    private: false,
-    setter: undefined,
-    getter: undefined,
-    many: false,
-    relationship: false,
-  };
+  const fieldDefaults = {};
 
   // adapters add their defaults to affect all models
   adapters.forEach((adapter) => {
