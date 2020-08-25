@@ -1,11 +1,11 @@
-import { IOC, ISchema } from "./SchemaKnex.types";
+import { IIOC, IModel } from "./SchemaKnex.types";
 
-export default function DeleteTable(ioc: IOC) {
+export default function DeleteTable(ioc: IIOC) {
   const { knex } = ioc;
 
-  return function (schema: ISchema) {
+  return function (model: IModel) {
     return async function (): Promise<void> {
-      const { name } = schema;
+      const { name } = model;
       await knex.schema.dropTable(name);
       return;
     };

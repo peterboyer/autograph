@@ -1,5 +1,5 @@
-import { WithOptional } from "../types";
-import { SchemaAdapter, ISchema, IOC } from "./SchemaKnex.types";
+import { WithOptional, ISchemaAdapter } from "../types";
+import { IIOC, IModel } from "./SchemaKnex.types";
 import _CreateTable from "./SchemaKnex_CreateTable";
 import _DeleteTable from "./SchemaKnex_DeleteTable";
 
@@ -14,11 +14,12 @@ const defaultsMapType = new Map<string, string>([
   ["Time", "time"],
 ]);
 
-type Config = WithOptional<IOC, "mapType">;
+type Config = WithOptional<IIOC, "mapType">;
 
-export default function SchemaKnex(config: Config) {
+export default function SchemaKnex(config: Config): ISchemaAdapter {
   const { knex, mapType = new Map() } = config;
-  const ioc: IOC = {
+
+  const ioc: IIOC = {
     knex,
     mapType: new Map([...defaultsMapType.entries(), ...mapType.entries()]),
   };
@@ -31,14 +32,14 @@ export default function SchemaKnex(config: Config) {
     };
   }
 
-  function mutate(schema: ISchema) {
-    schema.fields = {
+  function mutate(model: IModel) {
+    model.fields = {
       id: {
         type: "ID",
         primary: true,
         nullable: false,
       },
-      ...schema.fields,
+      ...model.fields,
       createdAt: {
         type: "DateTime",
         default: knex.fn.now(),
@@ -55,9 +56,9 @@ export default function SchemaKnex(config: Config) {
   const CreateTable = _CreateTable(ioc);
   const DeleteTable = _DeleteTable(ioc);
 
-  function compile(schema: ISchema) {
-    const createTable = CreateTable(schema);
-    const deleteTable = DeleteTable(schema);
+  function compile(model: IModel) {
+    const createTable = CreateTable(model);
+    const deleteTable = DeleteTable(model);
 
     return {
       createTable,
@@ -69,5 +70,5 @@ export default function SchemaKnex(config: Config) {
     defaults,
     mutate,
     compile,
-  } as SchemaAdapter<{}>;
+  };
 }

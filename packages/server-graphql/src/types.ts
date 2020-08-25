@@ -4,26 +4,17 @@ export type WithOptional<T, K extends keyof T> = Omit<T, K> &
   Partial<Pick<T, K>>;
 
 // library
-export type FieldResolver = (
-  parent: {} | null,
-  args: {} | null,
-  context: {},
-  info: {}
-) => any;
-
-export type Schema<S = {}, F = {}> = {
+export type IModel<F = {}, S = {}> = {
   name: string;
-  fields: { [key: string]: Field<F> };
+  fields: { [key: string]: IModelField<F> };
 } & S;
 
-export type Field<F = {}> = {
+export type IModelField<F = {}> = {
   type: string;
 } & F;
 
-export type SchemaAdapter = {
+export type ISchemaAdapter = {
   defaults?: () => {};
-  mutate?: (schema: Schema) => void;
-  compile: (schema: Schema) => any;
+  mutate?: (model: IModel) => void;
+  compile: (model: IModel) => any;
 };
-
-export type SchemaFieldName = string & {};

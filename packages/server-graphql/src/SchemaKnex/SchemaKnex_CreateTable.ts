@@ -1,13 +1,13 @@
-import { IOC, ISchema } from "./SchemaKnex.types";
+import { IIOC, IModel } from "./SchemaKnex.types";
 
-export default function CreateTable(ioc: IOC) {
+export default function CreateTable(ioc: IIOC) {
   const { knex, mapType } = ioc;
 
-  return function (schema: ISchema) {
+  return function (model: IModel) {
     return async function <T = {}>(
       rows: Partial<T>[] = []
     ): Promise<T[] | false> {
-      const { name, fields: _fields, constraints } = schema;
+      const { name, fields: _fields, constraints } = model;
 
       if (await knex.schema.hasTable(name)) {
         return false;

@@ -1,15 +1,24 @@
+import { ISchemaMutationResolver } from "./SchemaGraphQL.types";
+
+import lodash from "lodash";
+const { omit } = lodash;
+
+type TableInfo = {
+  columns: Map<string, { type: string }>;
+  selectArgs: Set<string>;
+};
+
+type QuerySelectMap = { [key: string]: (name: string, knex: any) => string };
+
 export default function SchemaGraphQLKnex(config: {
   knex: any;
-  selectMap?: { [key: string]: (name: string, knex: any) => string };
+  selectMap?: QuerySelectMap;
 }) {
   const { knex, selectMap: _selectMap = {} } = config;
 
   const selectMap = new Map(Object.entries(_selectMap));
 
-  const tables = new Map<
-    string,
-    { columns: Map<string, { type: string }>; selectArgs: Set<string> }
-  >();
+  const tables = new Map<string, TableInfo>();
 
   async function queryById(tableName: string, id: any) {
     if (!tables.has(tableName)) {
@@ -44,7 +53,48 @@ export default function SchemaGraphQLKnex(config: {
       .first();
   }
 
+  async function queryByFilter(tableName: string) {
+    // TODO: add queryById select filters for selectMap
+    const rows = await knex(tableName);
+    return rows;
+  }
+
+  async function queryOnCreate(
+    tableName: string,
+    resolvers: ISchemaMutationResolver[]
+  ) {
+    // ! TODO: use update SETTER data resolution logic
+    // TODO: implement bulk creation function
+    return [];
+  }
+
+  async function queryOnUpdate(
+    tableName: string,
+    resolvers: ISchemaMutationResolver[]
+  ) {
+    let items: { [key: string]: any }[] = [];
+    await knex.transaction(async (trx: any) => {
+      items = await Promise.all(
+        resolvers.map(async (resolver) => {
+          const [id, data] = await resolver(trx);
+          await knex(tableName).transacting(trx).where({ id }).update(data);
+          // TODO: optimise, avoid second query?
+          return queryById(tableName, id);
+        })
+      );
+    });
+    return items;
+  }
+
+  async function queryOnDelete(tableName: string, data: {}) {
+    return [];
+  }
+
   return {
     queryById,
+    queryByFilter,
+    queryOnCreate,
+    queryOnUpdate,
+    queryOnDelete,
   };
 }

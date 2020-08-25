@@ -1,21 +1,21 @@
-export { SchemaAdapter } from "../types";
-import { Schema } from "../types";
+import { IModel as RIModel } from "../types";
 
-export type Knex = any;
+export type IKnex = any;
 
-export type IOC = {
-  knex: Knex;
+export type IIOC = {
+  knex: IKnex;
   mapType: Map<string, string>;
 };
 
-export type ISchema = Schema<SchemaKnexAttributes, SchemaKnexFieldAttributes>;
+export type IModel = RIModel<IModelFieldAttributes, IModelAttributes>;
 
-export type SchemaKnexAttributes = {
+export type IModelAttributes = {
   constraints?: {
     unique?: string[][];
   };
 };
-export type SchemaKnexFieldAttributes = {
+
+export type IModelFieldAttributes = {
   column?: string;
   primary?: boolean;
   unique?: boolean;
@@ -25,7 +25,7 @@ export type SchemaKnexFieldAttributes = {
   relationship?: boolean | string;
 };
 
-export type ISchemaKnex = {
+export type ISchema = {
   createTable: (rows?: {}[]) => Promise<{}[]>;
   deleteTable: () => Promise<void>;
 };

@@ -1,6 +1,11 @@
-import { IOC, ISchema, IField, GQLString } from "./SchemaGraphQL.types";
+import {
+  IIOC,
+  IModel,
+  IModelField,
+  ISchemaTypeDefs,
+} from "./SchemaGraphQL.types";
 
-export default function TypeDefs(ioc: IOC) {
+export default function TypeDefs(ioc: IIOC) {
   const { mapType } = ioc;
 
   function getGraphType(type: string) {
@@ -11,7 +16,7 @@ export default function TypeDefs(ioc: IOC) {
     return [...args.values()].map(([key, type]) => `${key}: ${type}`).join(",");
   }
 
-  function mapGraphFieldsTypeDefs(fields: Map<string, IField>) {
+  function mapGraphFieldsTypeDefs(fields: Map<string, IModelField>) {
     const acc = new Set<string>();
     for (const [fieldName, field] of fields) {
       if (field.private) continue;
@@ -28,7 +33,7 @@ export default function TypeDefs(ioc: IOC) {
     return [...acc.values()].join("\n");
   }
 
-  function mapGraphFieldsTypeDefsInput(fields: Map<string, IField>) {
+  function mapGraphFieldsTypeDefsInput(fields: Map<string, IModelField>) {
     const acc = new Set<string>();
     for (const [fieldName, field] of fields) {
       if (field.private) continue;
@@ -42,8 +47,8 @@ export default function TypeDefs(ioc: IOC) {
     return [...acc.values()].join("\n");
   }
 
-  return function (schema: ISchema) {
-    const { name, fields: _fields } = schema;
+  return function (model: IModel): ISchemaTypeDefs {
+    const { name, fields: _fields } = model;
 
     const fields = new Map(Object.entries(_fields));
     const graphFieldsTypeDefs = mapGraphFieldsTypeDefs(fields);
@@ -78,10 +83,6 @@ export default function TypeDefs(ioc: IOC) {
       Root,
       Query,
       Mutation,
-    } as {
-      Root: GQLString;
-      Query: GQLString;
-      Mutation: GQLString;
     };
   };
 }

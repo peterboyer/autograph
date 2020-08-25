@@ -1,14 +1,14 @@
-import { SchemaAdapter, WithOptional } from "../types";
-import { ISchema, IOC } from "./SchemaGraphQL.types";
+import { WithOptional, ISchemaAdapter } from "../types";
+import { IIOC, IModel } from "./SchemaGraphQL.types";
 import _TypeDefs from "./SchemaGraphQL_TypeDefs";
 import _Resolvers from "./SchemaGraphQL_Resolvers";
 
-type Config = WithOptional<IOC, "mapType">;
+type Config = WithOptional<IIOC, "mapType">;
 
-export default function SchemaGraphQL(config: Config) {
+export default function SchemaGraphQL(config: Config): ISchemaAdapter {
   const { mapType = new Map(), queryById, errors } = config;
 
-  const ioc: IOC = {
+  const ioc: IIOC = {
     mapType: new Map([...mapType.entries()]),
     queryById,
     errors,
@@ -17,9 +17,9 @@ export default function SchemaGraphQL(config: Config) {
   const TypeDefs = _TypeDefs(ioc);
   const Resolvers = _Resolvers(ioc);
 
-  function compile(schema: ISchema) {
-    const typeDefs = TypeDefs(schema);
-    const resolvers = Resolvers(schema);
+  function compile(model: IModel) {
+    const typeDefs = TypeDefs(model);
+    const resolvers = Resolvers(model);
 
     return {
       typeDefs,
@@ -29,5 +29,5 @@ export default function SchemaGraphQL(config: Config) {
 
   return {
     compile,
-  } as SchemaAdapter<{}>;
+  };
 }

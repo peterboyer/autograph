@@ -1,46 +1,44 @@
-import { Schema, Field } from "../types";
+import { IModel as RIModel, IModelField as RIModelField } from "../types";
 
-export type SchemaGraphQL = {
-  typeDefs: {
-    Root: GQLString;
-    Query: GQLString;
-    Mutation: GQLString;
-  };
-  resolvers: {
-    Root: { [key: string]: GQLResolver };
-    Query: { [key: string]: GQLResolver };
-    Mutation: { [key: string]: GQLResolver };
-  };
-};
+export type GQLString = string & {};
+export type GQLResolver = (
+  parent?: { [key: string]: any },
+  args?: { [key: string]: any },
+  context?: { [key: string]: any },
+  info?: { [key: string]: any }
+) => any;
 
-export type ISchemaGraphQL = SchemaGraphQL;
-
-export type IOC = {
-  mapType: Map<string, string>;
-  queryById: (tableName: string, id: any) => any;
+export type IIOC = {
+  queryById: (
+    tableName: string,
+    id: any,
+    args?: Parameters<GQLResolver>
+  ) => Promise<{} | null>;
+  queryByFilter: (tableName: string) => Promise<{}[]>;
+  queryOnCreate: (
+    tableName: string,
+    data: { [key: string]: any }[]
+  ) => Promise<{}[]>;
+  queryOnUpdate: (
+    tableName: string,
+    data: { id: any; [key: string]: any }[]
+  ) => Promise<{}[]>;
+  queryOnDelete: (tableName: string, data: any[]) => Promise<any[]>;
   errors: {
     NotFound: (tableName: string, queryArgs?: {}) => Error;
     NotValid: (details?: {}) => Error;
   };
 };
 
-export type ISchema = Schema<
-  SchemaGraphQLAttributes,
-  SchemaGraphQLFieldAttributes
->;
+export type IModel = RIModel<IModelFieldAttributes, IModelAttributes>;
 
-export type IField = Field<SchemaGraphQLFieldAttributes>;
+export type IModelField = RIModelField<IModelFieldAttributes>;
 
-export type GQLString = string & {};
-export type GQLResolver = (
-  parent?: {},
-  args?: {},
-  context?: {},
-  info?: {}
-) => any;
+export type IModelAttributes = {};
 
-export type SchemaGraphQLAttributes = {};
-export type SchemaGraphQLFieldAttributes = {
+export type IModelFieldAttributes = {
+  // TODO: consider different name for "column"
+  column?: string;
   virtual?: boolean;
   relationship?: boolean | string;
   many?: boolean;
@@ -49,9 +47,31 @@ export type SchemaGraphQLFieldAttributes = {
   private?: boolean;
   args?: Map<string, string>;
   getter?: GQLResolver | string | null;
-  setter?: GQLResolver | string | null;
+  setter?:
+    | ((trx: any) => (value: any, item: { [key: string]: any }) => Promise<any>)
+    | string
+    | null;
 };
 
-export type TypeDefsNodeType = "Root" | "Query" | "Mutation";
-export type SchemaTypeDefs = { Root: string; Query: string; Mutation: string };
-export type SchemaResolvers = { Root: {}; Query: {}; Mutation: {} };
+export type ISchema = {
+  typeDefs: ISchemaTypeDefs;
+  resolvers: ISchemaResolvers;
+};
+
+export type ISchemaNode = "Root" | "Query" | "Mutation";
+
+export type ISchemaTypeDefs = {
+  Root: GQLString;
+  Query: GQLString;
+  Mutation: GQLString;
+};
+
+export type ISchemaResolvers = {
+  Root: { [key: string]: GQLResolver };
+  Query: { [key: string]: GQLResolver };
+  Mutation: { [key: string]: GQLResolver };
+};
+
+export type ISchemaMutationResolver = (
+  trx?: any
+) => Promise<[any, { [key: string]: any }]>;
