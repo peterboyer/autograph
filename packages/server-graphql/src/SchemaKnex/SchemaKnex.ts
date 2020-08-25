@@ -20,7 +20,7 @@ export default function SchemaKnex(config: Config): ISchemaAdapter {
   const { knex, mapType = new Map() } = config;
 
   const ioc: IIOC = {
-    knex,
+    ...config,
     mapType: new Map([...defaultsMapType.entries(), ...mapType.entries()]),
   };
 

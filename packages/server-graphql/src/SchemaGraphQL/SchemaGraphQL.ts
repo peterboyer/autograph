@@ -6,12 +6,11 @@ import _Resolvers from "./SchemaGraphQL_Resolvers";
 type Config = WithOptional<IIOC, "mapType">;
 
 export default function SchemaGraphQL(config: Config): ISchemaAdapter {
-  const { mapType = new Map(), queryById, errors } = config;
+  const { mapType = new Map() } = config;
 
   const ioc: IIOC = {
+    ...config,
     mapType: new Map([...mapType.entries()]),
-    queryById,
-    errors,
   };
 
   const TypeDefs = _TypeDefs(ioc);

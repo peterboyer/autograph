@@ -28,6 +28,7 @@ export type IIOC = {
     NotFound: (tableName: string, queryArgs?: {}) => Error;
     NotValid: (details?: {}) => Error;
   };
+  mapType: Map<string, string>;
 };
 
 export type IModel = RIModel<IModelFieldAttributes, IModelAttributes>;
