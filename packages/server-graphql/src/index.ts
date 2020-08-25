@@ -1,25 +1,12 @@
-// export * from "./types";
-// export { default, mergeTypeDefs, mergeResolvers } from "./schema";
+export { default } from "./SchemaManager/index";
 
-export { default, default as SchemaManager } from "./SchemaManager";
-export * from "./types";
+export * from "./SchemaManager/index";
 export * from "./SchemaKnex/index";
 export * from "./SchemaGraphQL/index";
 
-// export { default as AdapterApollo } from "./AdapterApollo";
-// export { default as AdapterKnex } from "./AdapterKnex";
+export * as Types from "./types";
+export * as TypesGraphQL from "./SchemaGraphQL/SchemaGraphQL.types";
+export * as TypesKnex from "./SchemaKnex/SchemaKnex.types";
 
-// export {
-//   Executor,
-//   RemoteExecutableSchema,
-// } from "./remote.js";
-
-// export {
-//   selectColumnsPush,
-//   selectColumnsPop,
-//   schemaTableCreate,
-// } from "./utils.js";
-
-// export {
-//   Point,
-// } from "./scalars/index.js";
+export * from "./utils";
+export * from "./scalars/index";

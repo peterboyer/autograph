@@ -11,6 +11,7 @@ export default function Resolvers(ioc: IIOC) {
     queryByFilter,
     queryOnCreate,
     queryOnUpdate,
+    queryOnDelete,
     errors,
   } = ioc;
 
@@ -77,24 +78,12 @@ export default function Resolvers(ioc: IIOC) {
       return queryByFilter(name);
     };
 
-    const resolverMutationCreate: GQLResolver = async (..._args) => {
-      const [, args] = _args;
-      const { data } = args || {};
-      if (!data.length) return [];
-
-      return queryOnCreate(name, data);
-    };
-
-    const resolverMutationUpdate: GQLResolver = async (..._args) => {
-      const [, args] = _args;
-      const { data } = args || {};
-      if (!data.length) return [];
-
+    const getItemDataResolvers = (data: { [key: string]: any }[]) => {
       const resolvers = data.map(
-        (item: { [key: string]: any }): ISchemaMutationResolver => {
-          return async function resolver(trx?: any) {
-            const { id } = item;
-            await queryById_throwNotFound(name, id);
+        (item): ISchemaMutationResolver =>
+          async function resolver(trx?: any) {
+            const { id = null } = item;
+            if (id) await queryById_throwNotFound(name, id);
 
             const itemData = {};
             for (const [_key, _value] of Object.entries(item)) {
@@ -123,18 +112,33 @@ export default function Resolvers(ioc: IIOC) {
             }
 
             return [id, itemData];
-          };
-        }
+          }
       );
 
-      return queryOnUpdate(name, resolvers);
+      return resolvers;
+    };
+
+    const resolverMutationCreate: GQLResolver = async (..._args) => {
+      const [, args] = _args;
+      const { data } = args || {};
+      if (!data.length) return [];
+      const resolvers = getItemDataResolvers(data);
+      return queryOnCreate(name, resolvers, _args);
+    };
+
+    const resolverMutationUpdate: GQLResolver = async (..._args) => {
+      const [, args] = _args;
+      const { data } = args || {};
+      if (!data.length) return [];
+      const resolvers = getItemDataResolvers(data);
+      return queryOnUpdate(name, resolvers, _args);
     };
 
     const resolverMutationDelete: GQLResolver = async (..._args) => {
-      const [parent, args] = _args;
-      // TODO: implement bulk deletion function
-      console.log(..._args);
-      return [];
+      const [, args] = _args;
+      const { ids = [] } = args || {};
+      if (!ids.length) return [];
+      return queryOnDelete(name, ids, _args);
     };
 
     const graphResolversRoot = {

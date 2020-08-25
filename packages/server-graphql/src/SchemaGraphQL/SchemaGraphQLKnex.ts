@@ -1,8 +1,5 @@
 import { ISchemaMutationResolver } from "./SchemaGraphQL.types";
 
-import lodash from "lodash";
-const { omit } = lodash;
-
 type TableInfo = {
   columns: Map<string, { type: string }>;
   selectArgs: Set<string>;
@@ -86,7 +83,7 @@ export default function SchemaGraphQLKnex(config: {
     return items;
   }
 
-  async function queryOnDelete(tableName: string, data: {}) {
+  async function queryOnDelete(tableName: string, ids: any[]) {
     return [];
   }
 

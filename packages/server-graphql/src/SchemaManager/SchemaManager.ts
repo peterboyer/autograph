@@ -1,10 +1,10 @@
 import lodash from "lodash";
-import { Schema, SchemaAdapter } from "./types";
+import { IModel, ISchemaAdapter } from "../types";
 const { merge, defaults } = lodash;
 
 export default function SchemaManager<T>(
-  _models: Schema[],
-  _adapters: { [key: string]: SchemaAdapter }
+  _models: IModel[],
+  _adapters: { [key: string]: ISchemaAdapter }
 ): { [key: string]: T } {
   const models = new Set(_models);
   const adapters = new Map(Object.entries(_adapters));

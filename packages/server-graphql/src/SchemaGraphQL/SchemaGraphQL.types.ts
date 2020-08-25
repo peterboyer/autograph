@@ -14,19 +14,32 @@ export type IIOC = {
     id: any,
     args?: Parameters<GQLResolver>
   ) => Promise<{} | null>;
-  queryByFilter: (tableName: string) => Promise<{}[]>;
+  queryByFilter: (
+    tableName: string,
+    args?: Parameters<GQLResolver>
+  ) => Promise<{}[]>;
   queryOnCreate: (
     tableName: string,
-    data: { [key: string]: any }[]
+    resolvers: ISchemaMutationResolver[],
+    args?: Parameters<GQLResolver>
   ) => Promise<{}[]>;
   queryOnUpdate: (
     tableName: string,
-    data: { id: any; [key: string]: any }[]
+    resolvers: ISchemaMutationResolver[],
+    args?: Parameters<GQLResolver>
   ) => Promise<{}[]>;
-  queryOnDelete: (tableName: string, data: any[]) => Promise<any[]>;
+  queryOnDelete: (
+    tableName: string,
+    ids: any[],
+    args?: Parameters<GQLResolver>
+  ) => Promise<any[]>;
   errors: {
-    NotFound: (tableName: string, queryArgs?: {}) => Error;
-    NotValid: (details?: {}) => Error;
+    NotFound: (
+      tableName: string,
+      queryArgs?: {},
+      args?: Parameters<GQLResolver>
+    ) => Error;
+    NotValid: (details?: {}, args?: Parameters<GQLResolver>) => Error;
   };
   mapType: Map<string, string>;
 };
