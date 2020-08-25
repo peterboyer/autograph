@@ -1,7 +1,7 @@
 import apollo from "apollo-server";
 const { ApolloError } = apollo;
 
-export default function SchemaGraphQLKnex() {
+export default function SchemaGraphQLApollo() {
   function NotFound(tableName: string, queryArgs: {} = {}) {
     return new ApolloError(
       `Cannot resolve '${tableName}' with ${JSON.stringify(queryArgs).replace(
