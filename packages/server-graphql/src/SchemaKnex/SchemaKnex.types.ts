@@ -23,6 +23,8 @@ export type IModelFieldAttributes = {
   default?: any;
   virtual?: boolean;
   relationship?: boolean | string;
+  relationshipOnDelete?: string;
+  relationshipOnUpdate?: string;
 };
 
 export type ISchema = {

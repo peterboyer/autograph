@@ -34,18 +34,18 @@ export default function SchemaKnex(config: Config): ISchemaAdapter {
 
   function mutate(model: IModel) {
     model.fields = {
-      id: {
+      id: model.fields.id || {
         type: "ID",
         primary: true,
         nullable: false,
       },
       ...model.fields,
-      createdAt: {
+      createdAt: model.fields.createdAt || {
         type: "DateTime",
         default: knex.fn.now(),
         nullable: false,
       },
-      updatedAt: {
+      updatedAt: model.fields.updatedAt || {
         type: "DateTime",
         default: knex.fn.now(),
         nullable: false,

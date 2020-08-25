@@ -1,7 +1,7 @@
 import {
-  TypeDefsNodeType,
-  SchemaTypeDefs,
-  SchemaResolvers,
+  ISchemaNode,
+  ISchemaTypeDefs,
+  ISchemaResolvers,
 } from "./SchemaGraphQL.types";
 
 /**
@@ -13,12 +13,10 @@ import {
  *    TypeDefs node to reference when iterating over schemas.
  */
 export const mergeTypeDefs = (
-  allTypeDefs: SchemaTypeDefs[],
-  node: TypeDefsNodeType = "Root"
+  allTypeDefs: ISchemaTypeDefs[],
+  node: ISchemaNode = "Root"
 ) => {
-  return allTypeDefs
-    .map((typeDefs: SchemaTypeDefs) => typeDefs[node])
-    .join("\n");
+  return allTypeDefs.map((typeDefs) => typeDefs[node]).join("\n");
 };
 
 /**
@@ -30,8 +28,8 @@ export const mergeTypeDefs = (
  *    Resolvers node to reference when iterating over schemas.
  */
 export const mergeResolvers = (
-  allResolvers: SchemaResolvers[],
-  node: TypeDefsNodeType = "Root"
+  allResolvers: ISchemaResolvers[],
+  node: ISchemaNode = "Root"
 ) => {
   return allResolvers.reduce((acc, resolvers) => {
     return Object.assign(acc, resolvers[node]);

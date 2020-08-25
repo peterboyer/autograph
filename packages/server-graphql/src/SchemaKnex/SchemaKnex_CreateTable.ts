@@ -48,7 +48,13 @@ export default function CreateTable(ioc: IIOC) {
             const references = !path.includes(".")
               ? `${field.type}.${path}`
               : path;
-            table.foreign(columnName).references(references);
+            let ref = table.foreign(columnName).references(references);
+            if (field.relationshipOnDelete) {
+              ref = ref.onDelete(field.relationshipOnDelete);
+            }
+            if (field.relationshipOnUpdate) {
+              ref = ref.onDelete(field.relationshipOnUpdate);
+            }
           }
         });
 
