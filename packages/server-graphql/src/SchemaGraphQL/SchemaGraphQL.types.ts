@@ -1,11 +1,11 @@
 import { IModel as RIModel, IModelField as RIModelField } from "../types";
 
 export type GQLString = string & {};
-export type GQLResolver = (
-  parent?: { [key: string]: any },
-  args?: { [key: string]: any },
-  context?: { [key: string]: any },
-  info?: { [key: string]: any }
+export type GQLResolver<C = {}> = (
+  parent: any,
+  args: any,
+  context: C,
+  info: any
 ) => any;
 
 export type IIOC = {
