@@ -8,34 +8,38 @@ const { GraphQLScalarType, Kind } = graphql;
 
 const PointType = new GraphQLScalarType({
   name: "Point",
-  serialize(value) {
+  serialize(value: string) {
     if (!value) return null;
-    const { coordinates: [lng, lat] } = JSON.parse(value);
+    const {
+      coordinates: [lng, lat],
+    } = JSON.parse(value);
     return `${lat.toString()},${lng.toString()}`;
   },
-  parseValue(value) {
+  parseValue(value: any) {
     // TODO: figure this out
     debugger;
     return value;
   },
-  parseLiteral(ast) {
+  // TODO: proper definitions
+  parseLiteral(ast: { kind: any; value: any }) {
     // TODO: figure this out
     debugger;
     switch (ast.kind) {
-    case Kind.Int:
-      return ast.value;
-    default:
-      return null;
+      case Kind.Int:
+        return ast.value;
+      default:
+        return null;
     }
-  }
+  },
 });
 
 export const mapKnexType = {
-  Point: (table, key) => table.specificType(key, "geometry(point, 4326)")
+  Point: (table: any, key: string) =>
+    table.specificType(key, "geometry(point, 4326)"),
 };
 
 export const mapKnexTypeSelect = {
-  geometry: (key, { knex }) => knex.st.asGeoJSON(key)
+  geometry: (key: string, { knex }: { knex: any }) => knex.st.asGeoJSON(key),
 };
 
 export const typeDefs = "scalar Point";
@@ -48,7 +52,8 @@ export const resolvers = {
  * toST(point:{ lat:String, lng:String }) => ...
  * toST(lat:String, lng:String) => ...
  */
-export const toST = st => (...args) => {
+// TODO: properly type
+export const toST = (st: any) => (...args: any[]) => {
   let lat = null;
   let lng = null;
   if (args.length === 0) return null;
@@ -62,9 +67,9 @@ export const toST = st => (...args) => {
     lng = _lng;
   }
   return (
-    lat !== undefined
-    && lng !== undefined
-    && st.geomFromText(`Point(${lng} ${lat})`, 4326)
-    || null
+    (lat !== undefined &&
+      lng !== undefined &&
+      st.geomFromText(`Point(${lng} ${lat})`, 4326)) ||
+    null
   );
 };
