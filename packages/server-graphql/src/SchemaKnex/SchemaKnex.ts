@@ -48,13 +48,13 @@ export default function SchemaKnex(config: Config): ISchemaAdapter {
       ...model.fields,
       createdAt: model.fields.createdAt || {
         type: "DateTime",
-        default: knex.fn.now(),
         nullable: false,
+        default: knex.fn.now(),
       },
       updatedAt: model.fields.updatedAt || {
         type: "DateTime",
-        default: knex.fn.now(),
         nullable: false,
+        default: knex.fn.now(),
       },
     };
   }
