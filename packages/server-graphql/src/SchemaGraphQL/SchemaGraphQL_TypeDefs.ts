@@ -25,7 +25,7 @@ export default function TypeDefs(ioc: IIOC) {
       acc.add(
         `${fieldName}${
           field.args ? `(${stringGraphFieldJoinArgs(field.args)})` : ""
-        }: ${field.many ? `[${typeGraph}!]` : `${typeGraph}`}${
+        }: ${field.many ? `[${typeGraph}!]!` : `${typeGraph}`}${
           field.nullable === false ? "!" : ""
         }`
       );

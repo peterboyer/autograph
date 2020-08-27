@@ -31,41 +31,43 @@ export default function Resolvers(ioc: IIOC) {
 
     const fields = new Map(Object.entries(_fields));
 
-    const resolverRoot = Object.entries(fields).reduce((acc, [key, o]) => {
-      if (o.private) return acc;
-      if (!o.getter) return acc;
+    const resolverRoot = [...fields.entries()].reduce(
+      (acc, [fieldName, field]) => {
+        if (field.private) return acc;
+        if (field.getter === null) return acc;
 
-      const resolver: GQLResolver = async (..._args) => {
-        const [parent, args] = _args;
+        const resolver: GQLResolver = async (..._args) => {
+          const [parent, args] = _args;
 
-        if (typeof o.getter === "function") {
-          const result = await o.getter(..._args);
-          if (!result && o.nullable === false)
-            throw errors.NotFound(o.type, args);
-          return result;
-        }
+          if (typeof field.getter === "function") {
+            const result = await field.getter(..._args);
+            if (!result && field.nullable === false)
+              throw errors.NotFound(field.type, args);
+            return result;
+          }
 
-        if (o.relationship) {
-          const target =
-            typeof o.getter === "string" ? o.getter : o.column || key;
-          const result = await queryById(
-            o.type,
-            parent && parent[target],
-            _args
-          );
-          if (!result && o.nullable === false)
-            throw errors.NotFound(o.type, args);
-          return result;
-        }
+          const key =
+            typeof field.getter === "string"
+              ? field.getter
+              : field.column || fieldName;
 
-        const value = (parent && parent[key]) || null;
-        return value;
-      };
+          if (field.relationship) {
+            const result = await queryById(field.type, parent[key], _args);
+            if (!result && field.nullable === false)
+              throw errors.NotFound(field.type, args);
+            return result;
+          }
 
-      return Object.assign(acc, {
-        [key]: resolver,
-      });
-    }, {});
+          const value = parent[key] || null;
+          return value;
+        };
+
+        return Object.assign(acc, {
+          [fieldName]: resolver,
+        });
+      },
+      {}
+    );
 
     const resolverQuery: GQLResolver = async (..._args) => {
       const [, args] = _args;
@@ -94,6 +96,7 @@ export default function Resolvers(ioc: IIOC) {
 
               // skip
               if (field.primary) continue;
+              if (field.setter === null) continue;
 
               let key = _key;
               let value = _value;
