@@ -4,7 +4,13 @@ const { merge, defaults } = lodash;
 
 export default function SchemaManager<T>(
   _models: IModel[],
-  _adapters: { [key: string]: ISchemaAdapter }
+  _adapters: { [key: string]: ISchemaAdapter },
+  options: {
+    mutate?: {
+      before?: (model: IModel) => void;
+      after?: (model: IModel) => void;
+    };
+  } = {}
 ): { [key: string]: T } {
   const models = new Set(_models);
   const adapters = new Map(Object.entries(_adapters));
@@ -21,10 +27,18 @@ export default function SchemaManager<T>(
   const schemasCompiled: { [key: string]: any } = {};
 
   models.forEach((model) => {
+    if (options.mutate?.before) {
+      options.mutate?.before(model);
+    }
+
     // adapters mutate the current model
     adapters.forEach((adapter) => {
       adapter.mutate && adapter.mutate(model);
     });
+
+    if (options.mutate?.after) {
+      options.mutate?.after(model);
+    }
 
     // apply the defaults to all the fields of the current model
     Object.keys(model.fields).forEach((fieldName) => {
