@@ -1,3 +1,6 @@
+// TODO: solve this now suppressed error
+// @ts-ignore: TS2307
+// Cannot find module 'apollo-server' or its corresponding type declarations.
 import apollo from "apollo-server";
 const { ApolloError } = apollo;
 

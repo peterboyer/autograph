@@ -3,6 +3,9 @@
  *  TODO: write documentation
  */
 
+// TODO: solve this now suppressed error
+// @ts-ignore: TS2307
+// Cannot find module 'graphql' or its corresponding type declarations.
 import graphql from "graphql";
 const { GraphQLScalarType, Kind } = graphql;
 
