@@ -1,6 +1,6 @@
 {
   "name": "@armix/server-schema",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": "Peter Boyer <@ptboyer>",
   "description": "Generate TypeDefs, Resolvers, and Tables for your GraphQL/Knex backends.",
   "repository": "https://github.com/armix-io/armix-server",
