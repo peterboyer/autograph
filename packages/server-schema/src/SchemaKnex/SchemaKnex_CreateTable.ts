@@ -39,7 +39,7 @@ export default function CreateTable(ioc: IIOC) {
           const column = table[columnType](columnName);
           if (field.nullable === false) column.notNullable();
           if (field.unique === true) table.unique(columnName);
-          if (field.default !== undefined) column.default(field.default);
+          if (field.default !== undefined) column.defaultTo(field.default);
           if (field.relationship) {
             // if undefined relationship, default to id
             const path =
