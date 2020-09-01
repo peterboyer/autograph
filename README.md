@@ -1,7 +1,6 @@
-# Armix • Server Packages
+# Armix Server
 
 ## Packages
 
-### [@armix/server-graphql](https://github.com/armix-io/armix-server/tree/master/packages/server-graphql)
-
-Functions to help with graphql/knex backend projects.
+- [@armix/server-schema](https://github.com/armix-io/armix-server/tree/master/packages/server-schema)
+  — Generate TypeDefs, Resolvers, Tables, (and more) for your GraphQL/Knex backends.

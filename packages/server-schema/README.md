@@ -1,75 +1,165 @@
-# @armix/server-graphql
+# @armix/server-schema
 
-Functions to help with graphql/knex backend projects.
+#### `model` → `adapter` → `schema`
 
-# Development
+Quickly generate extensible schemas for your backend, with first-class support
+for [GraphQL](https://graphql.org/) and [Knex](http://knexjs.org/); generate
+reusable TypeDefs and Resolvers to use with packages like [Apollo
+Server](https://github.com/apollographql/apollo-server/), and concise
+table-building functions for Knex-supported databases!
 
-1. `yarn` to install depedencies.
+## Usage
 
-2. Refer to [Scripts](#Scripts) below.
+### Define your models
 
-# Scripts
+```ts
+const User = {
+  name: "User",
+  fields: {
+    name: {
+      type: "String",
+      nullable: false,
+    },
+  },
+};
+```
 
-## `debug` (`yarn debug`)
+### Import your adapters
 
-1. Requires globally installed [yalc](https://www.npmjs.com/package/yalc).
+- Use our core adapters like [**SchemaGraphQL**](#schemagraphql) or
+  [**SchemaKnex**](#schemaknex),
+- Or even [create your own](#adapters)!
 
-2. Install into target project/package with `yalc add @armix/server-graphql`.
+```ts
+import { SchemaGraphQL } from "@armix/server-schema";
 
-## `docs` (`yarn docs`)
+const graphql = SchemaGraphQL({ ... });
+```
 
-1. Generates jsdocs into `./docs/`.
+### Generate your schemas
 
-# Motivation
+```ts
+import SchemaManager from "@armix/server-schema";
 
-I was looking around for a solution that could generate working boilerplate
-functionality from a simple source definition of my models and the relationships
-that they expressed between each other.
+const schemas = SchemaManager([User], { graphql });
+```
 
-Some solutions offered to generate an CRUD for graphql type definitions, or
-others attempted to simply generate actual source files from database
-definitions from a target database. But these solutions didn't meet the style
-that I wanted to work towards.
+### Explore your schemas
 
-I didn't want code to be generated for me, because once that source code is
-actually modified to accomodate custom business logic unique to the
-implementation of the project that you're creating, it is very difficult to
-upgrade resolvers or change the boilerplate to be more abstracted or whatnot.
+```ts
+const { User } = schemas;
 
-One solution that I was particularly excited with was KeyStone.JS, which had a
-very compatible approach with the ideal environment that I wanted. You were able
-to declare all your models as a schema, and then create a GraphQL API and an
-accompanying admin UI.
+> User.graphql.typeDefs.Root /*
+type User { name: String! }
+input UserInput { name: String }
+input UserInputID { id: ID! name: String } */
 
-The one main problem that caused me to walk away from KeyStone.JS was the way
-it handled relationships between models that you defined in your schema. Later
-on I would discover other things that I would require from my database at a
-query level that I simply couldn't build with KeyStone.JS's abstraction.
+> User.graphql.typeDefs.Query /*
+User(id: ID!): User!
+User_many(query: String): [User!]! */
 
-One relationship that I found somewhat impossible to express with KeyStone.JS
-was that of unique properties on a joining table. In the example of wanting to
-represent a User having Friends, which were other Users. The concept of
-a Friend as represented in the database as a Many to Many relationship required
-many intrinsic properties such as the needing to have one only row represent a
-friendship, which had a state, which determined whether or not the friend was
-accepted or pending to show up in join as a condition, created friction between
-myself and the framework.
+> User.graphql.typeDefs.Mutation /*
+User_create(data: [UserInput!]!): [User!]!
+User_update(data: [UserInputID!]!): [User!]!
+User_delete(ids: [ID!]!): [ID!]! */
 
-I didn't want the framework to complicate what is ultimately a very simple
-database query, particularly when the generated resolver for fetching "friends"
-of a User would also be very minimal.
+> User.graphql.resolvers /*
+{
+  Root: {
+    User: {
+      name: [AsyncFunction: resolver],
+    }
+  },
+  Query: {
+    User: [AsyncFunction: resolverQuery],
+    User_many: [AsyncFunction: resolverQueryMany]
+  },
+  Mutation: {
+    User_create: [AsyncFunction: resolverMutationCreate],
+    User_update: [AsyncFunction: resolverMutationUpdate],
+    User_delete: [AsyncFunction: resolverMutationDelete]
+  }
+} */
+```
 
-So after much research through various GraphQL schema generators, that was able
-address my desire to generate database models from it, as well as a fully
-generated set of CRUD resolvers for the entities that I define, I decided to
-create this library as not an entire framework, but as a utility that can
-generate the required pieces that I can spread into my typedefs and resolver
-objects to then eventually include into my GraphQL http server with Apollo
-Server.
+### Wrangle your schemas
 
-I've also designed a way to add declaritively:
+- Use built-in helpers to wrangle all your schemas.
 
-* custom database types
-* custom knex selector args for custom columns (e.g. PostGis Geometry)
-* custom graphql type remappings (if required)
-* error exception agnostic through provided values via resolver context
+```ts
+import { mergeTypeDefs, mergeResolvers } from "@armix/server-schema";
+
+const schemas = [User, Post, Comment];
+const allTypeDefs = schemas.map((schema) => schema.graphql.typeDefs);
+const allResolvers = schemas.map((schema) => schema.graphql.resolvers);
+
+const typeDefs = gql`
+  ${mergeTypeDefs(allTypeDefs)}
+  type Query {
+    Foo: String!;
+    ${mergeTypeDefs(allTypeDefs, "Query")}
+  }
+  type Mutation {
+    Faa: String!;
+    ${mergeTypeDefs(allTypeDefs, "Mutation")}
+  }
+`;
+
+const resolvers = {
+  ...mergeResolvers(allResolvers),
+  Query: {
+    Foo: (...) => "Bar",
+    ...mergeResolvers(allResolvers, "Query"),
+  },
+  Mutation: {
+    Faa: (...) => "Bor",
+    ...mergeResolvers(allResolvers, "Mutation"),
+  },
+}
+```
+
+### Use your schemas
+
+- Use with other packages like [Apollo
+  Server](https://github.com/apollographql/apollo-server/) and enjoy!
+
+```ts
+import { ApolloServer } from "apollo-server";
+
+const apollo = new ApolloServer({ typeDefs, resolvers });
+apollo.listen();
+```
+
+## Motivation?
+
+- Read [here](./README.motivation.md).
+
+## Development
+
+First clone this project to your machine:
+
+```bash
+$ git clone git@github.com:armix-io/armix-server.git
+```
+
+Once in the project root, you can run these scripts with `yarn`:
+
+- `build` — builds typescript `./src` into `./lib`
+- `develop` — starts typescript `tsc` (watching `./src`) and `nodemon` (watching
+  `./lib`, executing `yalc push`) to automatically publish changes to local
+  subscribed projects, see [development with yalc](#development-with-yalc).
+
+### Development with yalc
+
+The `develop` script requires [yalc](https://github.com/whitecolor/yalc) to be
+[installed globally](https://github.com/whitecolor/yalc#installation).
+
+Once installed you need to run `yalc publish` in this package directory, and
+then run `yalc add @armix/server-graphql` in your target project to subscribe to
+future local changes. Back in this package directory, you can automatically
+build and push changes with `yarn develop`, or manually with `yalc push`.
+
+## Maintainers
+
+- Peter Boyer • [Armix](https://armix.io)
+  ([@ptboyer](https://github.com/ptboyer))
