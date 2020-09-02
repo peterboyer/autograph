@@ -8,6 +8,12 @@ reusable TypeDefs and Resolvers to use with packages like [Apollo
 Server](https://github.com/apollographql/apollo-server/), and concise
 table-building functions for Knex-supported databases!
 
+## Install
+
+```
+yarn add @armix/server-schema
+```
+
 ## Usage
 
 ### Define your models
