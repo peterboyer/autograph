@@ -1,9 +1,13 @@
+import graphql from "graphql";
 import {
   IIOC,
   IModel,
   IModelField,
   ISchemaTypeDefs,
 } from "./SchemaGraphQL.types";
+const { print, parse } = graphql;
+
+const clean = (source: string) => print(parse(source));
 
 export default function TypeDefs(ioc: IIOC) {
   const { mapType } = ioc;
@@ -12,8 +16,10 @@ export default function TypeDefs(ioc: IIOC) {
     return mapType.get(type) || type;
   }
 
-  function stringGraphFieldJoinArgs(args: Map<string, string>) {
-    return [...args.values()].map(([key, type]) => `${key}: ${type}`).join(",");
+  function stringGraphFieldJoinArgs(args: Record<any, string>) {
+    return Object.entries(args)
+      .map(([key, type]) => `${key}: ${type}`)
+      .join(",");
   }
 
   function mapGraphFieldsTypeDefs(fields: Map<string, IModelField>) {
@@ -54,9 +60,14 @@ export default function TypeDefs(ioc: IIOC) {
     const graphFieldsTypeDefs = mapGraphFieldsTypeDefs(fields);
     const graphFieldsTypeDefsInput = mapGraphFieldsTypeDefsInput(fields);
 
-    const Root = `
+    const Root = clean(`
       type ${name} {
         ${graphFieldsTypeDefs}
+      }
+      type ${name}Many {
+        items: [${name}!]!
+        total: Int
+        cursor: String
       }
       input ${name}Input {
         ${graphFieldsTypeDefsInput}
@@ -65,12 +76,11 @@ export default function TypeDefs(ioc: IIOC) {
         id: ID!
         ${graphFieldsTypeDefsInput}
       }
-    `;
+    `);
 
-    // TODO: convert query into ${name}QueryInput with field accessors etc.
     const Query = `
       ${name}(id: ID!): ${name}!
-      ${name}_many(query: String): [${name}!]!
+      ${name}_many(cursor: String sort: String): ${name}Many!
     `;
 
     const Mutation = `

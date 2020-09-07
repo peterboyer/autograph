@@ -1,53 +1,91 @@
+import { GraphQLResolveInfo } from "graphql";
 import { IModel as RIModel, IModelField as RIModelField } from "../types";
 
-export type GQLString = string & {};
-export type GQLResolver<C = {}> = (
-  parent: any,
-  args: any,
-  context: C,
-  info: any
-) => any;
+export type IResolver<
+  TSource = unknown,
+  TArgs = {},
+  TContext = unknown,
+  TReturn = any
+> = (
+  source: TSource,
+  args: TArgs,
+  context: TContext,
+  info: GraphQLResolveInfo
+) => TReturn;
 
-export type IIOC = {
-  queryById: (
-    tableName: string,
-    id: any,
-    args?: Parameters<GQLResolver>
-  ) => Promise<{} | null>;
-  queryByFilter: (
-    tableName: string,
-    args?: Parameters<GQLResolver>
-  ) => Promise<{}[]>;
-  queryOnCreate: (
-    tableName: string,
-    resolvers: ISchemaMutationResolver[],
-    args?: Parameters<GQLResolver>
-  ) => Promise<{}[]>;
-  queryOnUpdate: (
-    tableName: string,
-    resolvers: ISchemaMutationResolver[],
-    args?: Parameters<GQLResolver>
-  ) => Promise<{}[]>;
-  queryOnDelete: (
-    tableName: string,
-    ids: any[],
-    args?: Parameters<GQLResolver>
-  ) => Promise<any[]>;
+export type IResolverAny = IResolver<any, any, any, any>;
+
+export type ISchemaMutationTransactor<T = any> = (
+  trx?: any
+) => Promise<[any, T]>;
+
+export type IQueryById<T = any, TResolverArgs = Parameters<IResolverAny>> = (
+  tableName: string,
+  id: any,
+  resolverArgs?: TResolverArgs
+) => Promise<T | null>;
+
+export type IQueryByArgs<T = any, TResolverArgs = Parameters<IResolverAny>> = (
+  tableName: string,
+  args: {
+    cursor?: string;
+    order?: { name: string; by?: string };
+  },
+  resolverArgs?: TResolverArgs
+) => Promise<{ items: T[]; total?: number; cursor?: string }>;
+
+export type IQueryOnCreate<
+  T = any,
+  TResolverArgs = Parameters<IResolverAny>
+> = (
+  tableName: string,
+  transactors: ISchemaMutationTransactor<T>[],
+  resolverArgs?: TResolverArgs
+) => Promise<T[]>;
+
+export type IQueryOnUpdate<
+  T = any,
+  TResolverArgs = Parameters<IResolverAny>
+> = (
+  tableName: string,
+  transactors: ISchemaMutationTransactor<T>[],
+  resolverArgs?: TResolverArgs
+) => Promise<T[]>;
+
+export type IQueryOnDelete<TResolverArgs = Parameters<IResolverAny>> = (
+  tableName: string,
+  ids: any[],
+  resolverArgs?: TResolverArgs
+) => Promise<string[]>;
+
+export type IErrorNotFound<TResolverArgs = Parameters<IResolverAny>> = (
+  tableName: string,
+  query: Record<any, any>,
+  resolverArgs?: TResolverArgs
+) => Error;
+
+export type IErrorNotValid<
+  TExtensions = Record<any, any>,
+  TResolverArgs = Parameters<IResolverAny>
+> = (extensions?: TExtensions, resolverArgs?: TResolverArgs) => Error;
+
+export type IMapType = Map<string, string>;
+
+export type IIOC<T = any> = {
+  queryById: IQueryById<T>;
+  queryByArgs: IQueryByArgs<T>;
+  queryOnCreate: IQueryOnCreate<T>;
+  queryOnUpdate: IQueryOnUpdate<T>;
+  queryOnDelete: IQueryOnDelete<T>;
   errors: {
-    NotFound: (
-      tableName: string,
-      queryArgs?: {},
-      args?: Parameters<GQLResolver>
-    ) => Error;
-    NotValid: (details?: {}, args?: Parameters<GQLResolver>) => Error;
+    NotFound: IErrorNotFound;
+    NotValid: IErrorNotValid;
   };
-  mapType: Map<string, string>;
+  mapType: IMapType;
 };
 
 export type IModel = RIModel<IModelFieldAttributes, IModelAttributes>;
-
 export type IModelField = RIModelField<IModelFieldAttributes>;
-
 export type IModelAttributes = {};
 
 export type IModelFieldAttributes = {
@@ -59,33 +97,22 @@ export type IModelFieldAttributes = {
   primary?: boolean;
   nullable?: boolean;
   private?: boolean;
-  args?: Map<string, string>;
-  getter?: GQLResolver | string | null;
-  setter?:
-    | ((trx: any) => (value: any, item: { [key: string]: any }) => Promise<any>)
-    | string
-    | null;
+  args?: Record<any, string>;
+  getter?: IModelGetter;
+  setter?: IModelSetter;
 };
+
+export type IModelGetter = IResolverAny | string | null;
+export type IModelSetter = IModelSetterCallback | string | null;
+export type IModelSetterCallback<T = unknown> = (
+  trx: any
+) => (value: unknown, item: T) => Promise<any>;
+
+export type ISchemaNodeType = "Root" | "Query" | "Mutation";
+export type ISchemaTypeDefs = Record<ISchemaNodeType, string>;
+export type ISchemaResolvers = Record<ISchemaNodeType, IResolverAny>;
 
 export type ISchema = {
   typeDefs: ISchemaTypeDefs;
   resolvers: ISchemaResolvers;
 };
-
-export type ISchemaNode = "Root" | "Query" | "Mutation";
-
-export type ISchemaTypeDefs = {
-  Root: GQLString;
-  Query: GQLString;
-  Mutation: GQLString;
-};
-
-export type ISchemaResolvers = {
-  Root: { [key: string]: GQLResolver };
-  Query: { [key: string]: GQLResolver };
-  Mutation: { [key: string]: GQLResolver };
-};
-
-export type ISchemaMutationResolver = (
-  trx?: any
-) => Promise<[any, { [key: string]: any }]>;

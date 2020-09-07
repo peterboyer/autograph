@@ -1,15 +1,36 @@
-import { WithOptional, ISchemaAdapter } from "../types";
-import { IIOC, IModel } from "./SchemaGraphQL.types";
+import { ISchemaAdapter } from "../types";
+import {
+  IModel,
+  IQueryById,
+  IQueryByArgs,
+  IQueryOnCreate,
+  IQueryOnUpdate,
+  IQueryOnDelete,
+  IErrorNotFound,
+  IErrorNotValid,
+  IMapType,
+} from "./SchemaGraphQL.types";
 import _TypeDefs from "./SchemaGraphQL_TypeDefs";
 import _Resolvers from "./SchemaGraphQL_Resolvers";
 
-type Config = WithOptional<IIOC, "mapType">;
+type IOptions = {
+  queryById: IQueryById;
+  queryByArgs: IQueryByArgs;
+  queryOnCreate: IQueryOnCreate;
+  queryOnUpdate: IQueryOnUpdate;
+  queryOnDelete: IQueryOnDelete;
+  errors: {
+    NotFound: IErrorNotFound;
+    NotValid: IErrorNotValid;
+  };
+  mapType?: IMapType;
+};
 
-export default function SchemaGraphQL(config: Config): ISchemaAdapter {
-  const { mapType = new Map() } = config;
+export default function SchemaGraphQL(options: IOptions): ISchemaAdapter {
+  const { mapType = new Map() } = options;
 
-  const ioc: IIOC = {
-    ...config,
+  const ioc = {
+    ...options,
     mapType: new Map([...mapType.entries()]),
   };
 

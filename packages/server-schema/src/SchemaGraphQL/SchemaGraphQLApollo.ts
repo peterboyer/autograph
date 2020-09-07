@@ -1,24 +1,22 @@
-// TODO: solve this now suppressed error
-// @ts-ignore: TS2307
-// Cannot find module 'apollo-server' or its corresponding type declarations.
 import apollo from "apollo-server";
+import { IErrorNotFound, IErrorNotValid } from "./SchemaGraphQL.types";
 const { ApolloError } = apollo;
 
 export default function SchemaGraphQLApollo() {
-  function NotFound(tableName: string, queryArgs: {} = {}) {
+  const NotFound: IErrorNotFound = (tableName, query) => {
     return new ApolloError(
-      `Cannot resolve '${tableName}' with ${JSON.stringify(queryArgs).replace(
+      `Cannot resolve '${tableName}' with ${JSON.stringify(query).replace(
         /"/g,
         ""
       )}.`,
       "NOT_FOUND",
-      queryArgs
+      query
     );
-  }
+  };
 
-  function NotValid(details?: {}) {
-    return new ApolloError("Invalid arguments.", "NOT_VALID", details);
-  }
+  const NotValid: IErrorNotValid = (extensions?) => {
+    return new ApolloError("Invalid arguments.", "NOT_VALID", extensions);
+  };
 
   return {
     errors: {

@@ -3,15 +3,12 @@
  *  TODO: write documentation
  */
 
-// TODO: solve this now suppressed error
-// @ts-ignore: TS2307
-// Cannot find module 'graphql' or its corresponding type declarations.
 import graphql from "graphql";
 const { GraphQLScalarType, Kind } = graphql;
 
 const PointType = new GraphQLScalarType({
   name: "Point",
-  serialize(value: string) {
+  serialize(value) {
     if (!value) return null;
     const {
       coordinates: [lng, lat],
@@ -24,11 +21,11 @@ const PointType = new GraphQLScalarType({
     return value;
   },
   // TODO: proper definitions
-  parseLiteral(ast: { kind: any; value: any }) {
+  parseLiteral(ast) {
     // TODO: figure this out
     debugger;
     switch (ast.kind) {
-      case Kind.Int:
+      case Kind.INT:
         return ast.value;
       default:
         return null;

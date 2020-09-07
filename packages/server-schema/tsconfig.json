@@ -3,10 +3,15 @@
     "target": "esnext",
     "strict": true,
     "esModuleInterop": true,
-    "declaration": true,
-    "declarationMap": true,
+    "moduleResolution": "Node",
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./lib"
+    "outDir": "lib",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"]
+    },
+    "declaration": true,
+    "declarationMap": true
   },
-  "include": ["./src"]
+  "include": ["src"]
 }
