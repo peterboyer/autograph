@@ -1,5 +1,5 @@
 import {
-  IResolverAny,
+  IResolver,
   ISchemaNodeType,
   ISchemaTypeDefs,
   ISchemaResolvers,
@@ -24,7 +24,7 @@ export function mergeResolvers(
 ) {
   return allResolvers.reduce((acc, resolvers) => {
     return Object.assign(acc, resolvers[node]);
-  }, {} as Record<string, IResolverAny>);
+  }, {} as Record<string, IResolver>);
 }
 
 /**

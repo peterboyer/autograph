@@ -13,7 +13,7 @@ export type IResolver<
   info: GraphQLResolveInfo
 ) => TReturn;
 
-export type IResolverAny = IResolver<any, any, any, any>;
+export type IResolverAny = IResolver<any, any, any>;
 
 export type ISchemaMutationTransactor<T = any> = (
   trx?: any
