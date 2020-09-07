@@ -15,7 +15,7 @@ export type IResolver<
 
 export type IResolverAny = IResolver<any, any, any>;
 
-export type ISchemaMutationTransactor<T = any> = (
+export type ISchemaMutationTransactor<T extends Object> = (
   trx?: any
 ) => Promise<[any, T]>;
 
@@ -71,12 +71,12 @@ export type IErrorNotValid<
 
 export type IMapType = Map<string, string>;
 
-export type IIOC<T = any> = {
-  queryById: IQueryById<T>;
-  queryByArgs: IQueryByArgs<T>;
-  queryOnCreate: IQueryOnCreate<T>;
-  queryOnUpdate: IQueryOnUpdate<T>;
-  queryOnDelete: IQueryOnDelete<T>;
+export type IIOC = {
+  queryById: IQueryById;
+  queryByArgs: IQueryByArgs;
+  queryOnCreate: IQueryOnCreate;
+  queryOnUpdate: IQueryOnUpdate;
+  queryOnDelete: IQueryOnDelete;
   errors: {
     NotFound: IErrorNotFound;
     NotValid: IErrorNotValid;

@@ -8,14 +8,7 @@ import {
 export default (ioc: IIOC) => {
   return (model: IModel) => {
     const { name, fields: _fields } = model;
-
     const fields = new Map(Object.entries(_fields));
-
-    // TODO: infer types from fields
-    // as a data layer, raw fetched from datasource
-    type IModelData = { [key: string]: any };
-    // as a view layer, public facing inputs and output keys to values
-    type IModelView = { [key: string]: any };
 
     const {
       queryById,
@@ -24,7 +17,7 @@ export default (ioc: IIOC) => {
       queryOnUpdate,
       queryOnDelete,
       errors,
-    } = ioc as IIOC<IModelData>;
+    } = ioc;
 
     const queryById_throwNotFound = async (
       ...args: Parameters<typeof queryById>
@@ -37,10 +30,7 @@ export default (ioc: IIOC) => {
       return result;
     };
 
-    // TODO: extract keys from IModelView to build resolverRoot record keys
-    // type IModelViewKeys = any;
-
-    const resolverRoot: Record<any, IResolver<IModelData>> = {};
+    const resolverRoot: Record<any, IResolver<{ [key: string]: any }>> = {};
 
     for (const [fieldName, field] of fields) {
       if (field.private) continue;
@@ -73,7 +63,7 @@ export default (ioc: IIOC) => {
       };
     }
 
-    const resolverQuery: IResolver<never, { id: string }, IModelView> = async (
+    const resolverQuery: IResolver<never, { id: string }> = async (
       ..._args
     ) => {
       const [, args] = _args;
@@ -83,8 +73,7 @@ export default (ioc: IIOC) => {
 
     const resolverQueryMany: IResolver<
       never,
-      { cursor?: string; order?: string },
-      IModelView[]
+      { cursor?: string; order?: string }
     > = async (..._args) => {
       const [, args] = _args;
       const { cursor, order: orderArg } = args;
@@ -102,9 +91,11 @@ export default (ioc: IIOC) => {
       return queryByArgs(name, { cursor, order });
     };
 
-    const getItemDataTransactors = (data: IModelView[]) => {
+    const getItemDataTransactors = <T extends { id: any | null }>(
+      data: T[]
+    ) => {
       const resolvers = data.map(
-        (item): ISchemaMutationTransactor<IModelView> => async (trx?) => {
+        (item): ISchemaMutationTransactor<T> => async (trx?) => {
           const { id = null } = item;
           if (id) await queryById_throwNotFound(name, id);
 
@@ -135,7 +126,7 @@ export default (ioc: IIOC) => {
             Object.assign(itemData, { [key]: value });
           }
 
-          return [id, itemData];
+          return [id, itemData as T];
         }
       );
 
@@ -144,8 +135,7 @@ export default (ioc: IIOC) => {
 
     const resolverMutationCreate: IResolver<
       never,
-      { data: IModelView[] },
-      unknown
+      { data: { id: any; [key: string]: any }[] }
     > = async (..._args) => {
       const [, args] = _args;
       const { data } = args || {};
@@ -156,8 +146,7 @@ export default (ioc: IIOC) => {
 
     const resolverMutationUpdate: IResolver<
       never,
-      { data: IModelView[] },
-      unknown
+      { data: { id: any; [key: string]: any }[] }
     > = async (..._args) => {
       const [, args] = _args;
       const { data } = args || {};
@@ -166,11 +155,9 @@ export default (ioc: IIOC) => {
       return queryOnUpdate(name, transactor, _args);
     };
 
-    const resolverMutationDelete: IResolver<
-      never,
-      { ids: string[] },
-      unknown
-    > = async (..._args) => {
+    const resolverMutationDelete: IResolver<never, { ids: string[] }> = async (
+      ..._args
+    ) => {
       const [, args] = _args;
       const { ids = [] } = args || {};
       if (!ids.length) return [];
