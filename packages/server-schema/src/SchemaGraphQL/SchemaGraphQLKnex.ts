@@ -77,13 +77,18 @@ export default function SchemaGraphQLKnex(config: {
   };
 
   async function* Cursor(
-    query: Knex.QueryBuilder,
+    tableName: string,
     order?: { name: string; by?: string }
   ) {
+    await resolveTableInfo(tableName);
+    const selectArgs = getTableSelectArgs(tableName);
+    const query = knex(tableName).select("*", ...selectArgs);
+
     // don't mutate input query object
     const _query = query.clone();
-
-    const info = await _query.clone().count("id").groupBy("id").first();
+    const q = knex(tableName).select(knex.raw("count(*)")).first();
+    const a = q.toString();
+    const info = await q;
     const total = parseInt(info?.count as string);
 
     // active immediately false if no items
@@ -96,7 +101,7 @@ export default function SchemaGraphQLKnex(config: {
     const orderName = order && order.name;
     const orderBy = (order && order.by) || "asc";
 
-    let nextId = null;
+    let nextId: number | null = null;
 
     const orders = [];
     orders.push({ column: "id", order: orderBy });
@@ -106,10 +111,11 @@ export default function SchemaGraphQLKnex(config: {
       const rows: Record<any, any>[] = await _query
         .clone()
         .limit(limit + 1)
-        .where("id", ">", nextId)
+        .where(function () {
+          nextId && this.where("id", ">=", nextId);
+        })
         .orderBy(orders);
 
-      debugger;
       const limitRow = rows.length === limit + 1 ? rows.pop() : undefined;
       const result = { items: rows, total };
 
@@ -139,11 +145,8 @@ export default function SchemaGraphQLKnex(config: {
     }
 
     if (!cursor) {
-      await resolveTableInfo(tableName);
-      const selectArgs = getTableSelectArgs(tableName);
-      const query = knex(tableName).select("*", ...selectArgs);
       cursorId = newCursorId();
-      cursor = Cursor(query, args.order);
+      cursor = Cursor(tableName, args.order);
       cursors.set(cursorId, cursor);
     }
 
