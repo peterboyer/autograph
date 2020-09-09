@@ -19,20 +19,33 @@ export type ISchemaMutationTransactor<T extends Object> = (
   trx?: any
 ) => Promise<[any, T]>;
 
-export type IQueryById<T = any, TResolverArgs = Parameters<IResolverAny>> = (
+export type IModelResolversGetter = (
+  tableName: string,
+  selectArgs: Set<string>,
+  defaultGetter: any
+) => (args: { id: string }, context: any) => any;
+
+export type IModelResolversGetterMany<T = any> = (
+  tableName: string,
+  selectArgs: Set<string>,
+  defaultGetter: any
+) => IResolver<undefined, { cursor: string; order: string }, any, T>;
+
+export type IQueryById = (
   tableName: string,
   id: any,
-  resolverArgs?: TResolverArgs
-) => Promise<T | null>;
+  resolverArgs?: Parameters<IResolverAny>
+) => Promise<[any, Set<string>]>;
 
-export type IQueryByArgs<T = any, TResolverArgs = Parameters<IResolverAny>> = (
+export type IQueryByArgs<GETTER_Returns = any> = (
   tableName: string,
   args: {
     cursor?: string;
     order?: { name: string; by?: string };
   },
-  resolverArgs?: TResolverArgs
-) => Promise<{ items: T[]; total?: number; cursor?: string }>;
+  resolverArgs: Parameters<IResolverAny>,
+  getter?: IModelResolversGetterMany<GETTER_Returns>
+) => Promise<{ items: any[]; total?: number; cursor?: string }>;
 
 export type IQueryOnCreate<
   T = any,
@@ -86,7 +99,12 @@ export type IIOC = {
 
 export type IModel = RIModel<IModelFieldAttributes, IModelAttributes>;
 export type IModelField = RIModelField<IModelFieldAttributes>;
-export type IModelAttributes = {};
+export type IModelAttributes = {
+  resolvers?: {
+    getter?: IModelResolversGetter;
+    getterMany?: IModelResolversGetterMany;
+  };
+};
 
 export type IModelFieldAttributes = {
   // TODO: consider different name for "column"

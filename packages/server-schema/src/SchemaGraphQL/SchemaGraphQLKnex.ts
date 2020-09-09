@@ -19,6 +19,19 @@ type INewCursorId = () => string;
 const newCursorIdDefault: INewCursorId = () =>
   Math.random().toString().substr(2);
 
+export type ICursorOptions = {
+  tableName: string;
+  order?: { name: string; by?: string };
+  getCountQuery: () => Knex.QueryBuilder;
+  getCount: (query: Knex.QueryBuilder) => Promise<number>;
+  getPageQuery: (
+    nextId: number | null,
+    orders: { column: string; order: string }[],
+    limit: number
+  ) => Knex.QueryBuilder;
+  getPage: (query: Knex.QueryBuilder) => Promise<any>;
+};
+
 export default function SchemaGraphQLKnex(config: {
   knex: Knex;
   selectMap?: QuerySelectMap;
@@ -64,32 +77,22 @@ export default function SchemaGraphQLKnex(config: {
   }
 
   function getTableSelectArgs(tableName: string) {
-    return tables.get(tableName)?.selectArgs || [];
+    return tables.get(tableName)?.selectArgs || new Set();
   }
 
   const queryById: IQueryById = async (tableName, id) => {
     await resolveTableInfo(tableName);
     const selectArgs = getTableSelectArgs(tableName);
-    return await knex(tableName)
+    const query = knex(tableName)
       .select("*", ...selectArgs)
       .where({ id })
       .first();
+    return [query, selectArgs];
   };
 
-  async function* Cursor(
-    tableName: string,
-    order?: { name: string; by?: string }
-  ) {
-    await resolveTableInfo(tableName);
-    const selectArgs = getTableSelectArgs(tableName);
-    const query = knex(tableName).select("*", ...selectArgs);
-
+  async function* Cursor(options: ICursorOptions) {
     // don't mutate input query object
-    const _query = query.clone();
-    const q = knex(tableName).select(knex.raw("count(*)")).first();
-    const a = q.toString();
-    const info = await q;
-    const total = parseInt(info?.count as string);
+    const total = await options.getCount(options.getCountQuery());
 
     // active immediately false if no items
     let active = !!total;
@@ -98,23 +101,24 @@ export default function SchemaGraphQLKnex(config: {
     // TODO: specify limit from args, and clamp to max 20 items per page/limit
     let limit = 3;
 
+    const order = options.order;
     const orderName = order && order.name;
     const orderBy = (order && order.by) || "asc";
 
     let nextId: number | null = null;
 
     const orders = [];
-    orders.push({ column: "id", order: orderBy });
-    orderName && orders.push({ column: orderName, order: orderBy });
+    orders.push({ column: `${options.tableName}.id`, order: orderBy });
+    orderName &&
+      orders.push({
+        column: `${options.tableName}.${orderName}`,
+        order: orderBy,
+      });
 
     while (true) {
-      const rows: Record<any, any>[] = await _query
-        .clone()
-        .limit(limit + 1)
-        .where(function () {
-          nextId && this.where("id", ">=", nextId);
-        })
-        .orderBy(orders);
+      const rows: Record<any, any>[] = await options.getPage(
+        options.getPageQuery(nextId, orders, limit)
+      );
 
       const limitRow = rows.length === limit + 1 ? rows.pop() : undefined;
       const result = { items: rows, total };
@@ -123,17 +127,56 @@ export default function SchemaGraphQLKnex(config: {
       if (!limitRow) {
         return result;
       }
-
-      yield result;
-
       // set value of nextId to order.name's value
       nextId = limitRow["id"];
+      if (!nextId) {
+        return result;
+      }
+
+      yield result;
     }
   }
 
   const cursors = new Map<string, ReturnType<typeof Cursor>>();
 
-  const queryByArgs: IQueryByArgs = async (tableName, args) => {
+  const queryByArgs: IQueryByArgs<ICursorOptions> = async (
+    tableName,
+    args,
+    resolverArgs,
+    getter
+  ) => {
+    await resolveTableInfo(tableName);
+    const selectArgs = getTableSelectArgs(tableName);
+
+    const cursorOptionsDefault: ICursorOptions = {
+      tableName,
+      order: args.order,
+      getCountQuery: () => {
+        return knex(tableName).select(knex.raw("count(*)")).first();
+      },
+      getCount: async (query) => {
+        const info = await query;
+        return parseInt(info?.count as string);
+      },
+      getPageQuery: (nextId, orders, limit) => {
+        return knex(tableName)
+          .select("*", ...selectArgs)
+          .limit(limit + 1)
+          .where(function () {
+            nextId && this.where("id", ">=", nextId);
+          })
+          .orderBy(orders);
+      },
+      getPage: async (query) => {
+        return query;
+      },
+    };
+
+    const cursorConfig =
+      (getter &&
+        getter(tableName, selectArgs, cursorOptionsDefault)(...resolverArgs)) ||
+      cursorOptionsDefault;
+
     let cursorId = args?.cursor;
     let cursor: ReturnType<typeof Cursor> | undefined = undefined;
 
@@ -146,7 +189,7 @@ export default function SchemaGraphQLKnex(config: {
 
     if (!cursor) {
       cursorId = newCursorId();
-      cursor = Cursor(tableName, args.order);
+      cursor = Cursor(cursorConfig);
       cursors.set(cursorId, cursor);
     }
 

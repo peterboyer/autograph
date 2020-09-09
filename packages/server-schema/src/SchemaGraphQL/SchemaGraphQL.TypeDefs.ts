@@ -80,7 +80,7 @@ export default function TypeDefs(ioc: IIOC) {
 
     const Query = `
       ${name}(id: ID!): ${name}!
-      ${name}_many(cursor: String sort: String): ${name}Many!
+      ${name}_many(cursor: String order: String): ${name}Many!
     `;
 
     const Mutation = `

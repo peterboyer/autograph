@@ -3,7 +3,8 @@ import { IIOC, IModel, IMapType } from "./SchemaGraphQL.types";
 import _TypeDefs from "./SchemaGraphQL.TypeDefs";
 import _Resolvers from "./SchemaGraphQL.Resolvers";
 
-type IOptions = IIOC & Required<Pick<IIOC, "mapType">>;
+type IOptions = Partial<Pick<IIOC, "mapType">> &
+  Required<Omit<IIOC, "mapType">>;
 
 export default function SchemaGraphQL(options: IOptions): ISchemaAdapter {
   const { mapType = new Map() } = options;

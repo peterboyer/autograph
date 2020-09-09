@@ -7,7 +7,7 @@ import {
 
 export default (ioc: IIOC) => {
   return (model: IModel) => {
-    const { name, fields: _fields } = model;
+    const { name, fields: _fields, resolvers } = model;
     const fields = new Map(Object.entries(_fields));
 
     const {
@@ -63,19 +63,27 @@ export default (ioc: IIOC) => {
       };
     }
 
-    const resolverQuery: IResolver<never, { id: string }> = async (
+    const resolverQuery: IResolver<undefined, { id: string }> = async (
       ..._args
     ) => {
-      const [, args] = _args;
+      const [, args, context] = _args;
       const { id } = args || {};
-      return queryById_throwNotFound(name, id);
+      const [defaultQuery, selectArgs] = await queryById(name, id);
+      const query = resolvers?.getter
+        ? resolvers.getter(name, selectArgs, defaultQuery)(args, context)
+        : defaultQuery;
+      const result = await query;
+      if (!result) {
+        throw errors.NotFound(name, args);
+      }
+      return result;
     };
 
     const resolverQueryMany: IResolver<
       never,
       { cursor?: string; order?: string }
-    > = async (..._args) => {
-      const [, args] = _args;
+    > = async (...resolverArgs) => {
+      const [, args] = resolverArgs;
       const { cursor, order: orderArg } = args;
       const [, orderKey, orderDirection] =
         (orderArg && orderArg.match(/^([\w\d]+)(?::(asc|desc))?$/)) || [];
@@ -88,7 +96,12 @@ export default (ioc: IIOC) => {
         }) ||
         undefined;
 
-      return queryByArgs(name, { cursor, order });
+      return queryByArgs(
+        name,
+        { cursor, order },
+        resolverArgs,
+        resolvers?.getterMany
+      );
     };
 
     const getItemDataTransactors = <T extends { id: any | null }>(
