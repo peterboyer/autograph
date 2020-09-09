@@ -3,6 +3,7 @@ import {
   IModel,
   IResolver,
   ISchemaMutationTransactor,
+  IResolverAny,
 } from "./SchemaGraphQL.types";
 
 export default (ioc: IIOC) => {
@@ -24,8 +25,8 @@ export default (ioc: IIOC) => {
     ) => {
       const result = await queryById(...args);
       if (!result) {
-        const [table, id] = args;
-        throw errors.NotFound(table, { id });
+        const [table, id, resolverArgs] = args;
+        throw errors.NotFound(table, { id }, resolverArgs);
       }
       return result;
     };
@@ -36,13 +37,13 @@ export default (ioc: IIOC) => {
       if (field.private) continue;
       if (field.getter === null) continue;
 
-      resolverRoot[fieldName] = async (..._args) => {
-        const [source, args] = _args;
+      resolverRoot[fieldName] = async (...resolverArgs) => {
+        const [source, args] = resolverArgs;
 
         if (typeof field.getter === "function") {
-          const result = await field.getter(..._args);
+          const result = await field.getter(...resolverArgs);
           if (!result && field.nullable === false)
-            throw errors.NotFound(field.type, args);
+            throw errors.NotFound(field.type, args, resolverArgs);
           return result;
         }
 
@@ -52,9 +53,9 @@ export default (ioc: IIOC) => {
             : field.column || fieldName;
 
         if (field.relationship) {
-          const result = await queryById(field.type, source[key], _args);
+          const result = await queryById(field.type, source[key], resolverArgs);
           if (!result && field.nullable === false)
-            throw errors.NotFound(field.type, args);
+            throw errors.NotFound(field.type, args, resolverArgs);
           return result;
         }
 
@@ -64,19 +65,15 @@ export default (ioc: IIOC) => {
     }
 
     const resolverQuery: IResolver<undefined, { id: string }> = async (
-      ..._args
+      ...resolverArgs
     ) => {
-      const [, args, context] = _args;
-      const { id } = args || {};
-      const [defaultQuery, selectArgs] = await queryById(name, id);
-      const query = resolvers?.getter
-        ? resolvers.getter(name, selectArgs, defaultQuery)(args, context)
-        : defaultQuery;
-      const result = await query;
-      if (!result) {
-        throw errors.NotFound(name, args);
-      }
-      return result;
+      const [, args] = resolverArgs;
+      return queryById_throwNotFound(
+        name,
+        args,
+        resolverArgs,
+        resolvers?.getter
+      );
     };
 
     const resolverQueryMany: IResolver<
@@ -105,12 +102,19 @@ export default (ioc: IIOC) => {
     };
 
     const getItemDataTransactors = <T extends { id: any | null }>(
-      data: T[]
+      data: T[],
+      resolverArgs: Parameters<IResolverAny>
     ) => {
-      const resolvers = data.map(
+      const transactors = data.map(
         (item): ISchemaMutationTransactor<T> => async (trx?) => {
           const { id = null } = item;
-          if (id) await queryById_throwNotFound(name, id);
+          if (id)
+            await queryById_throwNotFound(
+              name,
+              { id },
+              resolverArgs,
+              resolvers?.getter
+            );
 
           const itemData = {};
           for (const [_key, _value] of Object.entries(item)) {
@@ -143,29 +147,29 @@ export default (ioc: IIOC) => {
         }
       );
 
-      return resolvers;
+      return transactors;
     };
 
     const resolverMutationCreate: IResolver<
       never,
       { data: { id: any; [key: string]: any }[] }
-    > = async (..._args) => {
-      const [, args] = _args;
+    > = async (...resolverArgs) => {
+      const [, args] = resolverArgs;
       const { data } = args || {};
       if (!data.length) return [];
-      const transactor = getItemDataTransactors(data);
-      return queryOnCreate(name, transactor, _args);
+      const transactor = getItemDataTransactors(data, resolverArgs);
+      return queryOnCreate(name, transactor, resolverArgs);
     };
 
     const resolverMutationUpdate: IResolver<
       never,
       { data: { id: any; [key: string]: any }[] }
-    > = async (..._args) => {
-      const [, args] = _args;
+    > = async (...resolverArgs) => {
+      const [, args] = resolverArgs;
       const { data } = args || {};
       if (!data.length) return [];
-      const transactor = getItemDataTransactors(data);
-      return queryOnUpdate(name, transactor, _args);
+      const transactor = getItemDataTransactors(data, resolverArgs);
+      return queryOnUpdate(name, transactor, resolverArgs);
     };
 
     const resolverMutationDelete: IResolver<never, { ids: string[] }> = async (

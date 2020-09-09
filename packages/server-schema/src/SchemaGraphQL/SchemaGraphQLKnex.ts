@@ -80,14 +80,27 @@ export default function SchemaGraphQLKnex(config: {
     return tables.get(tableName)?.selectArgs || new Set();
   }
 
-  const queryById: IQueryById = async (tableName, id) => {
+  const queryById: IQueryById<Knex.QueryBuilder> = async (
+    tableName,
+    args,
+    resolverArgs,
+    getter
+  ) => {
     await resolveTableInfo(tableName);
     const selectArgs = getTableSelectArgs(tableName);
-    const query = knex(tableName)
-      .select("*", ...selectArgs)
+
+    const { id } = args;
+    const defaultQuery = knex(tableName)
+      .select(`${tableName}.*`, ...selectArgs)
       .where({ id })
       .first();
-    return [query, selectArgs];
+
+    const query =
+      (getter &&
+        getter(defaultQuery, { tableName, selectArgs })(...resolverArgs)) ||
+      defaultQuery;
+
+    return await query;
   };
 
   async function* Cursor(options: ICursorOptions) {
@@ -160,10 +173,10 @@ export default function SchemaGraphQLKnex(config: {
       },
       getPageQuery: (nextId, orders, limit) => {
         return knex(tableName)
-          .select("*", ...selectArgs)
+          .select(`${tableName}.*`, ...selectArgs)
           .limit(limit + 1)
           .where(function () {
-            nextId && this.where("id", ">=", nextId);
+            nextId && this.where(`${tableName}.id`, ">=", nextId);
           })
           .orderBy(orders);
       },
@@ -174,7 +187,9 @@ export default function SchemaGraphQLKnex(config: {
 
     const cursorConfig =
       (getter &&
-        getter(tableName, selectArgs, cursorOptionsDefault)(...resolverArgs)) ||
+        getter(cursorOptionsDefault, { tableName, selectArgs })(
+          ...resolverArgs
+        )) ||
       cursorOptionsDefault;
 
     let cursorId = args?.cursor;
@@ -208,7 +223,11 @@ export default function SchemaGraphQLKnex(config: {
     return [];
   };
 
-  const queryOnUpdate: IQueryOnUpdate = async (tableName, transactors) => {
+  const queryOnUpdate: IQueryOnUpdate = async (
+    tableName,
+    transactors,
+    resolverArgs
+  ) => {
     let items: any[] = [];
     await knex.transaction(async (trx) => {
       items = await Promise.all<any>(
@@ -216,7 +235,7 @@ export default function SchemaGraphQLKnex(config: {
           const [id, data] = await transactor(trx);
           await knex(tableName).transacting(trx).where({ id }).update(data);
           // TODO: optimise, avoid second query?
-          return queryById(tableName, id);
+          return queryById(tableName, id, resolverArgs);
         })
       );
     });

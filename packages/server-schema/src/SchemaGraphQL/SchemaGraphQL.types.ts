@@ -19,22 +19,21 @@ export type ISchemaMutationTransactor<T extends Object> = (
   trx?: any
 ) => Promise<[any, T]>;
 
-export type IModelResolversGetter = (
-  tableName: string,
-  selectArgs: Set<string>,
-  defaultGetter: any
-) => (args: { id: string }, context: any) => any;
+export type IModelResolversGetter<T = any> = (
+  defaultGetter: T,
+  context: { tableName: string; selectArgs: Set<string> }
+) => IResolver<undefined, { id: string }, any, T>;
 
 export type IModelResolversGetterMany<T = any> = (
-  tableName: string,
-  selectArgs: Set<string>,
-  defaultGetter: any
+  defaultGetter: T,
+  context: { tableName: string; selectArgs: Set<string> }
 ) => IResolver<undefined, { cursor: string; order: string }, any, T>;
 
-export type IQueryById = (
+export type IQueryById<GETTER_Returns = any> = (
   tableName: string,
-  id: any,
-  resolverArgs?: Parameters<IResolverAny>
+  args: { id: string },
+  resolverArgs: Parameters<IResolverAny>,
+  getter?: IModelResolversGetter<GETTER_Returns>
 ) => Promise<[any, Set<string>]>;
 
 export type IQueryByArgs<GETTER_Returns = any> = (
@@ -47,40 +46,34 @@ export type IQueryByArgs<GETTER_Returns = any> = (
   getter?: IModelResolversGetterMany<GETTER_Returns>
 ) => Promise<{ items: any[]; total?: number; cursor?: string }>;
 
-export type IQueryOnCreate<
-  T = any,
-  TResolverArgs = Parameters<IResolverAny>
-> = (
+export type IQueryOnCreate<T = any> = (
   tableName: string,
   transactors: ISchemaMutationTransactor<T>[],
-  resolverArgs?: TResolverArgs
+  resolverArgs: Parameters<IResolverAny>
 ) => Promise<T[]>;
 
-export type IQueryOnUpdate<
-  T = any,
-  TResolverArgs = Parameters<IResolverAny>
-> = (
+export type IQueryOnUpdate<T = any> = (
   tableName: string,
   transactors: ISchemaMutationTransactor<T>[],
-  resolverArgs?: TResolverArgs
+  resolverArgs: Parameters<IResolverAny>
 ) => Promise<T[]>;
 
-export type IQueryOnDelete<TResolverArgs = Parameters<IResolverAny>> = (
+export type IQueryOnDelete = (
   tableName: string,
   ids: any[],
-  resolverArgs?: TResolverArgs
+  resolverArgs: Parameters<IResolverAny>
 ) => Promise<string[]>;
 
 export type IErrorNotFound<TResolverArgs = Parameters<IResolverAny>> = (
   tableName: string,
   query: Record<any, any>,
-  resolverArgs?: TResolverArgs
+  resolverArgs: TResolverArgs
 ) => Error;
 
-export type IErrorNotValid<
-  TExtensions = Record<any, any>,
-  TResolverArgs = Parameters<IResolverAny>
-> = (extensions?: TExtensions, resolverArgs?: TResolverArgs) => Error;
+export type IErrorNotValid<TExtensions = Record<any, any>> = (
+  extensions?: TExtensions,
+  resolverArgs?: Parameters<IResolverAny>
+) => Error;
 
 export type IMapType = Map<string, string>;
 
