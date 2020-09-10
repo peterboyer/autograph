@@ -6,6 +6,8 @@ import {
   IQueryById,
 } from "./SchemaGraphQL.types";
 import Knex from "knex";
+import lodash from "lodash";
+const { pick } = lodash;
 
 type TableInfo = {
   columns: Map<string, { type: string }>;
@@ -21,15 +23,16 @@ const newCursorIdDefault: INewCursorId = () =>
 
 export type ICursorOptions = {
   tableName: string;
+  limit: number;
   order?: { name: string; by?: string };
   getCountQuery: () => Knex.QueryBuilder;
   getCount: (query: Knex.QueryBuilder) => Promise<number>;
   getPageQuery: (
-    nextId: number | null,
-    orders: { column: string; order: string }[],
-    limit: number
+    nextId: any[] | null,
+    options: Pick<ICursorOptions, "tableName" | "limit" | "order">
   ) => Knex.QueryBuilder;
   getPage: (query: Knex.QueryBuilder) => Promise<any>;
+  resolveCursorOrderValue: (value: any) => string;
 };
 
 export default function SchemaGraphQLKnex(config: {
@@ -110,30 +113,18 @@ export default function SchemaGraphQLKnex(config: {
     // active immediately false if no items
     let active = !!total;
     if (!active) return undefined;
-
-    // TODO: specify limit from args, and clamp to max 20 items per page/limit
-    let limit = 3;
-
-    const order = options.order;
-    const orderName = order && order.name;
-    const orderBy = (order && order.by) || "asc";
-
-    let nextId: number | null = null;
-
-    const orders = [];
-    orders.push({ column: `${options.tableName}.id`, order: orderBy });
-    orderName &&
-      orders.push({
-        column: `${options.tableName}.${orderName}`,
-        order: orderBy,
-      });
+    let nextId: any[] | null = null;
 
     while (true) {
       const rows: Record<any, any>[] = await options.getPage(
-        options.getPageQuery(nextId, orders, limit)
+        options.getPageQuery(
+          nextId,
+          pick(options, ["tableName", "limit", "order"])
+        )
       );
 
-      const limitRow = rows.length === limit + 1 ? rows.pop() : undefined;
+      const limitRow =
+        rows.length === options.limit + 1 ? rows.pop() : undefined;
       const result = { items: rows, total };
 
       // if no limitRow for another page, finish generating
@@ -141,10 +132,10 @@ export default function SchemaGraphQLKnex(config: {
         return result;
       }
       // set value of nextId to order.name's value
-      nextId = limitRow["id"];
-      if (!nextId) {
-        return result;
-      }
+      const orderName = options.order?.name;
+      nextId = [limitRow["id"]];
+      orderName &&
+        nextId.unshift(options.resolveCursorOrderValue(limitRow[orderName]));
 
       yield result;
     }
@@ -164,6 +155,7 @@ export default function SchemaGraphQLKnex(config: {
     const cursorOptionsDefault: ICursorOptions = {
       tableName,
       order: args.order,
+      limit: 3,
       getCountQuery: () => {
         return knex(tableName).select(knex.raw("count(*)")).first();
       },
@@ -171,17 +163,38 @@ export default function SchemaGraphQLKnex(config: {
         const info = await query;
         return parseInt(info?.count as string);
       },
-      getPageQuery: (nextId, orders, limit) => {
+      getPageQuery: (nextId, options) => {
+        const { limit, order } = options;
+
+        const orderName = order?.name;
+        const orderBy = order?.by || "asc";
+
+        const orders = [[`${options.tableName}.id`, orderBy]];
+        orderName &&
+          orders.unshift([`${options.tableName}.${orderName}`, orderBy]);
+
+        const wheres = [`"${tableName}"."id"`];
+        orderName && wheres.unshift(`"${tableName}"."${orderName}"`);
+
         return knex(tableName)
           .select(`${tableName}.*`, ...selectArgs)
           .limit(limit + 1)
           .where(function () {
-            nextId && this.where(`${tableName}.id`, ">=", nextId);
+            nextId &&
+              this.whereRaw(
+                `((${wheres.join(",")}) >= (${nextId
+                  .map((v) => `'${v}'`)
+                  .join(",")}))`
+              );
           })
-          .orderBy(orders);
+          .orderBy(orders.map(([column, order]) => ({ column, order })));
       },
       getPage: async (query) => {
         return query;
+      },
+      resolveCursorOrderValue: (value) => {
+        if (value instanceof Date) return value.toISOString();
+        return value.toString();
       },
     };
 
