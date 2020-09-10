@@ -25,11 +25,14 @@ export type ICursorOptions = {
   tableName: string;
   limit: number;
   order?: { name: string; by?: string };
-  getCountQuery: () => Knex.QueryBuilder;
+  filters: { name: string; type: string; value: any }[];
+  getCountQuery: (
+    options: Pick<ICursorOptions, "tableName" | "limit" | "order" | "filters">
+  ) => Knex.QueryBuilder;
   getCount: (query: Knex.QueryBuilder) => Promise<number>;
   getPageQuery: (
     nextId: any[] | null,
-    options: Pick<ICursorOptions, "tableName" | "limit" | "order">
+    options: Pick<ICursorOptions, "tableName" | "limit" | "order" | "filters">
   ) => Knex.QueryBuilder;
   getPage: (query: Knex.QueryBuilder) => Promise<any>;
   resolveCursorOrderValue: (value: any) => string;
@@ -107,8 +110,15 @@ export default function SchemaGraphQLKnex(config: {
   };
 
   async function* Cursor(options: ICursorOptions) {
+    const queryOptions = pick(options, [
+      "tableName",
+      "limit",
+      "order",
+      "filters",
+    ]);
+
     // don't mutate input query object
-    const total = await options.getCount(options.getCountQuery());
+    const total = await options.getCount(options.getCountQuery(queryOptions));
 
     // active immediately false if no items
     let active = !!total;
@@ -117,10 +127,7 @@ export default function SchemaGraphQLKnex(config: {
 
     while (true) {
       const rows: Record<any, any>[] = await options.getPage(
-        options.getPageQuery(
-          nextId,
-          pick(options, ["tableName", "limit", "order"])
-        )
+        options.getPageQuery(nextId, queryOptions)
       );
 
       const limitRow =
@@ -152,19 +159,50 @@ export default function SchemaGraphQLKnex(config: {
     await resolveTableInfo(tableName);
     const selectArgs = getTableSelectArgs(tableName);
 
+    // type IWheres = [name: string, operator: string, value: any][];
+    type IWheres = [string, string, any][];
+
+    const resolveFilters = (filters: ICursorOptions["filters"]) => {
+      const typeToOperator = {
+        eq: "=",
+        ne: "!=",
+        gt: ">",
+        gte: ">=",
+        lt: "<",
+        lte: "<=",
+      } as { [key: string]: string };
+
+      const wheres: IWheres = filters.map(({ name, type, value }) => [
+        name,
+        typeToOperator[type],
+        value,
+      ]);
+
+      return wheres;
+    };
+
     const cursorOptionsDefault: ICursorOptions = {
       tableName,
       order: args.order,
+      filters: args.filters,
       limit: 3,
-      getCountQuery: () => {
-        return knex(tableName).select(knex.raw("count(*)")).first();
+      getCountQuery: (options) => {
+        const { filters } = options;
+        return knex(tableName)
+          .select(knex.raw("count(*)"))
+          .where(function () {
+            for (const filter of resolveFilters(filters)) {
+              this.where(...filter);
+            }
+          })
+          .first();
       },
       getCount: async (query) => {
         const info = await query;
         return parseInt(info?.count as string);
       },
       getPageQuery: (nextId, options) => {
-        const { limit, order } = options;
+        const { limit, order, filters } = options;
 
         const orderName = order?.name;
         const orderBy = order?.by || "asc";
@@ -187,7 +225,12 @@ export default function SchemaGraphQLKnex(config: {
                   .join(",")}))`
               );
           })
-          .orderBy(orders.map(([column, order]) => ({ column, order })));
+          .orderBy(orders.map(([column, order]) => ({ column, order })))
+          .where(function () {
+            for (const filter of resolveFilters(filters)) {
+              this.where(...filter);
+            }
+          });
       },
       getPage: async (query) => {
         return query;

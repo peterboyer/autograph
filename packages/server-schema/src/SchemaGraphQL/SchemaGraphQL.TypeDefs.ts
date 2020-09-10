@@ -53,21 +53,47 @@ export default function TypeDefs(ioc: IIOC) {
     return [...acc.values()].join("\n");
   }
 
+  function mapGraphFieldsTypeDefsFilter(fields: Map<string, IModelField>) {
+    const acc = new Set<string>();
+    for (const [fieldName, field] of fields) {
+      if (field.private) continue;
+      if (field.primary) continue;
+      if (field.getter === null) continue;
+      if (field.many) continue;
+
+      if (field.relationship) continue;
+      // const typeGraph = field.relationship ? "ID" : getGraphType(field.type);
+
+      const typeGraph = getGraphType(field.type);
+      acc.add(`${fieldName}_eq: ${typeGraph}`);
+      acc.add(`${fieldName}_ne: ${typeGraph}`);
+      acc.add(`${fieldName}_gt: ${typeGraph}`);
+      acc.add(`${fieldName}_gte: ${typeGraph}`);
+      acc.add(`${fieldName}_lt: ${typeGraph}`);
+      acc.add(`${fieldName}_lte: ${typeGraph}`);
+    }
+    return [...acc.values()].join("\n");
+  }
+
   return function (model: IModel): ISchemaTypeDefs {
     const { name, fields: _fields } = model;
 
     const fields = new Map(Object.entries(_fields));
     const graphFieldsTypeDefs = mapGraphFieldsTypeDefs(fields);
     const graphFieldsTypeDefsInput = mapGraphFieldsTypeDefsInput(fields);
+    const graphFieldsTypeDefsFilter = mapGraphFieldsTypeDefsFilter(fields);
 
     const Root = clean(`
       type ${name} {
         ${graphFieldsTypeDefs}
       }
-      type ${name}Many {
+      type ${name}ManyResult {
         items: [${name}!]!
         total: Int
         cursor: String
+      }
+      input ${name}ManyFilter {
+        ${graphFieldsTypeDefsFilter}
       }
       input ${name}Input {
         ${graphFieldsTypeDefsInput}
@@ -80,7 +106,11 @@ export default function TypeDefs(ioc: IIOC) {
 
     const Query = `
       ${name}(id: ID!): ${name}!
-      ${name}_many(cursor: String order: String): ${name}Many!
+      ${name}_many(
+        cursor: String
+        order: String
+        filters: ${name}ManyFilter
+      ): ${name}ManyResult!
     `;
 
     const Mutation = `

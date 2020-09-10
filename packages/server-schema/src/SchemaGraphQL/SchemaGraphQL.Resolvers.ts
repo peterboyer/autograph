@@ -78,7 +78,7 @@ export default (ioc: IIOC) => {
 
     const resolverQueryMany: IResolver<
       never,
-      { cursor?: string; order?: string }
+      { cursor?: string; order?: string; filters?: { [key: string]: any } }
     > = async (...resolverArgs) => {
       const [, args] = resolverArgs;
       const { cursor, order: orderArg } = args;
@@ -93,9 +93,16 @@ export default (ioc: IIOC) => {
         }) ||
         undefined;
 
+      const filters = args.filters
+        ? Object.entries(args.filters).map(([identifier, value]) => {
+            const [, key, type] = identifier.match(/^([\w]+)(?:_(\w+)$)/) || [];
+            return { name: fields.get(key)?.column || key, type, value };
+          })
+        : [];
+
       return queryByArgs(
         name,
-        { cursor, order },
+        { cursor, order, filters },
         resolverArgs,
         resolvers?.getterMany
       );

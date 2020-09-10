@@ -41,6 +41,7 @@ export type IQueryByArgs<GETTER_Returns = any> = (
   args: {
     cursor?: string;
     order?: { name: string; by?: string };
+    filters: { name: string; type: string; value: any }[];
   },
   resolverArgs: Parameters<IResolverAny>,
   getter?: IModelResolversGetterMany<GETTER_Returns>
