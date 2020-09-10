@@ -220,9 +220,9 @@ export default function SchemaGraphQLKnex(config: {
           .where(function () {
             nextId &&
               this.whereRaw(
-                `((${wheres.join(",")}) >= (${nextId
-                  .map((v) => `'${v}'`)
-                  .join(",")}))`
+                `((${wheres.join(",")}) ${
+                  orderBy === "asc" ? ">=" : "<="
+                } (${nextId.map((v) => `'${v}'`).join(",")}))`
               );
           })
           .orderBy(orders.map(([column, order]) => ({ column, order })))
@@ -268,7 +268,7 @@ export default function SchemaGraphQLKnex(config: {
 
     return {
       items: value?.items || [],
-      total: value?.total,
+      total: value?.total || 0,
       cursor: done ? undefined : cursorId,
     };
   };
