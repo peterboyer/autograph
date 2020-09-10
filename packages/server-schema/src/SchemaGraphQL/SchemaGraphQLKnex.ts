@@ -98,7 +98,7 @@ export default function SchemaGraphQLKnex(config: {
     const { id } = args;
     const defaultQuery = knex(tableName)
       .select(`${tableName}.*`, ...selectArgs)
-      .where({ id })
+      .where(`${tableName}.id`, id)
       .first();
 
     const query =
