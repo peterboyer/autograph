@@ -57,12 +57,30 @@ const { User } = schemas;
 
 > User.graphql.typeDefs.Root /*
 type User { name: String! }
+type UserManyResult {
+  items: [User!]!
+  total: Int
+  cursor: String
+}
+input UserManyFilters {
+  name_eq: String
+  name_ne: String
+  name_gt: String
+  name_gte: String
+  name_lt: String
+  name_lte: String
+}
 input UserInput { name: String }
 input UserInputID { id: ID! name: String } */
 
 > User.graphql.typeDefs.Query /*
 User(id: ID!): User!
-User_many(query: String): [User!]! */
+User_many(
+  cursor: String
+  order: String
+  filters: UserManyFilters
+  limit: Int
+): UserManyResult! */
 
 > User.graphql.typeDefs.Mutation /*
 User_create(data: [UserInput!]!): [User!]!

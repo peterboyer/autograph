@@ -53,7 +53,7 @@ export default function TypeDefs(ioc: IIOC) {
     return [...acc.values()].join("\n");
   }
 
-  function mapGraphFieldsTypeDefsFilter(fields: Map<string, IModelField>) {
+  function mapGraphFieldsTypeDefsFilters(fields: Map<string, IModelField>) {
     const acc = new Set<string>();
     for (const [fieldName, field] of fields) {
       if (field.private) continue;
@@ -81,7 +81,7 @@ export default function TypeDefs(ioc: IIOC) {
     const fields = new Map(Object.entries(_fields));
     const graphFieldsTypeDefs = mapGraphFieldsTypeDefs(fields);
     const graphFieldsTypeDefsInput = mapGraphFieldsTypeDefsInput(fields);
-    const graphFieldsTypeDefsFilter = mapGraphFieldsTypeDefsFilter(fields);
+    const graphFieldsTypeDefsFilters = mapGraphFieldsTypeDefsFilters(fields);
 
     const Root = clean(`
       type ${name} {
@@ -92,8 +92,8 @@ export default function TypeDefs(ioc: IIOC) {
         total: Int
         cursor: String
       }
-      input ${name}ManyFilter {
-        ${graphFieldsTypeDefsFilter}
+      input ${name}ManyFilters {
+        ${graphFieldsTypeDefsFilters}
       }
       input ${name}Input {
         ${graphFieldsTypeDefsInput}
@@ -109,7 +109,7 @@ export default function TypeDefs(ioc: IIOC) {
       ${name}_many(
         cursor: String
         order: String
-        filters: ${name}ManyFilter
+        filters: ${name}ManyFilters
         limit: Int
       ): ${name}ManyResult!
     `;
