@@ -110,6 +110,7 @@ export default function TypeDefs(ioc: IIOC) {
         cursor: String
         order: String
         filters: ${name}ManyFilter
+        limit: Int
       ): ${name}ManyResult!
     `;
 

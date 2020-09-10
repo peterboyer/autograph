@@ -18,6 +18,8 @@ export default (ioc: IIOC) => {
       queryOnUpdate,
       queryOnDelete,
       errors,
+      limitDefault,
+      limitMaxDefault,
     } = ioc;
 
     const queryById_throwNotFound = async (
@@ -77,11 +79,21 @@ export default (ioc: IIOC) => {
     };
 
     const resolverQueryMany: IResolver<
-      never,
-      { cursor?: string; order?: string; filters?: { [key: string]: any } }
+      undefined,
+      {
+        cursor?: string;
+        order?: string;
+        filters?: { [key: string]: any };
+        limit?: number;
+      }
     > = async (...resolverArgs) => {
       const [, args] = resolverArgs;
-      const { cursor, order: orderArg } = args;
+      const {
+        cursor,
+        order: orderArg,
+        limit: limitArg,
+        filters: filtersArg,
+      } = args;
       const [, orderKey, orderDirection] =
         (orderArg && orderArg.match(/^([\w\d]+)(?::(asc|desc))?$/)) || [];
 
@@ -93,16 +105,19 @@ export default (ioc: IIOC) => {
         }) ||
         undefined;
 
-      const filters = args.filters
-        ? Object.entries(args.filters).map(([identifier, value]) => {
+      const filters = filtersArg
+        ? Object.entries(filtersArg).map(([identifier, value]) => {
             const [, key, type] = identifier.match(/^([\w]+)(?:_(\w+)$)/) || [];
             return { name: fields.get(key)?.column || key, type, value };
           })
         : [];
 
+      // limit clamped by max
+      const limit = Math.min(limitArg || limitDefault, limitMaxDefault);
+
       return queryByArgs(
         name,
-        { cursor, order, filters },
+        { cursor, order, filters, limit },
         resolverArgs,
         resolvers?.getterMany
       );

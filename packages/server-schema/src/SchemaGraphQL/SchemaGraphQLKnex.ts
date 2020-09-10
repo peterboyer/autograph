@@ -185,7 +185,7 @@ export default function SchemaGraphQLKnex(config: {
       tableName,
       order: args.order,
       filters: args.filters,
-      limit: 3,
+      limit: args.limit,
       getCountQuery: (options) => {
         const { filters } = options;
         return knex(tableName)

@@ -42,6 +42,7 @@ export type IQueryByArgs<GETTER_Returns = any> = (
     cursor?: string;
     order?: { name: string; by?: string };
     filters: { name: string; type: string; value: any }[];
+    limit: number;
   },
   resolverArgs: Parameters<IResolverAny>,
   getter?: IModelResolversGetterMany<GETTER_Returns>
@@ -89,6 +90,8 @@ export type IIOC = {
     NotValid: IErrorNotValid;
   };
   mapType: IMapType;
+  limitDefault: number;
+  limitMaxDefault: number;
 };
 
 export type IModel = RIModel<IModelFieldAttributes, IModelAttributes>;
