@@ -16,7 +16,7 @@
     "build:ts": "tsc --skipLibCheck",
     "watch:ts": "yarn build:ts -w",
     "watch:yalc": "yalc push && nodemon --delay 2500ms --exec \"yalc push --changed\"",
-    "develop": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
     "docs": "jsdoc src/*.js -d ./docs/",
     "docs:open": "open ./docs/index.html"
   },

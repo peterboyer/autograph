@@ -169,7 +169,7 @@ $ git clone git@github.com:armix-io/armix-server.git
 Once in the project root, you can run these scripts with `yarn`:
 
 - `build` — builds typescript `./src` into `./lib`
-- `develop` — starts typescript `tsc` (watching `./src`) and `nodemon` (watching
+- `dev` — starts typescript `tsc` (watching `./src`) and `nodemon` (watching
   `./lib`, executing `yalc push`) to automatically publish changes to local
   subscribed projects, see [development with yalc](#development-with-yalc).
 
