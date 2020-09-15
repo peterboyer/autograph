@@ -4,6 +4,7 @@ import {
   IModel,
   IModelField,
   ISchemaTypeDefs,
+  IModelFilter,
 } from "./SchemaGraphQL.types";
 const { print, parse } = graphql;
 
@@ -53,7 +54,10 @@ export default function TypeDefs(ioc: IIOC) {
     return [...acc.values()].join("\n");
   }
 
-  function mapGraphFieldsTypeDefsFilters(fields: Map<string, IModelField>) {
+  function mapGraphFieldsTypeDefsFilters(
+    fields: Map<string, IModelField>,
+    filters: Map<string, IModelFilter>
+  ) {
     const acc = new Set<string>();
     for (const [fieldName, field] of fields) {
       if (field.private) continue;
@@ -72,16 +76,26 @@ export default function TypeDefs(ioc: IIOC) {
       acc.add(`${fieldName}_lt: ${typeGraph}`);
       acc.add(`${fieldName}_lte: ${typeGraph}`);
     }
+
+    for (const [filterName, filter] of filters) {
+      acc.add(`${filterName}: ${filter.type}`);
+    }
+
     return [...acc.values()].join("\n");
   }
 
   return function (model: IModel): ISchemaTypeDefs {
-    const { name, fields: _fields } = model;
+    const { name, fields: _fields, filters: _filters = {} } = model;
 
     const fields = new Map(Object.entries(_fields));
+    const filters = new Map(Object.entries(_filters));
+
     const graphFieldsTypeDefs = mapGraphFieldsTypeDefs(fields);
     const graphFieldsTypeDefsInput = mapGraphFieldsTypeDefsInput(fields);
-    const graphFieldsTypeDefsFilters = mapGraphFieldsTypeDefsFilters(fields);
+    const graphFieldsTypeDefsFilters = mapGraphFieldsTypeDefsFilters(
+      fields,
+      filters
+    );
 
     const Root = clean(`
       type ${name} {

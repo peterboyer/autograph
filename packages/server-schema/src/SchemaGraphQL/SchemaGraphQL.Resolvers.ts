@@ -8,8 +8,9 @@ import {
 
 export default (ioc: IIOC) => {
   return (model: IModel) => {
-    const { name, fields: _fields, resolvers } = model;
+    const { name, fields: _fields, filters: _filters = {}, resolvers } = model;
     const fields = new Map(Object.entries(_fields));
+    const modelFilters = new Map(Object.entries(_filters));
 
     const {
       queryById,
@@ -66,7 +67,7 @@ export default (ioc: IIOC) => {
       };
     }
 
-    const resolverQuery: IResolver<undefined, { id: string }> = async (
+    const resolverQueryOne: IResolver<undefined, { id: string }> = async (
       ...resolverArgs
     ) => {
       const [, args] = resolverArgs;
@@ -74,7 +75,7 @@ export default (ioc: IIOC) => {
         name,
         args,
         resolverArgs,
-        resolvers?.getter
+        resolvers?.getterOne || resolvers?.getter
       );
     };
 
@@ -98,6 +99,10 @@ export default (ioc: IIOC) => {
         (orderArg && orderArg.match(/^([\w\d]+)(?::(asc|desc))?$/)) || [];
 
       // resolve view to data layer field name resolutions for queries
+      if (orderKey && !fields.get(orderKey)) {
+        throw new Error("INVALID_QUERY_ORDER_KEY");
+      }
+
       const order =
         (orderKey && {
           name: fields.get(orderKey)?.column || orderKey,
@@ -107,6 +112,10 @@ export default (ioc: IIOC) => {
 
       const filters = filtersArg
         ? Object.entries(filtersArg).map(([identifier, value]) => {
+            const modelFilter = modelFilters.get(identifier);
+            if (modelFilter) {
+              return { _custom: modelFilter, value };
+            }
             const [, key, type] = identifier.match(/^([\w]+)(?:_(\w+)$)/) || [];
             return { name: fields.get(key)?.column || key, type, value };
           })
@@ -119,7 +128,7 @@ export default (ioc: IIOC) => {
         name,
         { cursor, order, filters, limit },
         resolverArgs,
-        resolvers?.getterMany
+        resolvers?.getterMany || resolvers?.getter
       );
     };
 
@@ -208,7 +217,7 @@ export default (ioc: IIOC) => {
     };
 
     const graphResolversQuery = {
-      [`${name}`]: resolverQuery,
+      [`${name}`]: resolverQueryOne,
       [`${name}_many`]: resolverQueryMany,
     };
 

@@ -19,33 +19,36 @@ export type ISchemaMutationTransactor<T extends Object> = (
   trx?: any
 ) => Promise<[any, T]>;
 
-export type IModelResolversGetter<T = any> = (
-  defaultGetter: T,
+export type IModelResolversGetter = (
+  defaultGetter: any,
   context: { tableName: string; selectArgs: Set<string> }
-) => IResolver<undefined, { id: string }, any, T>;
+) => IResolverAny;
 
-export type IModelResolversGetterMany<T = any> = (
-  defaultGetter: T,
-  context: { tableName: string; selectArgs: Set<string> }
-) => IResolver<undefined, { cursor: string; order: string }, any, T>;
+export type IModelFilter = {
+  type: String;
+  use: (config: any, value: any) => any;
+};
 
-export type IQueryById<GETTER_Returns = any> = (
+export type IQueryById = (
   tableName: string,
   args: { id: string },
   resolverArgs: Parameters<IResolverAny>,
-  getter?: IModelResolversGetter<GETTER_Returns>
-) => Promise<[any, Set<string>]>;
+  getter?: IModelResolversGetter
+) => Promise<any>;
 
-export type IQueryByArgs<GETTER_Returns = any> = (
+export type IQueryByArgs = (
   tableName: string,
   args: {
     cursor?: string;
     order?: { name: string; by?: string };
-    filters: { name: string; type: string; value: any }[];
+    filters: (
+      | { name: string; type: string; value: any }
+      | { _custom: IModelFilter; value: any }
+    )[];
     limit: number;
   },
   resolverArgs: Parameters<IResolverAny>,
-  getter?: IModelResolversGetterMany<GETTER_Returns>
+  getter?: IModelResolversGetter
 ) => Promise<{ items: any[]; total?: number; cursor?: string }>;
 
 export type IQueryOnCreate<T = any> = (
@@ -97,9 +100,13 @@ export type IIOC = {
 export type IModel = RIModel<IModelFieldAttributes, IModelAttributes>;
 export type IModelField = RIModelField<IModelFieldAttributes>;
 export type IModelAttributes = {
+  filters?: {
+    [key: string]: IModelFilter;
+  };
   resolvers?: {
     getter?: IModelResolversGetter;
-    getterMany?: IModelResolversGetterMany;
+    getterOne?: IModelResolversGetter;
+    getterMany?: IModelResolversGetter;
   };
 };
 
