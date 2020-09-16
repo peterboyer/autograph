@@ -15,7 +15,7 @@ export type IQueryConfig = {
 };
 
 export function QueryConfig(knex: Knex) {
-  const resolve = (config: IQueryConfig) => {
+  const resolve = (config: IQueryConfig, trx?: Knex.Transaction) => {
     const { from, select, limit, wheres, orders, joins } = config;
 
     const query = knex(from).select(
@@ -27,6 +27,8 @@ export function QueryConfig(knex: Knex) {
         }
       })
     );
+
+    if (trx) query.transacting(trx);
 
     if (limit) query.limit(limit);
 
