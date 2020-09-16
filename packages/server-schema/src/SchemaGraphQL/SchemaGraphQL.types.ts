@@ -15,9 +15,11 @@ export type IResolver<
 
 export type IResolverAny = IResolver<any, any, any>;
 
-export type ISchemaMutationTransactor<T extends Object> = (
-  trx?: any
-) => Promise<[any, T]>;
+export type ISchemaMutationTransactorPre = (trx?: any) => Promise<[any, {}]>;
+export type ISchemaMutationTransactorPost = (
+  trx?: any,
+  id?: any
+) => Promise<void>;
 
 export type IModelResolversGetter = (
   defaultGetter: any,
@@ -33,7 +35,8 @@ export type IQueryById = (
   tableName: string,
   args: { id: string },
   resolverArgs: Parameters<IResolverAny>,
-  getter?: IModelResolversGetter
+  getter?: IModelResolversGetter,
+  trx?: any
 ) => Promise<any>;
 
 export type IQueryByArgs = (
@@ -51,17 +54,19 @@ export type IQueryByArgs = (
   getter?: IModelResolversGetter
 ) => Promise<{ items: any[]; total?: number; cursor?: string }>;
 
-export type IQueryOnCreate<T = any> = (
+export type IQueryOnUpsert<T = any> = (
   tableName: string,
-  transactors: ISchemaMutationTransactor<T>[],
-  resolverArgs: Parameters<IResolverAny>
+  transactors: {
+    pre: ISchemaMutationTransactorPre;
+    post: ISchemaMutationTransactorPost;
+  }[],
+  resolverArgs: Parameters<IResolverAny>,
+  getter?: IModelResolversGetter
 ) => Promise<T[]>;
 
-export type IQueryOnUpdate<T = any> = (
-  tableName: string,
-  transactors: ISchemaMutationTransactor<T>[],
-  resolverArgs: Parameters<IResolverAny>
-) => Promise<T[]>;
+export type IQueryOnCreate = IQueryOnUpsert;
+
+export type IQueryOnUpdate = IQueryOnUpsert;
 
 export type IQueryOnDelete = (
   tableName: string,
@@ -126,9 +131,10 @@ export type IModelFieldAttributes = {
 
 export type IModelGetter = IResolverAny | string | null;
 export type IModelSetter = IModelSetterCallback | string | null;
-export type IModelSetterCallback<T = unknown> = (
-  trx: any
-) => (value: unknown, item: T) => Promise<any>;
+export type IModelSetterCallback<T extends {} = {}, D extends {} = {}> = (
+  trx: any,
+  id?: any
+) => (value: any, data: D) => T | Promise<T>;
 
 export type ISchemaNodeType = "Root" | "Query" | "Mutation";
 export type ISchemaTypeDefs = Record<ISchemaNodeType, string>;

@@ -48,7 +48,8 @@ export default function SchemaGraphQLKnex(config: {
     tableName,
     args,
     resolverArgs,
-    getter
+    getter,
+    trx
   ) => {
     await resolveTableInfo(tableName);
     const selectArgs = getTableSelectArgs(tableName);
@@ -62,7 +63,7 @@ export default function SchemaGraphQLKnex(config: {
     };
     getter && getter(config, { tableName, selectArgs })(...resolverArgs);
 
-    return queryFromConfig(config);
+    return queryFromConfig(config, trx).first();
   };
 
   const queryByArgs: IQueryByArgs = async (
@@ -206,28 +207,37 @@ export default function SchemaGraphQLKnex(config: {
     };
   };
 
-  const queryOnCreate: IQueryOnCreate = async () => {
-    // ! TODO: use update SETTER data resolution logic
-    // TODO: implement bulk creation function
-    return [];
-  };
-
-  const queryOnUpdate: IQueryOnUpdate = async (
+  const queryOnCreate: IQueryOnCreate = async (
     tableName,
     transactors,
-    resolverArgs
+    resolverArgs,
+    getter
   ) => {
     let items: any[] = [];
     await knex.transaction(async (trx) => {
       items = await Promise.all<any>(
-        transactors.map(async (transactor) => {
-          const [id, data] = await transactor(trx);
-          await knex(tableName).transacting(trx).where({ id }).update(data);
-          // TODO: optimise, avoid second query?
-          return queryById(tableName, id, resolverArgs);
+        transactors.map(async ({ pre, post }) => {
+          const [, data] = await pre(trx);
+
+          const rows = await knex(tableName)
+            .transacting(trx)
+            .insert(data)
+            .returning("id");
+
+          const id = rows[0];
+          await post(trx, id);
+
+          return await queryById(
+            tableName,
+            { id: `${id}` },
+            resolverArgs,
+            getter,
+            trx
+          );
         })
       );
     });
+
     return items;
   };
 

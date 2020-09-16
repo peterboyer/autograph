@@ -2,15 +2,20 @@ import {
   IIOC,
   IModel,
   IResolver,
-  ISchemaMutationTransactor,
   IResolverAny,
+  ISchemaMutationTransactorPre,
+  ISchemaMutationTransactorPost,
 } from "./SchemaGraphQL.types";
 
 export default (ioc: IIOC) => {
   return (model: IModel) => {
     const { name, fields: _fields, filters: _filters = {}, resolvers } = model;
+
     const fields = new Map(Object.entries(_fields));
     const modelFilters = new Map(Object.entries(_filters));
+
+    const getterOne = resolvers?.getterOne || resolvers?.getter;
+    const getterMany = resolvers?.getterMany || resolvers?.getter;
 
     const {
       queryById,
@@ -71,12 +76,7 @@ export default (ioc: IIOC) => {
       ...resolverArgs
     ) => {
       const [, args] = resolverArgs;
-      return queryById_throwNotFound(
-        name,
-        args,
-        resolverArgs,
-        resolvers?.getterOne || resolvers?.getter
-      );
+      return queryById_throwNotFound(name, args, resolverArgs, getterOne);
     };
 
     const resolverQueryMany: IResolver<
@@ -128,27 +128,28 @@ export default (ioc: IIOC) => {
         name,
         { cursor, order, filters, limit },
         resolverArgs,
-        resolvers?.getterMany || resolvers?.getter
+        getterMany
       );
     };
 
-    const getItemDataTransactors = <T extends { id: any | null }>(
+    const getDataItemTransactors = <T extends { id: any | null }>(
       data: T[],
       resolverArgs: Parameters<IResolverAny>
-    ) => {
-      const transactors = data.map(
-        (item): ISchemaMutationTransactor<T> => async (trx?) => {
-          const { id = null } = item;
-          if (id)
+    ) =>
+      data.map((dataItem) => {
+        const pre: ISchemaMutationTransactorPre = async (trx) => {
+          const { id = null } = dataItem;
+          if (id) {
             await queryById_throwNotFound(
               name,
               { id },
               resolverArgs,
-              resolvers?.getter
+              getterOne
             );
+          }
 
           const itemData = {};
-          for (const [_key, _value] of Object.entries(item)) {
+          for (const [_key, _value] of Object.entries(dataItem)) {
             const field = fields.get(_key);
 
             // TODO: raise error
@@ -157,29 +158,46 @@ export default (ioc: IIOC) => {
             // skip
             if (field.primary) continue;
             if (field.setter === null) continue;
+            if (typeof field.setter === "function" && field.setter.length !== 1)
+              continue;
 
             let key = _key;
-            let value = _value;
+            let assignment = {};
 
-            if (field.setter) {
-              if (typeof field.setter === "function") {
-                value = await field.setter(trx)(value, item);
-              } else {
-                key =
-                  typeof field.setter === "string"
-                    ? field.setter
-                    : field.column || key;
-              }
+            key =
+              typeof field.setter === "string"
+                ? field.setter
+                : field.column || key;
+
+            if (typeof field.setter === "function") {
+              assignment = await field.setter(trx)(_value, dataItem);
+            } else {
+              assignment = { [key]: _value };
             }
-            Object.assign(itemData, { [key]: value });
+
+            Object.assign(itemData, assignment);
           }
 
-          return [id, itemData as T];
-        }
-      );
+          return [id, itemData];
+        };
+        const post: ISchemaMutationTransactorPost = async (trx, id) => {
+          for (const [_key, _value] of Object.entries(dataItem)) {
+            const field = fields.get(_key);
 
-      return transactors;
-    };
+            // TODO: raise error
+            if (!field) continue;
+
+            // skip
+            if (field.primary) continue;
+            if (field.setter === null) continue;
+            if (typeof field.setter !== "function") continue;
+            if (field.setter.length !== 2) continue;
+
+            await field.setter(trx, id)(_value, dataItem);
+          }
+        };
+        return { pre, post };
+      });
 
     const resolverMutationCreate: IResolver<
       never,
@@ -188,8 +206,8 @@ export default (ioc: IIOC) => {
       const [, args] = resolverArgs;
       const { data } = args || {};
       if (!data.length) return [];
-      const transactor = getItemDataTransactors(data, resolverArgs);
-      return queryOnCreate(name, transactor, resolverArgs);
+      const itemTransactors = getDataItemTransactors(data, resolverArgs);
+      return queryOnCreate(name, itemTransactors, resolverArgs, getterOne);
     };
 
     const resolverMutationUpdate: IResolver<
@@ -199,8 +217,8 @@ export default (ioc: IIOC) => {
       const [, args] = resolverArgs;
       const { data } = args || {};
       if (!data.length) return [];
-      const transactor = getItemDataTransactors(data, resolverArgs);
-      return queryOnUpdate(name, transactor, resolverArgs);
+      const itemTransactors = getDataItemTransactors(data, resolverArgs);
+      return queryOnUpdate(name, itemTransactors, resolverArgs, getterOne);
     };
 
     const resolverMutationDelete: IResolver<never, { ids: string[] }> = async (
