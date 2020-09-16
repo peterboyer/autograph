@@ -32,7 +32,7 @@ export default function TypeDefs(ioc: IIOC) {
       acc.add(
         `${fieldName}${
           field.args ? `(${stringGraphFieldJoinArgs(field.args)})` : ""
-        }: ${field.many ? `[${typeGraph}!]!` : `${typeGraph}`}${
+        }: ${field.many ? `[${typeGraph}!]` : `${typeGraph}`}${
           field.nullable === false ? "!" : ""
         }`
       );
@@ -40,7 +40,10 @@ export default function TypeDefs(ioc: IIOC) {
     return [...acc.values()].join("\n");
   }
 
-  function mapGraphFieldsTypeDefsInput(fields: Map<string, IModelField>) {
+  function mapGraphFieldsTypeDefsInput(
+    fields: Map<string, IModelField>,
+    partial = false
+  ) {
     const acc = new Set<string>();
     for (const [fieldName, field] of fields) {
       if (field.private) continue;
@@ -48,7 +51,9 @@ export default function TypeDefs(ioc: IIOC) {
       if (field.setter === null) continue;
       const typeGraph = field.relationship ? "ID" : getGraphType(field.type);
       acc.add(
-        `${fieldName}: ${field.many ? `[${typeGraph}!]` : `${typeGraph}`}`
+        `${fieldName}: ${field.many ? `[${typeGraph}!]` : `${typeGraph}`}${
+          !partial && field.nullable === false ? "!" : ""
+        }`
       );
     }
     return [...acc.values()].join("\n");
@@ -92,6 +97,10 @@ export default function TypeDefs(ioc: IIOC) {
 
     const graphFieldsTypeDefs = mapGraphFieldsTypeDefs(fields);
     const graphFieldsTypeDefsInput = mapGraphFieldsTypeDefsInput(fields);
+    const graphFieldsTypeDefsInputPartial = mapGraphFieldsTypeDefsInput(
+      fields,
+      true
+    );
     const graphFieldsTypeDefsFilters = mapGraphFieldsTypeDefsFilters(
       fields,
       filters
@@ -112,9 +121,9 @@ export default function TypeDefs(ioc: IIOC) {
       input ${name}Input {
         ${graphFieldsTypeDefsInput}
       }
-      input ${name}InputID {
+      input ${name}InputPartial {
         id: ID!
-        ${graphFieldsTypeDefsInput}
+        ${graphFieldsTypeDefsInputPartial}
       }
     `);
 
@@ -130,7 +139,7 @@ export default function TypeDefs(ioc: IIOC) {
 
     const Mutation = `
       ${name}_create(data: [${name}Input!]!): [${name}!]!
-      ${name}_update(data: [${name}InputID!]!): [${name}!]!
+      ${name}_update(data: [${name}InputPartial!]!): [${name}!]!
       ${name}_delete(ids: [ID!]!): [ID!]!
     `;
 
