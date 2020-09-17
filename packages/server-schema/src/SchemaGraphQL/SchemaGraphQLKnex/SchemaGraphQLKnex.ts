@@ -237,7 +237,39 @@ export default function SchemaGraphQLKnex(config: {
         })
       );
     });
+    return items;
+  };
 
+  const queryOnUpdate: IQueryOnUpdate = async (
+    tableName,
+    transactors,
+    resolverArgs,
+    getter
+  ) => {
+    let items: any[] = [];
+    await knex.transaction(async (trx) => {
+      items = await Promise.all<any>(
+        transactors.map(async ({ pre, post }) => {
+          const [id, data] = await pre(trx);
+
+          await knex(tableName)
+            .transacting(trx)
+            .where({ id })
+            .update(data)
+            .returning("id");
+
+          await post(trx, id);
+
+          return await queryById(
+            tableName,
+            { id: `${id}` },
+            resolverArgs,
+            getter,
+            trx
+          );
+        })
+      );
+    });
     return items;
   };
 
