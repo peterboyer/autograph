@@ -29,12 +29,12 @@ export default (ioc: IIOC) => {
     } = ioc;
 
     const queryById_throwNotFound = async (
-      ...args: Parameters<typeof queryById>
+      ..._args: Parameters<typeof queryById>
     ) => {
-      const result = await queryById(...args);
+      const result = await queryById(..._args);
       if (!result) {
-        const [table, id, resolverArgs] = args;
-        throw errors.NotFound(table, { id }, resolverArgs);
+        const [table, args, resolverArgs] = _args;
+        throw errors.NotFound(table, args, resolverArgs);
       }
       return result;
     };
