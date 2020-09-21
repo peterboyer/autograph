@@ -90,7 +90,7 @@ export default function TypeDefs(ioc: IIOC) {
   }
 
   return function (model: IModel): ISchemaTypeDefs {
-    const { name, fields: _fields, filters: _filters = {} } = model;
+    const { name, fields: _fields, filters: _filters = {}, typeDefs } = model;
 
     const fields = new Map(Object.entries(_fields));
     const filters = new Map(Object.entries(_filters));
@@ -125,6 +125,7 @@ export default function TypeDefs(ioc: IIOC) {
         id: ID!
         ${graphFieldsTypeDefsInputPartial}
       }
+      ${typeDefs?.Root || ""}
     `);
 
     const Query = `
@@ -135,12 +136,14 @@ export default function TypeDefs(ioc: IIOC) {
         filters: ${name}ManyFilters
         limit: Int
       ): ${name}ManyResult!
+      ${typeDefs?.Query || ""}
     `;
 
     const Mutation = `
       ${name}_create(data: [${name}Input!]!): [${name}!]!
       ${name}_update(data: [${name}InputPartial!]!): [${name}!]!
       ${name}_delete(ids: [ID!]!): [ID!]!
+      ${typeDefs?.Mutation || ""}
     `;
 
     return {

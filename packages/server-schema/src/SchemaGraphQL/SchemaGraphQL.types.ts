@@ -113,6 +113,7 @@ export type IModelAttributes = {
     getterOne?: IModelResolversGetter;
     getterMany?: IModelResolversGetter;
   };
+  typeDefs?: Partial<Record<ISchemaNodeType, string>>;
 };
 
 export type IModelFieldAttributes = {
