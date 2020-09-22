@@ -36,12 +36,29 @@ export function QueryConfig(knex: Knex) {
       query.where(function () {
         wheres.forEach((condition) => {
           if (typeof condition === "function") {
+            // callback with query as this
             condition(this);
-          } else if (Array.isArray(condition)) {
+          } else if (
+            Array.isArray(condition) &&
+            (condition.length === 2 || condition.length === 3)
+          ) {
+            // array of args spread for where
             // @ts-ignore: knex overloads not allowing spread args
             this.where(...condition);
-          } else {
+          } else if (
+            condition &&
+            !Array.isArray(condition) &&
+            typeof condition === "object"
+          ) {
+            // object for where
             this.where(condition);
+          } else {
+            // invalid where type
+            throw new TypeError(
+              `'wheres' condition ([${condition.toString()}])` +
+                " must be either a function, an array of length 2 or 3," +
+                " or an object"
+            );
           }
         });
       });

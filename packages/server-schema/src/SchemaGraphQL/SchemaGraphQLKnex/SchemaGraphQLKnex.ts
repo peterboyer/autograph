@@ -156,7 +156,6 @@ export default function SchemaGraphQLKnex(config: {
           limit: limit + 1,
           wheres: nextId
             ? [
-                [],
                 (query) =>
                   query.whereRaw(
                     `((${wheres.join(",")}) ${
