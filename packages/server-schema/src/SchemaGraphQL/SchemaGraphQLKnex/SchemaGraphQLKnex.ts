@@ -274,7 +274,10 @@ export default function SchemaGraphQLKnex(config: {
   };
 
   const queryOnDelete: IQueryOnDelete = async (tableName, ids) => {
-    return [];
+    await knex.transaction(async (trx) => {
+      await knex(tableName).transacting(trx).whereIn("id", ids).delete();
+    });
+    return ids;
   };
 
   return {
