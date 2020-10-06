@@ -67,6 +67,6 @@ export type TQuerier<TSource, TContext, TQueryConfig> = (
 ) => TResolver<TSource, {}, TContext, void>;
 
 export type TFilter<TArg extends TType, TQueryConfig> = {
-  type: TArg;
+  arg: TArg;
   resolver: (config: TQueryConfig, value: Typed<TArg>) => void;
 };

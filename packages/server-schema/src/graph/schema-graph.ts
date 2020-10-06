@@ -3,6 +3,7 @@ import {
   TResolver,
   TAccessor,
   TErrors,
+  TFilter,
   Typed,
   TypedDict,
 } from "./schema-graph-types";
@@ -36,73 +37,46 @@ export const schema = <
   type TTransaction = TConfig["Transaction"];
   type TQueryConfig = TConfig["QueryConfig"];
 
-  const getModifiers = {
-    use: <T extends TResolver<TSource, TypedDict<{}>, TContext>>(resolver: T) =>
-      ({
-        resolver,
-      } as const),
-    args: <A extends { [key: string]: TType }>(args: A) => <
-      R extends TResolver<TSource, TypedDict<A>, TContext>
-    >(
+  type TNodeGetMods = {
+    use: <T extends TResolver<TSource, TypedDict<{}>, TContext>>(
+      resolver: T
+    ) => {
+      resolver: T;
+    };
+    args: <A extends { [key: string]: TType }>(
+      args: A
+    ) => <R extends TResolver<TSource, TypedDict<A>, TContext>>(
       resolver: R
-    ) =>
-      ({
-        args,
-        resolver,
-      } as const),
+    ) => {
+      args: A;
+      resolver: R;
+    };
   };
 
-  const setModifiers = {
-    pre: <A extends TType>(arg: A) => <
-      T extends (
+  type TNodeGet = (modifiers: TNodeGetMods) => void;
+
+  type TNodeSetMods = {
+    pre: <A extends TType>(
+      arg: A
+    ) => <
+      R extends (
         trx: TTransaction
       ) => (value: Typed<A>, context: TContext) => void
     >(
-      transactor: T
-    ) =>
-      ({
-        stage: "pre",
-        arg,
-        transactor,
-      } as const),
-    post: <A extends TType>(arg: A) => <
-      T extends (
+      transactor: R
+    ) => void;
+    post: <A extends TType>(
+      arg: A
+    ) => <
+      R extends (
         trx: TTransaction
       ) => (source: TSource, value: Typed<A>, context: TContext) => void
     >(
-      transactor: T
-    ) =>
-      ({
-        stage: "post",
-        arg,
-        transactor,
-      } as const),
+      transactor: R
+    ) => void;
   };
 
-  type TNodeGet = (
-    modifiers: typeof getModifiers
-  ) => {
-    args: { [key: string]: TType };
-    resolver: TResolver<TSource, TypedDict<{ [key: string]: TType }>, TContext>;
-  };
-
-  type TNodeSet = (
-    modifiers: typeof setModifiers
-  ) =>
-    | {
-        stage: "pre";
-        arg: TType;
-        transactor: (
-          trx: TTransaction
-        ) => (value: Typed<TType>, context: TContext) => void;
-      }
-    | {
-        stage: "post";
-        arg: TType;
-        transactor: (
-          trx: TTransaction
-        ) => (source: TSource, value: Typed<TType>, context: TContext) => void;
-      };
+  type TNodeSet = (modifiers: TNodeSetMods) => void;
 
   type TDefAccessor = (errors: TErrors) => TAccessor<TSource, TContext>;
 
@@ -122,15 +96,6 @@ export const schema = <
 
   type TDefNodes = Record<any, TDefNode>;
 
-  const filterModifier = <V extends TType>(type: V) => <
-    T extends (config: TQueryConfig, value: Typed<V>) => void
-  >(
-    resolver: T
-  ) => ({
-    type,
-    resolver,
-  });
-
   type TQuery = (
     config: TQueryConfig
   ) => TResolver<TSource, {}, TContext, void>;
@@ -139,9 +104,16 @@ export const schema = <
     access?: Partial<
       Record<"create" | "read" | "update" | "delete" | "default", TDefAccessor>
     >;
-    filters?: (
-      use: typeof filterModifier
-    ) => Record<any, ReturnType<ReturnType<typeof filterModifier>>>;
+    filters?: Record<
+      any,
+      (modifiers: {
+        use: <A extends TType>(
+          type: A
+        ) => <R extends (config: TQueryConfig, value: Typed<A>) => void>(
+          resolver: R
+        ) => void;
+      }) => void
+    >;
     query?: {
       one?: TQuery;
       many?: TQuery;
@@ -151,12 +123,12 @@ export const schema = <
 
   return <
     XTName extends TName,
-    XTNodes extends TDefNodes,
-    XTOptions extends TOptions
+    XTDefNodes extends TDefNodes,
+    XTDefOptions extends TOptions
   >(
     name: XTName,
-    nodes: XTNodes,
-    options?: XTOptions
+    nodes: XTDefNodes,
+    options?: XTDefOptions
   ) => {
     const _nodes = Object.entries(nodes).reduce((acc, [name, node]) => {
       const _node: TNode =
@@ -176,12 +148,57 @@ export const schema = <
                         node.resolver.get &&
                         (typeof node.resolver.get === "string"
                           ? node.resolver.get
-                          : node.resolver.get(getModifiers)),
+                          : (() => {
+                              let obj: {
+                                current?: {
+                                  args: any;
+                                  resolver: any;
+                                };
+                              } = {};
+                              node.resolver.get({
+                                use: (resolver) => {
+                                  obj.current = { args: undefined, resolver };
+                                  return obj.current;
+                                },
+                                args: (args) => (resolver) => {
+                                  obj.current = { args, resolver };
+                                  return obj.current;
+                                },
+                              });
+                              return obj.current!;
+                            })()),
                       set:
                         node.resolver.set &&
                         (typeof node.resolver.set === "string"
                           ? node.resolver.set
-                          : node.resolver.set(setModifiers)),
+                          : (() => {
+                              let obj: {
+                                current?: {
+                                  stage: "pre" | "post";
+                                  arg: any;
+                                  transactor: any;
+                                };
+                              } = {};
+                              node.resolver.set({
+                                pre: (arg) => (transactor) => {
+                                  obj.current = {
+                                    stage: "pre",
+                                    arg,
+                                    transactor,
+                                  };
+                                  return obj.current;
+                                },
+                                post: (arg) => (transactor) => {
+                                  obj.current = {
+                                    stage: "post",
+                                    arg,
+                                    transactor,
+                                  };
+                                  return obj.current;
+                                },
+                              });
+                              return obj.current!;
+                            })()),
                     }),
               access: node.access && {
                 get:
@@ -197,9 +214,50 @@ export const schema = <
             };
       Object.assign(acc, { [name]: _node });
       return acc;
-    }, {} as { [K in keyof XTNodes]: TNode });
+    }, {} as { [K in keyof XTDefNodes]: TNode });
 
-    const _options = options;
+    const _options = options && {
+      access: options.access && {
+        create:
+          options.access.create &&
+          options.access.create(config?.errors || defaults.errors),
+        read:
+          options.access.read &&
+          options.access.read(config?.errors || defaults.errors),
+        update:
+          options.access.update &&
+          options.access.update(config?.errors || defaults.errors),
+        delete:
+          options.access.delete &&
+          options.access.delete(config?.errors || defaults.errors),
+        default:
+          options.access.default &&
+          options.access.default(config?.errors || defaults.errors),
+      },
+      filters:
+        options.filters &&
+        Object.entries(options.filters).reduce((acc, [name, filter]) => {
+          let obj: {
+            current?: {
+              arg: any;
+              resolver: any;
+            };
+          } = {};
+
+          filter({
+            use: (arg) => (resolver) => {
+              obj.current = {
+                arg,
+                resolver,
+              };
+              return obj.current;
+            },
+          });
+
+          Object.assign(acc, { [name]: obj.current });
+          return acc;
+        }, {} as { [K in keyof XTDefOptions["filters"]]: TFilter<TType, unknown> }),
+    };
 
     return create(name, _nodes, _options);
   };
