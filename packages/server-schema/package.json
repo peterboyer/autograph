@@ -5,7 +5,6 @@
   "description": "Generate TypeDefs, Resolvers, and Tables for your GraphQL/Knex backends.",
   "repository": "https://github.com/armix-io/armix-server",
   "license": "MIT",
-  "type": "module",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "engines": {
