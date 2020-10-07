@@ -27,11 +27,18 @@ export type TNode = {
           | null
           | string
           | {
-              stage: "pre" | "post";
+              stage: "pre";
               arg: TType;
               transactor: (
                 transactor: any
-              ) => TResolver<any, Typed<TType>, any>;
+              ) => (value: any, context: any) => void;
+            }
+          | {
+              stage: "post";
+              arg: TType;
+              transactor: (
+                trx: any
+              ) => (source: any, value: any, context: any) => void;
             };
       };
   access?: Partial<Record<"get" | "set" | "default", TAccessor<any, any>>>;

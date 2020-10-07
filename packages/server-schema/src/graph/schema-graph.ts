@@ -8,7 +8,7 @@ import {
   TypedDict,
 } from "./schema-graph-types";
 export * from "./schema-graph-types";
-import create, { TName, TNode } from "./schema-graph-create";
+import create, { TName, TNodes, TNode } from "./schema-graph-create";
 
 export const defaults: {
   errors: TErrors;
@@ -31,7 +31,7 @@ export const schema = <
     QueryConfig?: unknown;
   } = {}
 >(config?: {
-  errors?: TErrors;
+  errors?: Partial<TErrors>;
 }) => {
   type TContext = TConfig["Context"];
   type TTransaction = TConfig["Transaction"];
@@ -130,6 +130,11 @@ export const schema = <
     nodes: XTDefNodes,
     options?: XTDefOptions
   ) => {
+    const _errors: TErrors = {
+      NotFound: config?.errors?.NotFound || defaults.errors.NotFound,
+      NotAllowed: config?.errors?.NotAllowed || defaults.errors.NotAllowed,
+    };
+
     const _nodes = Object.entries(nodes).reduce((acc, [name, node]) => {
       const _node: TNode =
         "__is" in node
@@ -201,38 +206,21 @@ export const schema = <
                             })()),
                     }),
               access: node.access && {
-                get:
-                  node.access.get &&
-                  node.access.get(config?.errors || defaults.errors),
-                set:
-                  node.access.set &&
-                  node.access.set(config?.errors || defaults.errors),
-                default:
-                  node.access.default &&
-                  node.access.default(config?.errors || defaults.errors),
+                get: node.access.get && node.access.get(_errors),
+                set: node.access.set && node.access.set(_errors),
+                default: node.access.default && node.access.default(_errors),
               },
             };
-      Object.assign(acc, { [name]: _node });
-      return acc;
-    }, {} as { [K in keyof XTDefNodes]: TNode });
+      return Object.assign(acc, { [name]: _node });
+    }, {} as TNodes);
 
     const _options = options && {
       access: options.access && {
-        create:
-          options.access.create &&
-          options.access.create(config?.errors || defaults.errors),
-        read:
-          options.access.read &&
-          options.access.read(config?.errors || defaults.errors),
-        update:
-          options.access.update &&
-          options.access.update(config?.errors || defaults.errors),
-        delete:
-          options.access.delete &&
-          options.access.delete(config?.errors || defaults.errors),
-        default:
-          options.access.default &&
-          options.access.default(config?.errors || defaults.errors),
+        create: options.access.create && options.access.create(_errors),
+        read: options.access.read && options.access.read(_errors),
+        update: options.access.update && options.access.update(_errors),
+        delete: options.access.delete && options.access.delete(_errors),
+        default: options.access.default && options.access.default(_errors),
       },
       filters:
         options.filters &&
@@ -243,7 +231,6 @@ export const schema = <
               resolver: any;
             };
           } = {};
-
           filter({
             use: (arg) => (resolver) => {
               obj.current = {
@@ -253,10 +240,9 @@ export const schema = <
               return obj.current;
             },
           });
-
-          Object.assign(acc, { [name]: obj.current });
-          return acc;
-        }, {} as { [K in keyof XTDefOptions["filters"]]: TFilter<TType, unknown> }),
+          return Object.assign(acc, { [name]: obj.current });
+        }, {} as Record<any, TFilter<TType, unknown>>),
+      query: options.query,
     };
 
     return create(name, _nodes, _options);
