@@ -1,8 +1,8 @@
-export * as graph from "./graph/schema-graph";
-export { default as graphSchema } from "./graph/schema-graph";
+export * as graph from "./graph";
+export { default as graphSchema } from "./graph";
 
-export * as knex from "./knex/schema-knex";
-export { default as knexSchema } from "./knex/schema-knex";
+export * as knex from "./knex";
+export { default as knexSchema } from "./knex";
 
 // export { default } from "./SchemaManager/index";
 

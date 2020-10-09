@@ -6,9 +6,12 @@ import {
   TFilter,
   Typed,
   TypedDict,
+  TName,
+  TNodes,
+  TNode,
+  ISchemaTypeDefs,
 } from "./schema-graph-types";
-export * from "./schema-graph-types";
-import create, { TName, TNodes, TNode } from "./schema-graph-create";
+import create from "./schema-graph-create";
 
 export const defaults: {
   errors: TErrors;
@@ -56,7 +59,7 @@ export const schema = <
   type TNodeGet = (modifiers: TNodeGetMods) => void;
 
   type TNodeSetMods = {
-    pre: <A extends TType>(
+    pre: <A extends TType<unknown, "scalar">>(
       arg: A
     ) => <
       R extends (
@@ -65,7 +68,7 @@ export const schema = <
     >(
       transactor: R
     ) => void;
-    post: <A extends TType>(
+    post: <A extends TType<unknown, "scalar">>(
       arg: A
     ) => <
       R extends (
@@ -83,8 +86,7 @@ export const schema = <
   type TDefNode =
     | TType
     | {
-        type: TType | string;
-        alias?: string;
+        type: TType;
         resolver?:
           | string
           | {
@@ -107,7 +109,7 @@ export const schema = <
     filters?: Record<
       any,
       (modifiers: {
-        use: <A extends TType>(
+        use: <A extends TType<unknown, "scalar">>(
           type: A
         ) => <R extends (config: TQueryConfig, value: Typed<A>) => void>(
           resolver: R
@@ -119,6 +121,7 @@ export const schema = <
       many?: TQuery;
       default?: TQuery;
     };
+    typeDefs?: Partial<ISchemaTypeDefs>;
   };
 
   return <
@@ -143,7 +146,6 @@ export const schema = <
             }
           : {
               type: node.type,
-              alias: node.alias,
               resolver:
                 node.resolver &&
                 (typeof node.resolver === "string"
@@ -214,36 +216,42 @@ export const schema = <
       return Object.assign(acc, { [name]: _node });
     }, {} as TNodes);
 
-    const _options = options && {
-      access: options.access && {
-        create: options.access.create && options.access.create(_errors),
-        read: options.access.read && options.access.read(_errors),
-        update: options.access.update && options.access.update(_errors),
-        delete: options.access.delete && options.access.delete(_errors),
-        default: options.access.default && options.access.default(_errors),
+    const _options = Object.assign(
+      {
+        limitDefault: 20,
+        limitMaxDefault: 50,
       },
-      filters:
-        options.filters &&
-        Object.entries(options.filters).reduce((acc, [name, filter]) => {
-          let obj: {
-            current?: {
-              arg: any;
-              resolver: any;
-            };
-          } = {};
-          filter({
-            use: (arg) => (resolver) => {
-              obj.current = {
-                arg,
-                resolver,
+      options,
+      options && {
+        access: options.access && {
+          create: options.access.create && options.access.create(_errors),
+          read: options.access.read && options.access.read(_errors),
+          update: options.access.update && options.access.update(_errors),
+          delete: options.access.delete && options.access.delete(_errors),
+          default: options.access.default && options.access.default(_errors),
+        },
+        filters:
+          options.filters &&
+          Object.entries(options.filters).reduce((acc, [name, filter]) => {
+            let obj: {
+              current?: {
+                arg: any;
+                resolver: any;
               };
-              return obj.current;
-            },
-          });
-          return Object.assign(acc, { [name]: obj.current });
-        }, {} as Record<any, TFilter<TType, unknown>>),
-      query: options.query,
-    };
+            } = {};
+            filter({
+              use: (arg) => (resolver) => {
+                obj.current = {
+                  arg,
+                  resolver,
+                };
+                return obj.current;
+              },
+            });
+            return Object.assign(acc, { [name]: obj.current });
+          }, {} as Record<any, TFilter>),
+      }
+    );
 
     return create(name, _nodes, _options);
   };

@@ -1,96 +1,18 @@
-import {
-  TType,
-  TResolver,
-  TAccessor,
-  TQuerier,
-  TFilter,
-  Typed,
-  TypedDict,
-} from "./schema-graph-types";
+import { TName, TNodes, TOptions, TSchema } from "./schema-graph-types";
 
-export type TName = string;
-
-export type TNode = {
-  type: TType | string;
-  alias?: string;
-  resolver?:
-    | string
-    | {
-        get?:
-          | null
-          | string
-          | {
-              args?: Record<any, TType>;
-              resolver: TResolver<any, TypedDict<Record<any, TType>>, any>;
-            };
-        set?:
-          | null
-          | string
-          | {
-              stage: "pre";
-              arg: TType;
-              transactor: (
-                transactor: any
-              ) => (value: any, context: any) => void;
-            }
-          | {
-              stage: "post";
-              arg: TType;
-              transactor: (
-                trx: any
-              ) => (source: any, value: any, context: any) => void;
-            };
-      };
-  access?: Partial<Record<"get" | "set" | "default", TAccessor<any, any>>>;
-};
-
-export type TNodes = Record<any, TNode>;
-
-export type TOptions = {
-  access?: Partial<
-    Record<
-      "create" | "read" | "update" | "delete" | "default",
-      TAccessor<any, any>
-    >
-  >;
-  filters?: Record<any, TFilter<TType<any>, any>>;
-  query?: {
-    one?: TQuerier<any, any, any>;
-    many?: TQuerier<any, any, any>;
-    default?: TQuerier<any, any, any>;
-  };
-};
-
-export type TReturn = {
-  typeDefs: {
-    Root: string;
-    Query: string;
-    Mutation: string;
-  };
-  resolvers: {
-    Root: () => any;
-    Query: () => any;
-    Mutation: () => any;
-  };
-};
+// TODO typedefs with raw node: with Root Query Mutation as uncompiled strings
+// TODO typedefs append/process as arrays rather than strings, then merge to string
+import TypeDefs from "./schema-graph-typedefs";
+import Resolvers from "./schema-graph-resolvers";
 
 export const create = (
   name: TName,
   nodes: TNodes,
-  options?: TOptions
-): TReturn => {
-  return {
-    typeDefs: {
-      Root: ``,
-      Query: ``,
-      Mutation: ``,
-    },
-    resolvers: {
-      Root: () => null,
-      Query: () => null,
-      Mutation: () => null,
-    },
-  };
+  options: TOptions
+): TSchema => {
+  const typeDefs = TypeDefs(name, nodes, options);
+  const resolvers = Resolvers(name, nodes, options);
+  return { typeDefs, resolvers };
 };
 
 export default create;

@@ -4,6 +4,7 @@
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "Node",
+    "downlevelIteration": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "lib",
     "baseUrl": ".",
