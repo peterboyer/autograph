@@ -78,17 +78,19 @@ function mapGraphFieldsTypeDefsFilters(
   filters: Map<any, TFilter>
 ) {
   const acc = new Set<string>();
-  for (const [fieldName, node] of nodes) {
+  for (const [nodeName, node] of nodes) {
     if (typeof node.resolver !== "string" && node.resolver?.get === null)
       continue;
 
+    if (node.type.__is !== "scalar") continue;
+
     const typeGraph = getType(node.type);
-    acc.add(`${fieldName}_eq: ${typeGraph}`);
-    acc.add(`${fieldName}_ne: ${typeGraph}`);
-    acc.add(`${fieldName}_gt: ${typeGraph}`);
-    acc.add(`${fieldName}_gte: ${typeGraph}`);
-    acc.add(`${fieldName}_lt: ${typeGraph}`);
-    acc.add(`${fieldName}_lte: ${typeGraph}`);
+    acc.add(`${nodeName}_eq: ${typeGraph}`);
+    acc.add(`${nodeName}_ne: ${typeGraph}`);
+    acc.add(`${nodeName}_gt: ${typeGraph}`);
+    acc.add(`${nodeName}_gte: ${typeGraph}`);
+    acc.add(`${nodeName}_lt: ${typeGraph}`);
+    acc.add(`${nodeName}_lte: ${typeGraph}`);
   }
 
   for (const [filterName, filter] of filters) {

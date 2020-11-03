@@ -9,7 +9,9 @@ import {
   TName,
   TNodes,
   TNode,
-  ISchemaTypeDefs,
+  TOptions,
+  TQuerier,
+  TSchemaTypeDefs,
 } from "./schema-graph-types";
 import create from "./schema-graph-create";
 
@@ -41,18 +43,26 @@ export const schema = <
   type TQueryConfig = TConfig["QueryConfig"];
 
   type TNodeGetMods = {
-    use: <T extends TResolver<TSource, TypedDict<{}>, TContext>>(
-      resolver: T
+    use: <
+      R extends (
+        trx: TTransaction
+      ) => TResolver<TSource, TypedDict<{}>, TContext>
+    >(
+      transactor: R
     ) => {
-      resolver: T;
+      transactor: R;
     };
     args: <A extends { [key: string]: TType }>(
       args: A
-    ) => <R extends TResolver<TSource, TypedDict<A>, TContext>>(
-      resolver: R
+    ) => <
+      R extends (
+        trx: TTransaction
+      ) => TResolver<TSource, TypedDict<A>, TContext>
+    >(
+      transactor: R
     ) => {
       args: A;
-      resolver: R;
+      transactor: R;
     };
   };
 
@@ -98,11 +108,7 @@ export const schema = <
 
   type TDefNodes = Record<any, TDefNode>;
 
-  type TQuery = (
-    config: TQueryConfig
-  ) => TResolver<TSource, {}, TContext, void>;
-
-  type TOptions = {
+  type TDefOptions = {
     access?: Partial<
       Record<"create" | "read" | "update" | "delete" | "default", TDefAccessor>
     >;
@@ -117,17 +123,23 @@ export const schema = <
       }) => void
     >;
     query?: {
-      one?: TQuery;
-      many?: TQuery;
-      default?: TQuery;
+      one?: TQuerier<TSource, TContext, TQueryConfig, TTransaction>;
+      many?: TQuerier<TSource, TContext, TQueryConfig, TTransaction>;
+      default?: TQuerier<TSource, TContext, TQueryConfig, TTransaction>;
     };
-    typeDefs?: Partial<ISchemaTypeDefs>;
+    typeDefs?: Partial<TSchemaTypeDefs>;
+    queryById: TOptions["queryById"];
+    queryByArgs: TOptions["queryByArgs"];
+    queryOnCreate: TOptions["queryOnCreate"];
+    queryOnUpdate: TOptions["queryOnUpdate"];
+    queryOnDelete: TOptions["queryOnDelete"];
+    errors: TOptions["errors"];
   };
 
   return <
     XTName extends TName,
     XTDefNodes extends TDefNodes,
-    XTDefOptions extends TOptions
+    XTDefOptions extends TDefOptions
   >(
     name: XTName,
     nodes: XTDefNodes,
@@ -159,16 +171,16 @@ export const schema = <
                               let obj: {
                                 current?: {
                                   args: any;
-                                  resolver: any;
+                                  transactor: any;
                                 };
                               } = {};
                               node.resolver.get({
-                                use: (resolver) => {
-                                  obj.current = { args: undefined, resolver };
+                                use: (transactor) => {
+                                  obj.current = { args: undefined, transactor };
                                   return obj.current;
                                 },
-                                args: (args) => (resolver) => {
-                                  obj.current = { args, resolver };
+                                args: (args) => (transactor) => {
+                                  obj.current = { args, transactor };
                                   return obj.current;
                                 },
                               });
@@ -216,7 +228,7 @@ export const schema = <
       return Object.assign(acc, { [name]: _node });
     }, {} as TNodes);
 
-    const _options = Object.assign(
+    const _options: TOptions = Object.assign(
       {
         limitDefault: 20,
         limitMaxDefault: 50,

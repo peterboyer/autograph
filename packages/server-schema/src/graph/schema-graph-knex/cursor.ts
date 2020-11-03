@@ -1,16 +1,17 @@
 import Knex from "knex";
-import lodash from "lodash";
-
-import { IQueryByArgs } from "../SchemaGraphQL.types";
-const { pick } = lodash;
+import { pick } from "lodash";
+import { TFilter } from "../schema-graph-types";
 
 export type ICursorOptionsPicked = "tableName" | "limit" | "order" | "filters";
 
 export type ICursorOptions = {
   tableName: string;
-  limit: Parameters<IQueryByArgs>[1]["limit"];
-  order?: Parameters<IQueryByArgs>[1]["order"];
-  filters: Parameters<IQueryByArgs>[1]["filters"];
+  limit: number;
+  order?: { name: string; by?: string };
+  filters: (
+    | { name: string; type: string; value: any }
+    | { _custom: TFilter; value: any }
+  )[];
   getCountQuery: (
     options: Pick<ICursorOptions, ICursorOptionsPicked>
   ) => Knex.QueryBuilder;

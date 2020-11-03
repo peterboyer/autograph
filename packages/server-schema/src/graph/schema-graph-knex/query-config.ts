@@ -1,6 +1,6 @@
 import Knex from "knex";
 
-export type IQueryConfig = {
+export type TQueryConfig = {
   from: string;
   select: (string | ((knex: Knex) => any))[];
   limit?: number;
@@ -12,10 +12,14 @@ export type IQueryConfig = {
   )[];
   orders?: string[][];
   joins?: (string[] | ((query: Knex.QueryBuilder) => void))[];
+  meta: {
+    tableName: string;
+    selectArgs: Set<string>;
+  };
 };
 
 export function QueryConfig(knex: Knex) {
-  const resolve = (config: IQueryConfig, trx?: Knex.Transaction) => {
+  const resolve = (config: TQueryConfig, trx?: Knex.Transaction) => {
     const { from, select, limit, wheres, orders, joins } = config;
 
     const query = knex(from).select(
