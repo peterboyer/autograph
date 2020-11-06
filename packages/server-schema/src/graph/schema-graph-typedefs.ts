@@ -1,11 +1,9 @@
 import {
-  types,
+  Types,
   TType,
-  TName,
-  TNode,
-  TNodes,
-  TOptions,
+  TField,
   TFilter,
+  TSourceTree,
 } from "./schema-graph-types";
 
 const clean = (source: string) => source;
@@ -19,78 +17,73 @@ function getType(type: TType) {
 function getTypeDictArgs(args: Record<any, TType>) {
   return Object.entries(args)
     .map(([key, type]) => `${key}: ${getType(type)}`)
-    .join(",");
+    .join(" ");
 }
 
-function mapGraphFieldsTypeDefs(nodes: Map<any, TNode>) {
+function mapGraphFieldsTypeDefs(fields: Map<any, TField>) {
   const acc = new Set<string>();
-  for (const [nodeName, node] of nodes) {
-    if (typeof node.resolver === "string") {
-      acc.add(`${nodeName}: ${getType(node.type)}`);
-      continue;
-    }
-
-    if (node.resolver?.get === null) continue;
-
-    const args =
-      typeof node.resolver?.get === "object"
-        ? node.resolver.get.args
-        : undefined;
-    acc.add(
-      `${nodeName}${args ? `(${getTypeDictArgs(args)})` : ""}: ${getType(
-        node.type
-      )}`
-    );
+  for (const [fieldName, field] of fields) {
+    const resolverGet = field.resolver.get;
+    if (!resolverGet) continue;
+    const { args } = resolverGet;
+    const fieldArgs = Object.keys(args).length
+      ? `(${getTypeDictArgs(args)})`
+      : "";
+    const fieldType = getType(field.type);
+    acc.add(`${fieldName}${fieldArgs}: ${fieldType}`);
   }
   return [...acc.values()].join("\n");
 }
 
-function mapGraphFieldsTypeDefsInput(nodes: Map<any, TNode>, partial = false) {
+function mapGraphFieldsTypeDefsInput(
+  fields: Map<any, TField>,
+  partial = false
+) {
   const acc = new Set<string>();
-  for (const [nodeName, node] of nodes) {
-    if (typeof node.resolver === "string") {
-      acc.add(`${nodeName}: ${getType(node.type)}`);
+  for (const [fieldName, field] of fields) {
+    if (typeof field.resolver === "string") {
+      acc.add(`${fieldName}: ${getType(field.type)}`);
       continue;
     }
 
-    if (node.resolver?.set === null) continue;
-    if (node.resolver?.set) continue;
+    if (field.resolver?.set === null) continue;
+    if (field.resolver?.set) continue;
 
-    // use defined type from resolver/transactor, otherwise if scalar use node
+    // use defined type from resolver/transactor, otherwise if scalar use field
     // type, default to ID scalar
     const arg =
-      (typeof node.resolver?.set === "object" && node.resolver?.set.arg) ||
-      node.type.__is === "complex"
-        ? types.ID
-        : (node.type as TType<unknown, "scalar">);
+      (typeof field.resolver?.set === "object" && field.resolver?.set.arg) ||
+      field.type.__is === "complex"
+        ? Types.ID
+        : (field.type as TType<unknown, "scalar">);
 
     const _arg =
       typeof arg === "object"
         ? { ...arg, nullable: partial ? false : arg.nullable }
         : arg;
-    acc.add(`${nodeName}: ${getType(_arg)}`);
+    acc.add(`${fieldName}: ${getType(_arg)}`);
   }
   return [...acc.values()].join("\n");
 }
 
 function mapGraphFieldsTypeDefsFilters(
-  nodes: Map<any, TNode>,
+  fields: Map<any, TField>,
   filters: Map<any, TFilter>
 ) {
   const acc = new Set<string>();
-  for (const [nodeName, node] of nodes) {
-    if (typeof node.resolver !== "string" && node.resolver?.get === null)
+  for (const [fieldName, field] of fields) {
+    if (typeof field.resolver !== "string" && field.resolver?.get === null)
       continue;
 
-    if (node.type.__is !== "scalar") continue;
+    if (field.type.__is !== "scalar") continue;
 
-    const typeGraph = getType(node.type);
-    acc.add(`${nodeName}_eq: ${typeGraph}`);
-    acc.add(`${nodeName}_ne: ${typeGraph}`);
-    acc.add(`${nodeName}_gt: ${typeGraph}`);
-    acc.add(`${nodeName}_gte: ${typeGraph}`);
-    acc.add(`${nodeName}_lt: ${typeGraph}`);
-    acc.add(`${nodeName}_lte: ${typeGraph}`);
+    const typeGraph = getType(field.type);
+    acc.add(`${fieldName}_eq: ${typeGraph}`);
+    acc.add(`${fieldName}_ne: ${typeGraph}`);
+    acc.add(`${fieldName}_gt: ${typeGraph}`);
+    acc.add(`${fieldName}_gte: ${typeGraph}`);
+    acc.add(`${fieldName}_lt: ${typeGraph}`);
+    acc.add(`${fieldName}_lte: ${typeGraph}`);
   }
 
   for (const [filterName, filter] of filters) {
@@ -100,29 +93,20 @@ function mapGraphFieldsTypeDefsFilters(
   return [...acc.values()].join("\n");
 }
 
-export default function TypeDefs(
-  name: TName,
-  nodes: TNodes,
-  options: TOptions
-) {
-  const {
-    filters: _filters = {},
-    typeDefs,
-    limitDefault,
-    limitMaxDefault,
-  } = options;
+export default function TypeDefs(ast: TSourceTree) {
+  const { name, typeDefs, limitDefault, limitMaxDefault } = ast;
 
-  const _nodes = new Map(Object.entries(nodes));
-  const filters = new Map(Object.entries(_filters));
+  const fields = new Map(Object.entries(ast.fields));
+  const filters = new Map(Object.entries(ast.filters));
 
-  const graphFieldsTypeDefs = mapGraphFieldsTypeDefs(_nodes);
-  const graphFieldsTypeDefsInput = mapGraphFieldsTypeDefsInput(_nodes);
+  const graphFieldsTypeDefs = mapGraphFieldsTypeDefs(fields);
+  const graphFieldsTypeDefsInput = mapGraphFieldsTypeDefsInput(fields);
   const graphFieldsTypeDefsInputPartial = mapGraphFieldsTypeDefsInput(
-    _nodes,
+    fields,
     true
   );
   const graphFieldsTypeDefsFilters = mapGraphFieldsTypeDefsFilters(
-    _nodes,
+    fields,
     filters
   );
 

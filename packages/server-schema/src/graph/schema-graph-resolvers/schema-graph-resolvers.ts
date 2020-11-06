@@ -1,12 +1,9 @@
 import {
   types,
   TType,
-  TName,
-  TNode,
-  TNodes,
-  TOptions,
   TFilter,
   TResolver,
+  TSourceTree,
 } from "../schema-graph-types";
 
 import TResolverIOC from "./resolver-ioc";
@@ -17,23 +14,8 @@ import ResolverMutationCreate from "./resolver-mutation-create";
 import ResolverMutationUpdate from "./resolver-mutation-update";
 import ResolverMutationDelete from "./resolver-mutation-delete";
 
-export default function Resolvers(
-  name: TName,
-  nodes: TNodes,
-  options: TOptions
-) {
-  const {
-    query,
-    filters,
-    limitDefault,
-    limitMaxDefault,
-    queryById,
-    queryByArgs,
-    queryOnCreate,
-    queryOnUpdate,
-    queryOnDelete,
-    errors,
-  } = options;
+export default function Resolvers(tree: TSourceTree) {
+  const { query, filters, limitDefault, limitMaxDefault } = tree;
 
   const queryOne = query?.one || query?.default;
   const queryMany = query?.many || query?.default;
@@ -48,18 +30,6 @@ export default function Resolvers(
       throw errors.NotFound(table, args, resolverArgs);
     }
     return result;
-  };
-
-  const ioc: TResolverIOC = {
-    limitDefault,
-    limitMaxDefault,
-    queryById,
-    queryByIdOrThrow,
-    queryByArgs,
-    queryOnCreate,
-    queryOnUpdate,
-    queryOnDelete,
-    errors,
   };
 
   const graphResolversRoot = {

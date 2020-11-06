@@ -18,13 +18,15 @@
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
     "docs": "jsdoc src/*.js -d ./docs/",
     "docs:open": "open ./docs/index.html",
-    "push": "../../publish.sh"
+    "push": "../../publish.sh",
+    "test": "ts-node node_modules/tape/bin/tape ./src/graph/field-types.test.ts ./src/core/index.test.ts"
   },
   "dependencies": {
     "lodash": "^4.17.15"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.159",
+    "@types/tape": "^4.13.0",
     "@typescript-eslint/eslint-plugin": "^3.9.0",
     "@typescript-eslint/parser": "^3.9.0",
     "apollo-server": "^2.17.0",
@@ -35,6 +37,8 @@
     "knex": "^0.21.5",
     "nodemon": "^2.0.4",
     "prettier": "^2.0.5",
+    "tape": "^5.0.1",
+    "ts-node": "^9.0.0",
     "typescript": "^4.0.2"
   }
 }
