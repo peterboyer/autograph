@@ -1,9 +1,11 @@
 import Knex from "knex";
 import { partition } from "lodash";
 import { TOptions } from "../schema-graph-types";
-import TableInfo from "./table-info";
-import Cursor, { ICursorOptions } from "./cursor";
-import QueryConfig, { TQueryConfig } from "./query-config";
+import TableInfo from "../../graph/schema-graph-knex/table-info";
+import Cursor, { ICursorOptions } from "../../graph/schema-graph-knex/cursor";
+import QueryConfig, {
+  TQueryConfig,
+} from "../../graph/schema-graph-knex/query-config";
 
 export type TNewCursorId = () => string;
 

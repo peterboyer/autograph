@@ -1,24 +1,6 @@
-import { GraphQLResolveInfo } from "graphql";
-
-import { TType, Typed } from "./field-types";
-export * from "./field-types";
-
-export type TResolver<
-  TSource = any,
-  TArgs = any,
-  TContext = any,
-  TReturn = any
-> = (
-  source: TSource,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => TReturn;
-
-export type TErrors = {
-  NotFound: (...args: any[]) => void;
-  NotAllowed: (...args: any[]) => void;
-};
+import { TResolver } from "./types-graphql";
+import { TGraphTypeDefs } from "./types-graph";
+import { TType, Typed } from "./types-types";
 
 export type TAccessor<TSource, TContext> = (
   source: TSource,
@@ -42,17 +24,6 @@ export type TFilter<
   arg: TArg;
   resolver: (config: TQueryConfig, value: Typed<TArg>) => void;
 };
-
-export type TSchemaNodeType = "Root" | "Query" | "Mutation";
-export type TSchemaTypeDefs = Record<TSchemaNodeType, string>;
-export type TSchemaResolvers = Record<TSchemaNodeType, TResolver>;
-
-export type TSchema = {
-  typeDefs: TSchemaTypeDefs;
-  resolvers: TSchemaResolvers;
-};
-
-export type TName = string;
 
 export type TNodeGetTransactor = (transaction?: any) => TResolver;
 
@@ -89,7 +60,7 @@ export type TField = {
   access: Partial<Record<"get" | "set" | "default", TAccessor<any, any>>>;
 };
 
-export type TSourceTree = {
+export type TSchemaAST = {
   name: string;
   fields: Record<any, TField>;
   access: Record<
@@ -98,7 +69,7 @@ export type TSourceTree = {
   >;
   filters: Record<any, TFilter<TType<unknown, "scalar">, any>>;
   query: Record<"one" | "many" | "default", TQuerier | null>;
-  typeDefs: Partial<TSchemaTypeDefs>;
+  typeDefs: Partial<TGraphTypeDefs>;
   limitDefault: number;
   limitMaxDefault: number;
   // queryById: (

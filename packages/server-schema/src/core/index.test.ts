@@ -1,17 +1,38 @@
+import Knex from "knex";
+import { ApolloServer } from "apollo-server";
+import { createTestClient } from 'apollo-server-testing'
 import test from "tape";
+import { Types as BaseTypes, Complex } from "./types/types-types";
+import Parser from "./parser/parser";
+import Graph from "./graph/graph";
+import KnexDriver from "./knex/knex";
+import { mapGraphs } from "./graph/graph-utils";
 
 const clean = (source: string) => source.replace(/[\s\n]+/g, " ").trim();
 
-import Parser from "../graph/graph-source-parser";
-import { Types as BaseTypes, Complex } from "../graph/field-types";
+const DEFAULT_DATABASE_URL =
+  "postgresql://postgres:password@localhost:5432/postgres";
+
+const knex = Knex({
+  client: "pg",
+  connection: process.env.DATABASE_URL || DEFAULT_DATABASE_URL,
+});
 
 const Types = Object.assign({}, BaseTypes, {
   User: Complex("User"),
 });
 
 const parser = Parser();
+const graph = Graph({
+  ...KnexDriver({
+    knex,
+    queryNameRemap: {
+      User: "user",
+    },
+  }),
+});
 
-type TUser = {
+export type TUser = {
   id: number;
   name: string | null;
 };
@@ -33,11 +54,17 @@ export const User = parser<TUser>({
       },
     },
   },
-}).compile();
+});
+
+const GraphUser = graph(User);
+const options = mapGraphs([GraphUser]);
+const server = new ApolloServer(options);
+
+const { query, mutate } = createTestClient(server);
 
 test("typeDefs", (t) => {
   t.test("Root", (t) => {
-    const tdroot = clean(User.typeDefs.Root);
+    const tdroot = clean(GraphUser.typeDefs.Root);
     console.log(tdroot);
 
     t.assert(
@@ -57,3 +84,11 @@ test("typeDefs", (t) => {
 
   t.end();
 });
+
+test("resolvers", (t) => {
+  t.test("One", (t) => {
+    const { Query } = GraphUser.resolvers;
+
+    Query.
+  });
+})

@@ -1,6 +1,6 @@
 import Knex from "knex";
-import { types, Types } from "./schema-knex-types";
-export * from "./schema-knex-types";
+import { types, Types } from "./knex-types";
+export * from "./knex-types";
 
 export const presets = {
   id: {

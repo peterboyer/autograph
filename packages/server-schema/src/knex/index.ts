@@ -1,2 +1,2 @@
-export * from "./schema-knex";
-export { default } from "./schema-knex";
+export * from "./knex";
+export { default } from "./knex";

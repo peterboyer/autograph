@@ -1,17 +1,13 @@
+import { TResolver } from "../types/types-graphql";
+import { Types, TType, Typed, TypedDict } from "../types/types-types";
+import { TGraphNodeType } from "../types/types-graph";
 import {
-  Types,
-  TType,
-  TResolver,
+  TSchemaAST,
+  TField,
   TAccessor,
   TFilter,
-  Typed,
-  TypedDict,
-  TField,
   TQuerier,
-  TSchemaTypeDefs,
-  TSourceTree,
-} from "./schema-graph-types";
-import Compiler from "./graph-tree-compiler";
+} from "../types/types-schema-ast";
 
 /**
  * Parses a source object into a source tree object for compilation.
@@ -109,16 +105,13 @@ const Parser = <
       many?: TQuerier<TSource, TContext, TQueryConfig>;
       default?: TQuerier<TSource, TContext, TQueryConfig>;
     };
-    typeDefs?: Partial<TSchemaTypeDefs>;
+    typeDefs?: Partial<TGraphNodeType>;
   };
 
   function parser<
     TSource,
     TSchema extends TSchemaGeneric<TSource> = TSchemaGeneric<TSource>
-  >(
-    // source: TSource,
-    schema: TSchema
-  ) {
+  >(schema: TSchema) {
     const defaults = {
       fields: {},
       access: {},
@@ -128,6 +121,8 @@ const Parser = <
       limitDefault: 20,
       limitMaxDefault: 50,
     };
+
+    const { name } = schema;
 
     const fields = Object.entries(schema.fields).reduce(
       (acc, [fieldName, field]) => {
@@ -282,7 +277,7 @@ const Parser = <
           },
         });
       },
-      {} as TSourceTree["fields"]
+      {} as TSchemaAST["fields"]
     );
 
     const access = {
@@ -293,7 +288,7 @@ const Parser = <
       default: schema.access?.default || null,
     };
 
-    const filters: TSourceTree["filters"] = Object.entries(
+    const filters: TSchemaAST["filters"] = Object.entries(
       schema.filters || {}
     ).reduce((acc, [name, filter]) => {
       let obj: {
@@ -322,7 +317,8 @@ const Parser = <
 
     const typeDefs = schema.typeDefs || {};
 
-    const tree = Object.assign(defaults, schema, {
+    const ast = Object.assign(defaults, {
+      name,
       fields,
       access,
       filters,
@@ -330,13 +326,7 @@ const Parser = <
       typeDefs,
     });
 
-    return {
-      tree,
-      compile: (...compilerArgs: Parameters<typeof Compiler>) => {
-        const compiler = Compiler(...compilerArgs);
-        return compiler(tree);
-      },
-    };
+    return ast;
   }
 
   return parser;

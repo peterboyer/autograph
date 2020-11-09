@@ -7,7 +7,10 @@ export type ITableInfo = {
 
 export type ISelectMapType = (name: string, knex: any) => string;
 
-export function TableInfo(knex: Knex, selectMap: Map<string, ISelectMapType>) {
+export function TableInfo(
+  knex: Knex,
+  selectMap: Map<string, ISelectMapType> = new Map()
+) {
   const tables = new Map<string, ITableInfo>();
 
   const resolve = async (tableName: string) => {

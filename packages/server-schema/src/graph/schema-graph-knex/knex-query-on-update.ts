@@ -1,7 +1,7 @@
 import Knex from "knex";
 import { TOptions } from "../schema-graph-types";
 import TableInfo from "./table-info";
-import QueryById from "./knex-query-by-id";
+import QueryById from "../../core/graph-knex/knex-query-by-id";
 
 export function QueryOnUpdate(
   knex: Knex,
