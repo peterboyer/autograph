@@ -19,14 +19,14 @@
     "docs": "jsdoc src/*.js -d ./docs/",
     "docs:open": "open ./docs/index.html",
     "push": "../../publish.sh",
-    "test": "ts-node node_modules/tape/bin/tape ./src/graph/field-types.test.ts ./src/core/index.test.ts"
+    "test": "jest"
   },
   "dependencies": {
     "lodash": "^4.17.15"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.15",
     "@types/lodash": "^4.14.159",
-    "@types/tape": "^4.13.0",
     "@typescript-eslint/eslint-plugin": "^3.9.0",
     "@typescript-eslint/parser": "^3.9.0",
     "apollo-server": "^2.19.0",
@@ -34,13 +34,15 @@
     "concurrently": "^5.3.0",
     "eslint": "^7.6.0",
     "graphql": "^14.0.0",
+    "jest": "^26.6.3",
     "jsdoc": "^3.6.4",
     "knex": "^0.21.12",
     "knex-postgis": "^0.12.0",
     "nodemon": "^2.0.4",
     "pg": "^8.4.2",
     "prettier": "^2.0.5",
-    "tape": "^5.0.1",
+    "sqlite3": "^5.0.0",
+    "ts-jest": "^26.4.4",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.2"
   }

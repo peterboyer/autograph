@@ -3,7 +3,7 @@ import { TField } from "../../types/types-schema-ast";
 import TOptions from "./ast-resolvers-options";
 
 export function mapRoot(fields: Map<string, TField>, options: TOptions) {
-  const root: Record<any, TResolver<{ [key: string]: any }>> = {};
+  const root: Record<any, TResolver> = {};
 
   for (const [nodeName, node] of fields) {
     const {

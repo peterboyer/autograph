@@ -1,5 +1,5 @@
 import { TType } from "../../types/types-types";
-import { getType } from "./ast-get-type";
+import { getType } from "./get-type";
 
 export function getTypeDictArgs(args: Record<any, TType>) {
   return Object.entries(args)

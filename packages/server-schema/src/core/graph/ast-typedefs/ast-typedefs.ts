@@ -1,7 +1,7 @@
 import { TSchemaAST } from "../../types/types-schema-ast";
-import { mapFields } from "./ast-map-fields";
-import { mapFieldsInput } from "./ast-map-fields-input";
-import { mapFieldsFilters } from "./ast-map-fields-filters";
+import { mapFields } from "./map-fields";
+import { mapFieldsInput } from "./map-fields-input";
+import { mapFieldsFilters } from "./map-fields-filters";
 
 const clean = (source: string) => source;
 

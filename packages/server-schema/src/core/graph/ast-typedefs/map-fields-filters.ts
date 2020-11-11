@@ -1,5 +1,5 @@
 import { TField, TFilter } from "../../types/types-schema-ast";
-import { getType } from "./ast-get-type";
+import { getType } from "./get-type";
 
 export function mapFieldsFilters(
   fields: Map<any, TField>,

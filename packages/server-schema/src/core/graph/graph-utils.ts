@@ -12,10 +12,10 @@ export function mapGraphs(graphs: TGraph[]) {
   return {
     typeDefs: `
       ${mergeTypeDefs(_typeDefs)}
-      Query {
+      type Query {
         ${mergeTypeDefs(_typeDefs, "Query")}
       }
-      Mutation {
+      type Mutation {
         ${mergeTypeDefs(_typeDefs, "Mutation")}
       }
     `,

@@ -1,6 +1,6 @@
 import { TField } from "../../types/types-schema-ast";
-import { getType } from "./ast-get-type";
-import { getTypeDictArgs } from "./ast-get-type-dict-args";
+import { getType } from "./get-type";
+import { getTypeDictArgs } from "./get-type-dict-args";
 
 export function mapFields(fields: Map<any, TField>) {
   const acc = new Set<string>();
