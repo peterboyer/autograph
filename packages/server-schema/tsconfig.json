@@ -1,16 +1,16 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES5",
+    "outDir": "lib",
+
+    "target": "ES2015",
+    "module": "commonjs",
+
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "Node",
-    "downlevelIteration": true,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "lib",
-    "baseUrl": ".",
-    "paths": {
-      "*": ["node_modules/*"]
-    },
+
     "declaration": true,
     "declarationMap": true
   },
