@@ -24,7 +24,8 @@ export function Field(field: TField, fieldName: string): TFieldAST {
         set: resolverSet,
       },
       access: {},
-      order: type._is === "scalar" ? fieldName : null,
+      orderTarget: type._is === "scalar" ? fieldName : null,
+      filterTarget: type._is === "scalar" ? fieldName : null,
       default: null,
     };
   }
@@ -135,13 +136,11 @@ export function Field(field: TField, fieldName: string): TFieldAST {
     return null;
   })();
 
-  const order = ((): TFieldAST["order"] => {
-    const _order = field.order;
-    const _resolver = field.resolver;
-
-    if (_order) return _order;
+  const orderTarget = ((): TFieldAST["orderTarget"] => {
+    if (field.orderTarget) return field.orderTarget;
 
     if (type._is !== "scalar") return null;
+    const _resolver = field.resolver;
 
     if (!_resolver) return fieldName;
 
@@ -152,6 +151,22 @@ export function Field(field: TField, fieldName: string): TFieldAST {
     return null;
   })();
 
+  const filterTarget = ((): TFieldAST["filterTarget"] => {
+    if (field.filterTarget) return field.filterTarget;
+
+    const _resolver = field.resolver;
+
+    if (!_resolver) return fieldName;
+
+    if (typeof _resolver === "string") return _resolver;
+
+    if (typeof _resolver.get === "string") return _resolver.get;
+
+    return null;
+  })();
+
+  const _default = field.default || null;
+
   return {
     type,
     resolver: {
@@ -159,8 +174,9 @@ export function Field(field: TField, fieldName: string): TFieldAST {
       set: resolverSet,
     },
     access: {},
-    order,
-    default: field.default,
+    orderTarget,
+    filterTarget,
+    default: _default,
   };
 }
 

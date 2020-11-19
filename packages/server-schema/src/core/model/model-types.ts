@@ -5,6 +5,7 @@ import {
   TAccessor as TAccessorAST,
   TQuerier as TQuerierAST,
 } from "../types/types-ast";
+import { TQuery } from "../graph/ast-resolvers/ast-resolvers-options";
 
 export type TArgs = {
   Source: unknown;
@@ -38,7 +39,8 @@ export type TField<A extends TArgs = TArgs> =
             set?: null | string | TFieldSetResolver<A>;
           };
       access?: Partial<Record<"get" | "set" | "default", TAccessor<A>>>;
-      order?: string;
+      orderTarget?: string;
+      filterTarget?: string;
       default?: any;
     };
 
@@ -99,7 +101,7 @@ export type TAccessor<A extends TArgs = TArgs> = TAccessorAST<
 export type TFilter = (modifiers: {
   use: <A extends TScalar>(
     type: A
-  ) => <R extends (value: Typed<A>, config: unknown) => void>(
+  ) => <R extends (query: TQuery, value: NonNullable<Typed<A>>) => void>(
     resolver: R
   ) => void;
 }) => void;

@@ -1,4 +1,5 @@
 import { TAST } from "../types/types-ast";
+import { TScalar, Types } from "../types/types-types";
 import { TModel, TArgs } from "./model-types";
 import Field from "./model-field";
 import Filter from "./model-filter";
@@ -40,6 +41,49 @@ export function Model<
     },
     {}
   );
+
+  // add default filters
+  const SCALAR_OPERATORS = ["eq", "ne", "gt", "gte", "lt", "lte"];
+  const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
+
+  Object.entries(fields).forEach(([fieldName, field]) => {
+    const target = field.filterTarget;
+    if (!target) return;
+
+    const operators =
+      field.type._is === "scalar"
+        ? SCALAR_OPERATORS
+        : field.type._is === "object"
+        ? OBJECT_OPERATORS
+        : [];
+
+    operators.forEach((operator) => {
+      const filterName = `${fieldName}_${operator}`;
+
+      // skip if already defined
+      if (filters[filterName]) return;
+
+      const arg = (field.type._is === "scalar"
+        ? field.type
+        : Types.ID) as TScalar;
+
+      if (["in", "ni"].includes(operator)) {
+        arg.isList = true;
+      }
+
+      filters[filterName] = {
+        arg,
+        resolver: (query, value) => {
+          query.filters.push({
+            target,
+            operator,
+            value,
+          });
+          return query;
+        },
+      };
+    });
+  });
 
   const query: TAST["query"] = {
     one: model.query?.one || null,
