@@ -1,11 +1,11 @@
+import { TAST } from "../../types/types-ast";
 import { TResolver } from "../../types/types-graphql";
-import { TField } from "../../types/types-ast";
 import TOptions from "./ast-resolvers-options";
 
-export function mapRoot(fields: Map<string, TField>, options: TOptions) {
+export function mapRoot(ast: TAST, options: TOptions) {
   const root: Record<any, TResolver> = {};
 
-  for (const [nodeName, node] of fields) {
+  for (const [nodeName, node] of Object.entries(ast.fields)) {
     const {
       type,
       resolver: { get: resolverGet },
@@ -19,16 +19,18 @@ export function mapRoot(fields: Map<string, TField>, options: TOptions) {
           const id = result;
           const name = type.name;
 
-          const [queryResult] = await options.onQuery({
+          const {
+            items: [item],
+          } = await options.onQuery({
             name,
             id,
           });
 
-          if (!queryResult && type.isNonNull) {
+          if (!item && type.isNonNull) {
             throw new Error("@AS/NOT_FOUND");
           }
 
-          return queryResult;
+          return item;
         }
         return result;
       };
