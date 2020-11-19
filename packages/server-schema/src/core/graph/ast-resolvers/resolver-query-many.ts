@@ -19,9 +19,9 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
     const [, args] = resolverArgs;
 
     const {
+      limit: limitArg,
       cursor: cursorArg,
       order: orderArg,
-      limit: limitArg,
       filters: filtersArg,
     } = args;
 
@@ -29,25 +29,36 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
     const query: TQuery = {
       name,
       limit: Math.min(limitArg || ast.limitDefault, ast.limitMax),
+      orders: [],
+      filters: [],
     };
 
     if (cursorArg) {
       query.cursor = cursorArg;
     }
 
-    if (orderArg) {
+    if (!cursorArg && orderArg) {
       const [, orderFieldName, orderDirection] =
         orderArg.match(/^([\w\d]+)(?::(asc|desc))?$/) || [];
       if (!orderFieldName || !orderDirection)
         throw new Error("INVALID_QUERY_ORDER");
 
       const field = ast.fields[orderFieldName];
-      if (!(field && field.order)) throw new Error("INVALID_QUERY_ORDER_FIELD");
+      if (!(field && field.orderTarget))
+        throw new Error("INVALID_QUERY_ORDER_FIELD");
 
-      query.order = {
-        target: field.order,
+      query.orders.push({
+        target: field.orderTarget,
         direction: orderDirection as "asc" | "desc",
-      };
+      });
+    }
+
+    if (!cursorArg && filtersArg) {
+      Object.entries(filtersArg).forEach(([filterName, value]) => {
+        const filter = ast.filters[filterName];
+        const _query = filter.resolver(query, value);
+        if (_query) Object.assign(query, _query);
+      });
     }
 
     const { items, total, cursor } = await options.onQuery(query);
