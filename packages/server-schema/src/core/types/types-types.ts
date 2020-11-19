@@ -1,8 +1,8 @@
-// base
+import omit from "lodash.omit";
 
-export type TMetaType = "scalar" | "object";
+export type TYPE = "scalar" | "object";
 
-export type TType<T = TMetaType, V = unknown> = {
+export type TType<T = TYPE, V = unknown> = {
   _is: T;
   _type: V;
   name: string;
@@ -12,7 +12,7 @@ export type TType<T = TMetaType, V = unknown> = {
 
 // constructor
 
-export const Type = <T extends TMetaType, V>(_is: T, name: string) => {
+export const Type = <T extends TYPE, V>(_is: T, name: string) => {
   const self = {
     _is,
     _type: (undefined as unknown) as V,
@@ -32,14 +32,28 @@ export const Type = <T extends TMetaType, V>(_is: T, name: string) => {
         isList: true;
         isNonNull: true;
       };
+      toString: () => string;
     } {
       return {
-        ...self,
+        ...omit(self, ["List", "NonNull"]),
         isList: true,
-        NonNull: {
-          ...self,
-          isList: true,
-          isNonNull: true,
+        get NonNull(): {
+          _is: typeof self["_is"];
+          _type: typeof self["_type"];
+          name: typeof self["name"];
+          isList: true;
+          isNonNull: true;
+          toString: () => string;
+        } {
+          return {
+            ...omit(self, ["List", "NonNull"]),
+            isList: true,
+            isNonNull: true,
+            toString: () => `[${name}!]!`,
+          };
+        },
+        toString: () => {
+          return `[${name}!]`;
         },
       };
     },
@@ -49,12 +63,15 @@ export const Type = <T extends TMetaType, V>(_is: T, name: string) => {
       name: typeof self["name"];
       isList: typeof self["isList"];
       isNonNull: true;
+      toString: () => string;
     } {
       return {
-        ...self,
+        ...omit(self, ["List", "NonNull"]),
         isNonNull: true,
+        toString: () => `${name}!`,
       };
     },
+    toString: () => `${name}`,
   };
 
   return self as Required<typeof self>;
@@ -62,8 +79,10 @@ export const Type = <T extends TMetaType, V>(_is: T, name: string) => {
 
 // constructor aliases
 
+export type TScalar<V = unknown> = TType<"scalar", V>;
 export const Scalar = <V>(name: string) => Type<"scalar", V>("scalar", name);
 
+export type TObject<V = unknown> = TType<"scalar", V>;
 export const Object = (name: string) => Type<"object", never>("object", name);
 
 // core types
@@ -74,6 +93,7 @@ export const Types = {
   Float: Scalar<number>("Float"),
   String: Scalar<string>("String"),
   Boolean: Scalar<boolean>("Boolean"),
+  Scalar,
   Object,
 } as const;
 
@@ -99,8 +119,8 @@ export type TypedIsList<
 
 // tests
 
-const is_string_or_null = Types.ID;
 const is_string_only = Types.ID.NonNull;
+const is_string_or_null = Types.ID;
 const is_string_list_only = Types.ID.List.NonNull;
 const is_string_list_or_null = Types.ID.List;
 const is_object = Types.Object("User");

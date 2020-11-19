@@ -1,11 +1,11 @@
-import { TSchemaAST } from "../../types/types-schema-ast";
+import { TAST } from "../../types/types-ast";
 import { mapFields } from "./map-fields";
 import { mapFieldsInput } from "./map-fields-input";
 import { mapFieldsFilters } from "./map-fields-filters";
 
 const clean = (source: string) => source;
 
-export default function TypeDefs(ast: TSchemaAST) {
+export default function TypeDefs(ast: TAST) {
   const { name, typeDefs, limitDefault, limitMaxDefault } = ast;
 
   const fields = new Map(Object.entries(ast.fields));

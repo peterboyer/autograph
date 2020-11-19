@@ -1,4 +1,4 @@
-import { TField } from "../../types/types-schema-ast";
+import { TField } from "../../types/types-ast";
 import { getType } from "./get-type";
 import { getTypeDictArgs } from "./get-type-dict-args";
 

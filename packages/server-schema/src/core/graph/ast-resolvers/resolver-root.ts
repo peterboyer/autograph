@@ -1,5 +1,5 @@
 import { TResolver } from "../../types/types-graphql";
-import { TField } from "../../types/types-schema-ast";
+import { TField } from "../../types/types-ast";
 import TOptions from "./ast-resolvers-options";
 
 export function mapRoot(fields: Map<string, TField>, options: TOptions) {

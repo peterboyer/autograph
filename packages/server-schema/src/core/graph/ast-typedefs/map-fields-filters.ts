@@ -1,4 +1,4 @@
-import { TField, TFilter } from "../../types/types-schema-ast";
+import { TField, TFilter } from "../../types/types-ast";
 import { getType } from "./get-type";
 
 export function mapFieldsFilters(

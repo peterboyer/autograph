@@ -1,4 +1,4 @@
-import { TSchemaAST } from "../../types/types-schema-ast";
+import { TSchemaAST } from "../../types/types-ast";
 import TOptions from "./ast-resolvers-options";
 
 import ResolverRoot from "./resolver-root";

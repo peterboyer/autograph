@@ -1,4 +1,4 @@
-import { TField } from "../../types/types-schema-ast";
+import { TField } from "../../types/types-ast";
 import { getType } from "./get-type";
 
 export function mapFieldsInput(fields: Map<any, TField>, partial = false) {
