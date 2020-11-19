@@ -4,12 +4,12 @@ import { TResolver } from "./types-graphql";
 
 export type TAST = {
   name: string;
-  fields: Record<any, TField>;
+  fields: Record<string, TField>;
   access: Record<
     "create" | "read" | "update" | "delete" | "default",
     TAccessor<any, any> | null
   >;
-  filters: Record<any, TFilter<TScalar, any>>;
+  filters: Record<string, TFilter<TScalar, any>>;
   query: Record<"one" | "many" | "default", TQuerier | null>;
   typeDefs: Partial<TGraphTypeDefs>;
   limitDefault: number;
@@ -73,6 +73,7 @@ export type TField = {
         };
   };
   access: Partial<Record<"get" | "set" | "default", TAccessor<any, any>>>;
+  order: null | string;
   default?: any;
 };
 

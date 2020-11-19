@@ -2,19 +2,19 @@ import { Types, TScalar } from "../types/types-types";
 import { TField } from "./model-types";
 import { TField as TFieldAST } from "../types/types-ast";
 
-export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
+export function Field(field: TField, fieldName: string): TFieldAST {
   if ("_is" in field) {
     const type = field;
 
     const resolverGet: TFieldAST["resolver"]["get"] = {
       args: {},
-      transactor: () => (source) => source[defaultSourceProperty],
+      transactor: () => (source) => source[fieldName],
     };
 
     const resolverSet: TFieldAST["resolver"]["set"] = {
       stage: "pre",
-      arg: type as TScalar,
-      transactor: () => (value) => ({ [defaultSourceProperty]: value }),
+      arg: type._is === "object" ? Types.ID : (type as TScalar),
+      transactor: () => (value) => ({ [fieldName]: value }),
     };
 
     return {
@@ -24,7 +24,8 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
         set: resolverSet,
       },
       access: {},
-      default: undefined,
+      order: type._is === "scalar" ? fieldName : null,
+      default: null,
     };
   }
 
@@ -36,7 +37,7 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
     if (!_resolver) {
       return {
         args: {},
-        transactor: () => (source) => source[defaultSourceProperty],
+        transactor: () => (source) => source[fieldName],
       };
     }
 
@@ -52,7 +53,7 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
     if (_resolverGet === undefined) {
       return {
         args: {},
-        transactor: () => (source) => source[defaultSourceProperty],
+        transactor: () => (source) => source[fieldName],
       };
     }
 
@@ -87,7 +88,7 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
       return {
         stage: "pre",
         arg: _resolverType,
-        transactor: () => (value) => ({ [defaultSourceProperty]: value }),
+        transactor: () => (value) => ({ [fieldName]: value }),
       };
     }
 
@@ -105,7 +106,7 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
       return {
         stage: "pre",
         arg: _resolverType,
-        transactor: () => (value) => ({ [defaultSourceProperty]: value }),
+        transactor: () => (value) => ({ [fieldName]: value }),
       };
     }
 
@@ -134,7 +135,22 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
     return null;
   })();
 
-  const _default = field.default;
+  const order = ((): TFieldAST["order"] => {
+    const _order = field.order;
+    const _resolver = field.resolver;
+
+    if (_order) return _order;
+
+    if (type._is !== "scalar") return null;
+
+    if (!_resolver) return fieldName;
+
+    if (typeof _resolver === "string") return _resolver;
+
+    if (typeof _resolver.get === "string") return _resolver.get;
+
+    return null;
+  })();
 
   return {
     type,
@@ -143,7 +159,8 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
       set: resolverSet,
     },
     access: {},
-    default: _default,
+    order,
+    default: field.default,
   };
 }
 

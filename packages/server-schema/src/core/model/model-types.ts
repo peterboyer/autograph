@@ -38,6 +38,7 @@ export type TField<A extends TArgs = TArgs> =
             set?: null | string | TFieldSetResolver<A>;
           };
       access?: Partial<Record<"get" | "set" | "default", TAccessor<A>>>;
+      order?: string;
       default?: any;
     };
 
