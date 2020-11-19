@@ -2,10 +2,15 @@ export type TQuery = {
   name: string;
   id?: string;
   cursor?: string;
-  order?: {
+  orders: {
     target: string;
     direction: "asc" | "desc";
-  };
+  }[];
+  filters: {
+    target: string;
+    operator: string;
+    value: any;
+  }[];
   limit?: number;
 };
 
