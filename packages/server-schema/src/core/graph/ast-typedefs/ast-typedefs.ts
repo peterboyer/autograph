@@ -17,7 +17,7 @@ export default function TypeDefs(ast: TAST): TGraphTypeDefs {
   const root = mapFields(fields);
   const rootInput = mapFieldsInput(fields);
   const rootInputPartial = mapFieldsInput(fields, true);
-  const rootFilters = mapFieldsFilters(fields, filters);
+  const rootFilters = mapFieldsFilters(filters);
 
   const hasFilters = !!rootFilters;
 
