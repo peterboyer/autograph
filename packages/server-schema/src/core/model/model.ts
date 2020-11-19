@@ -49,7 +49,7 @@ export function Model<
 
   const typeDefs: TAST["typeDefs"] = model.typeDefs || {};
   const limitDefault = model.limitDefault || 20;
-  const limitMaxDefault = model.limitMaxDefault || 50;
+  const limitMax = model.limitMax || 50;
 
   const ast = {
     name,
@@ -59,7 +59,7 @@ export function Model<
     query,
     typeDefs,
     limitDefault,
-    limitMaxDefault,
+    limitMax,
   };
 
   return ast;

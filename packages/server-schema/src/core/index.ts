@@ -1,2 +1,3 @@
-export { Model } from "./model";
-export { Types } from "./types/types-types";
+export * from "./model";
+export * from "./graph";
+export * from "./types";

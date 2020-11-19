@@ -21,7 +21,7 @@ export type TModel<A extends TArgs = TArgs> = {
   query?: Partial<Record<"one" | "many" | "default", TQuerier<A>>>;
   typeDefs?: Partial<TGraphTypeDefs>;
   limitDefault?: number;
-  limitMaxDefault?: number;
+  limitMax?: number;
 };
 
 /**
@@ -38,6 +38,7 @@ export type TField<A extends TArgs = TArgs> =
             set?: null | string | TFieldSetResolver<A>;
           };
       access?: Partial<Record<"get" | "set" | "default", TAccessor<A>>>;
+      default?: any;
     };
 
 type TFieldGetResolverModifiers<A extends TArgs = TArgs> = {

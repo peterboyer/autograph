@@ -1,12 +1,15 @@
 import { TAST } from "../../types/types-ast";
+import { TGraphTypeDefs } from "../../types/types-graph";
 import { mapFields } from "./map-fields";
 import { mapFieldsInput } from "./map-fields-input";
 import { mapFieldsFilters } from "./map-fields-filters";
 
-const clean = (source: string) => source;
+import * as DOCSTRINGS from "./ast-typedefs-docs";
 
-export default function TypeDefs(ast: TAST) {
-  const { name, typeDefs, limitDefault, limitMaxDefault } = ast;
+const identity = <T>(a: T) => a;
+
+export default function TypeDefs(ast: TAST): TGraphTypeDefs {
+  const { name, typeDefs, limitDefault, limitMax } = ast;
 
   const fields = new Map(Object.entries(ast.fields));
   const filters = new Map(Object.entries(ast.filters));
@@ -16,74 +19,94 @@ export default function TypeDefs(ast: TAST) {
   const rootInputPartial = mapFieldsInput(fields, true);
   const rootFilters = mapFieldsFilters(fields, filters);
 
-  const Root = clean(`
-      type ${name} {
-        ${root}
-      }
-      type ${name}ManyResult {
-        items: [${name}!]!
-        total: Int
-        cursor: String
-      }
-      input ${name}Input {
-        ${rootInput}
-      }
-      input ${name}InputPartial {
-        id: ID!
-        ${rootInputPartial}
-      }
-      input ${name}ManyFilters {
-        ${rootFilters}
-      }
+  const hasFilters = !!rootFilters;
 
-      ${typeDefs?.Root || ""}
-    `);
+  // TODO: from options
+  const useDocumentation = false;
+  const $ = useDocumentation;
 
-  const Query = `
-      # Accepts an \`id\` to return it's corresponding \`${name}\`. Throws if
-      # not found.
-      ${name}(id: ID!): ${name}!
+  const ROOT = `
+    type ${name} {
+      ${root}
+    }`;
+  const ROOT_PAGE = `
+    type ${name}Page {
+      items: [${name}!]!
+      total: Int
+      cursor: String
+    }`;
+  const ROOT_CREATE = `
+    input ${name}Create {
+      ${rootInput}
+    }`;
+  const ROOT_UPDATE = `
+    input ${name}Update {
+      id: ID!
+      ${rootInputPartial}
+    }`;
+  const ROOT_FILTERS = `
+    input ${name}Filters {
+      ${rootFilters}
+    }`;
+  const ROOT_INJECTED = typeDefs?.Root || "";
 
-      # Accepts a combination of one or many options to paginate through many
-      # \`${name}\` items.
-      # - \`cursor\`, used from a previous request to the get page of items. If
-      # specified, all other arguments are ignored.
-      # - \`order\`, used to order items (e.g. "fieldA:asc", "fieldB:desc")
-      # - \`filters\`, a map of filters and their values used to conditionally
-      # filter items. See \`${name}ManyFilters\` for available filters and value
-      # types.
-      # - \`limit\`, specify how many items per page
-      # (default: \`${limitDefault}\`, max: \`${limitMaxDefault}\`)
-      #
-      # Returns \`${name}ManyResult\` with a \`cursor\` value (to be used in a
-      # subsequent request to fetch the next page of items, \`null\` if no more
-      # items), \`total\` (to denote how many items exist), and \`items\` of
-      # \`${name}\`.
-      ${name}_many(
-        cursor: String
-        order: String
-        filters: ${name}ManyFilters
-        limit: Int
-      ): ${name}ManyResult!
+  const Root = [
+    ROOT,
+    ROOT_PAGE,
+    ROOT_CREATE,
+    ROOT_UPDATE,
+    hasFilters && ROOT_FILTERS,
+    ROOT_INJECTED,
+  ]
+    .filter(identity)
+    .join("\n");
 
-      ${typeDefs?.Query || ""}
-    `;
+  const QUERY_ONE = `
+    ${name}(id: ID!): ${name}!`;
+  const QUERY_MANY = `
+    ${name}_many(
+      cursor: String
+      order: String
+      ${hasFilters ? `filters: ${name}Filters` : ""}
+      limit: Int
+    ): ${name}Page!`;
+  const QUERY_INJECTED = typeDefs?.Query || "";
 
-  const Mutation = `
-      # Accepts \`data\` as an array of \`${name}Input\` to persist, and
-      # returns those new items.
-      ${name}_create(data: [${name}Input!]!): [${name}!]!
+  const Query = [
+    $ && DOCSTRINGS.QUERY_ONE(name),
+    QUERY_ONE,
+    $ && DOCSTRINGS.QUERY_MANY(name, limitDefault, limitMax),
+    QUERY_MANY,
+    QUERY_INJECTED,
+  ]
+    .filter(identity)
+    .join("\n");
 
-      # Accepts \`data\` as an array of \`${name}InputPartial\` to update items
-      # by the given \`{ id }\` field, and returns those updated items.
-      ${name}_update(data: [${name}InputPartial!]!): [${name}!]!
+  const MUTATION_CREATE = `
+    ${name}_create(
+      data: [${name}Create!]!
+    ): [${name}!]!`;
+  const MUTATION_UPDATE = `
+    ${name}_update(
+      data: [${name}Update!]!
+    ): [${name}!]!`;
+  const MUTATION_DELETE = `
+    ${name}_delete(
+      ids: [ID!]!
+    ): [ID!]!`;
+  const MUTATION_INJECTED = typeDefs?.Mutation || "";
 
-      # Accepts \`ids\` as an array of \`ID\`s and returns those \`ID\`s after
-      # deletion.
-      ${name}_delete(ids: [ID!]!): [ID!]!
-
-      ${typeDefs?.Mutation || ""}
-    `;
+  const Mutation = [
+    $ && DOCSTRINGS.MUTATION_CREATE(name),
+    MUTATION_CREATE,
+    $ && DOCSTRINGS.MUTATION_UPDATE(name),
+    MUTATION_UPDATE,
+    $ && DOCSTRINGS.MUTATION_DELETE(),
+    MUTATION_DELETE,
+    MUTATION_INJECTED,
+  ]
+    .filter(identity)
+    .join("\n");
 
   return {
     Root,

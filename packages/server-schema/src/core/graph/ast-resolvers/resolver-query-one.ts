@@ -4,7 +4,14 @@ import TOptions from "./ast-resolvers-options";
 export function ResolverQueryOne(name: string, options: TOptions) {
   return async (...resolverArgs: Parameters<TResolver>) => {
     const [, args] = resolverArgs;
-    return options.queryById(name, args.id);
+
+    const { id } = args;
+    const [queryResult] = await options.onQuery({
+      name,
+      id,
+    });
+
+    return queryResult;
   };
 }
 

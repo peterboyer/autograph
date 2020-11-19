@@ -1,5 +1,10 @@
+export type TQuery = {
+  name: string;
+  id?: string;
+};
+
 export type TOptions = {
-  queryById: (name: string, id: string | number) => any;
+  onQuery: (query: TQuery) => Promise<Object[]>;
 };
 
 export default TOptions;

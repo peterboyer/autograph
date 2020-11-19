@@ -24,6 +24,7 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
         set: resolverSet,
       },
       access: {},
+      default: undefined,
     };
   }
 
@@ -133,6 +134,8 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
     return null;
   })();
 
+  const _default = field.default;
+
   return {
     type,
     resolver: {
@@ -140,6 +143,7 @@ export function Field(field: TField, defaultSourceProperty: string): TFieldAST {
       set: resolverSet,
     },
     access: {},
+    default: _default,
   };
 }
 

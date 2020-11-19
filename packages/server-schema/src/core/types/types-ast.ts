@@ -13,7 +13,7 @@ export type TAST = {
   query: Record<"one" | "many" | "default", TQuerier | null>;
   typeDefs: Partial<TGraphTypeDefs>;
   limitDefault: number;
-  limitMaxDefault: number;
+  limitMax: number;
   // queryById: (
   //   arg: any,
   //   resolverArgs: Parameters<TResolver>,
@@ -73,6 +73,7 @@ export type TField = {
         };
   };
   access: Partial<Record<"get" | "set" | "default", TAccessor<any, any>>>;
+  default?: any;
 };
 
 export type TNodeGetTransactor = (transaction?: any) => TResolver;

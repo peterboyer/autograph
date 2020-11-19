@@ -1,7 +1,9 @@
 import { TType } from "../../types/types-types";
 
-export function getType(type: TType) {
-  return type.array
-    ? `[${type.name}!]${type.nullable ? "" : "!"}`
-    : `${type.name}${type.nullable ? "" : "!"}`;
+export function getType(type: TType, partial = false) {
+  if (partial) {
+    // if partial remove non-null modifier from end
+    return type.toString().replace(/!$/, "");
+  }
+  return type.toString();
 }

@@ -1,4 +1,4 @@
-import { TSchemaAST } from "../../types/types-ast";
+import { TAST } from "../../types/types-ast";
 import TOptions from "./ast-resolvers-options";
 
 import ResolverRoot from "./resolver-root";
@@ -8,7 +8,7 @@ import ResolverQueryOne from "./resolver-query-one";
 // import ResolverMutationUpdate from "./resolver-mutation-update";
 // import ResolverMutationDelete from "./resolver-mutation-delete";
 
-export default function Resolvers(ast: TSchemaAST, options: TOptions) {
+export default function Resolvers(ast: TAST, options: TOptions) {
   const { name } = ast;
   // const { query, filters, limitDefault, limitMaxDefault } = ast;
 
@@ -16,7 +16,7 @@ export default function Resolvers(ast: TSchemaAST, options: TOptions) {
   // const _filters = new Map(Object.entries(filters || {}));
 
   const Root = ResolverRoot(fields, options);
-  const One = ResolverQueryOne(ast.name, options);
+  const One = ResolverQueryOne(name, options);
   // const Many = mapMany();
   // const Create = mapCreate();
   // const Update = mapUpdate();

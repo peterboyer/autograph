@@ -10,7 +10,7 @@ export function mapFieldsInput(fields: Map<any, TField>, partial = false) {
     if (!resolverSet) continue;
 
     const { arg } = resolverSet;
-    const fieldArg = getType(arg);
+    const fieldArg = getType(arg, partial);
 
     acc.add(`${fieldName}: ${fieldArg}`);
   }

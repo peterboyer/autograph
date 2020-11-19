@@ -7,9 +7,9 @@ export function mapFieldsFilters(
 ) {
   const acc = new Set<string>();
   for (const [fieldName, field] of fields) {
-    if (field.type.__is !== "scalar") continue;
+    if (field.type._is !== "scalar") continue;
 
-    const typeGraph = getType(field.type);
+    const typeGraph = getType(field.type, true);
     acc.add(`${fieldName}_eq: ${typeGraph}`);
     acc.add(`${fieldName}_ne: ${typeGraph}`);
     acc.add(`${fieldName}_gt: ${typeGraph}`);
@@ -19,7 +19,7 @@ export function mapFieldsFilters(
   }
 
   for (const [filterName, filter] of filters) {
-    acc.add(`${filterName}: ${getType(filter.arg)}`);
+    acc.add(`${filterName}: ${getType(filter.arg, true)}`);
   }
 
   return [...acc.values()].join("\n");

@@ -15,11 +15,19 @@ export function mapRoot(fields: Map<string, TField>, options: TOptions) {
       root[nodeName] = async (...resolverArgs) => {
         const { transactor } = resolverGet;
         const result = await transactor()(...resolverArgs);
-        if (type.__is === "complex") {
-          const queryResult = await options.queryById(type.name, result);
-          if (!queryResult && !type.nullable) {
+        if (type._is === "object") {
+          const id = result;
+          const name = type.name;
+
+          const [queryResult] = await options.onQuery({
+            name,
+            id,
+          });
+
+          if (!queryResult && type.isNonNull) {
             throw new Error("@AS/NOT_FOUND");
           }
+
           return queryResult;
         }
         return result;
