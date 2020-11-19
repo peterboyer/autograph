@@ -29,8 +29,8 @@ export default function TypeDefs(ast: TAST): TGraphTypeDefs {
     type ${name} {
       ${root}
     }`;
-  const ROOT_PAGE = `
-    type ${name}Page {
+  const ROOT_LIST = `
+    type ${name}List {
       items: [${name}!]!
       total: Int
       cursor: String
@@ -52,7 +52,7 @@ export default function TypeDefs(ast: TAST): TGraphTypeDefs {
 
   const Root = [
     ROOT,
-    ROOT_PAGE,
+    ROOT_LIST,
     ROOT_CREATE,
     ROOT_UPDATE,
     hasFilters && ROOT_FILTERS,
@@ -64,12 +64,12 @@ export default function TypeDefs(ast: TAST): TGraphTypeDefs {
   const QUERY_ONE = `
     ${name}(id: ID!): ${name}!`;
   const QUERY_MANY = `
-    ${name}_many(
+    ${name}Many(
       cursor: String
       order: String
       ${hasFilters ? `filters: ${name}Filters` : ""}
       limit: Int
-    ): ${name}Page!`;
+    ): ${name}List!`;
   const QUERY_INJECTED = typeDefs?.Query || "";
 
   const Query = [
