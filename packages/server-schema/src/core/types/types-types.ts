@@ -32,7 +32,6 @@ export const Type = <T extends TYPE, V>(_is: T, name: string) => {
         isList: true;
         isNonNull: true;
       };
-      toString: () => string;
     } {
       return {
         ...omit(self, ["List", "NonNull"]),
@@ -43,17 +42,12 @@ export const Type = <T extends TYPE, V>(_is: T, name: string) => {
           name: typeof self["name"];
           isList: true;
           isNonNull: true;
-          toString: () => string;
         } {
           return {
             ...omit(self, ["List", "NonNull"]),
             isList: true,
             isNonNull: true,
-            toString: () => `[${name}!]!`,
           };
-        },
-        toString: () => {
-          return `[${name}!]`;
         },
       };
     },
@@ -63,15 +57,12 @@ export const Type = <T extends TYPE, V>(_is: T, name: string) => {
       name: typeof self["name"];
       isList: typeof self["isList"];
       isNonNull: true;
-      toString: () => string;
     } {
       return {
         ...omit(self, ["List", "NonNull"]),
         isNonNull: true,
-        toString: () => `${name}!`,
       };
     },
-    toString: () => `${name}`,
   };
 
   return self as Required<typeof self>;
