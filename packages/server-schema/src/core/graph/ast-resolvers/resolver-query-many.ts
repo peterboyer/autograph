@@ -6,7 +6,7 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
   return async (
     ...resolverArgs: Parameters<
       TResolver<
-        never,
+        undefined,
         {
           cursor?: string;
           order?: string;

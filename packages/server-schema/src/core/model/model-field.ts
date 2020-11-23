@@ -8,13 +8,13 @@ export function Field(field: TField, fieldName: string): TFieldAST {
 
     const resolverGet: TFieldAST["resolver"]["get"] = {
       args: {},
-      transactor: () => (source) => source[fieldName],
+      transactor: (source) => source[fieldName],
     };
 
     const resolverSet: TFieldAST["resolver"]["set"] = {
       stage: "pre",
       arg: type._is === "object" ? Types.ID : (type as TScalar),
-      transactor: () => (value) => ({ [fieldName]: value }),
+      transactor: (value) => ({ [fieldName]: value }),
     };
 
     return {
@@ -38,14 +38,14 @@ export function Field(field: TField, fieldName: string): TFieldAST {
     if (!_resolver) {
       return {
         args: {},
-        transactor: () => (source) => source[fieldName],
+        transactor: (source) => source[fieldName],
       };
     }
 
     if (typeof _resolver === "string") {
       return {
         args: {},
-        transactor: () => (source) => source[_resolver],
+        transactor: (source) => source[_resolver],
       };
     }
 
@@ -54,14 +54,14 @@ export function Field(field: TField, fieldName: string): TFieldAST {
     if (_resolverGet === undefined) {
       return {
         args: {},
-        transactor: () => (source) => source[fieldName],
+        transactor: (source) => source[fieldName],
       };
     }
 
     if (typeof _resolverGet === "string") {
       return {
         args: {},
-        transactor: () => (source) => source[_resolverGet],
+        transactor: (source) => source[_resolverGet],
       };
     }
 
@@ -89,7 +89,7 @@ export function Field(field: TField, fieldName: string): TFieldAST {
       return {
         stage: "pre",
         arg: _resolverType,
-        transactor: () => (value) => ({ [fieldName]: value }),
+        transactor: (value) => ({ [fieldName]: value }),
       };
     }
 
@@ -97,7 +97,7 @@ export function Field(field: TField, fieldName: string): TFieldAST {
       return {
         stage: "pre",
         arg: _resolverType,
-        transactor: () => (value) => ({ [_resolver]: value }),
+        transactor: (value) => ({ [_resolver]: value }),
       };
     }
 
@@ -107,7 +107,7 @@ export function Field(field: TField, fieldName: string): TFieldAST {
       return {
         stage: "pre",
         arg: _resolverType,
-        transactor: () => (value) => ({ [fieldName]: value }),
+        transactor: (value) => ({ [fieldName]: value }),
       };
     }
 
@@ -115,7 +115,7 @@ export function Field(field: TField, fieldName: string): TFieldAST {
       return {
         stage: "pre",
         arg: _resolverType,
-        transactor: () => (value) => ({ [_resolverSet]: value }),
+        transactor: (value) => ({ [_resolverSet]: value }),
       };
     }
 

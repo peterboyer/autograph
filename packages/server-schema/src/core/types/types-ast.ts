@@ -46,15 +46,15 @@ export type TField = {
   default?: any;
 };
 
-export type TNodeGetTransactor = (transaction?: any) => TResolver;
+export type TNodeGetTransactor = TResolver;
 
-export type TNodeSetPreTransactor = (
-  transaction?: any
-) => (value: any, context: any) => void;
+export type TNodeSetPreTransactor = (value: any, context: any) => void;
 
 export type TNodeSetPostTransactor = (
-  transaction?: any
-) => (source: any, value: any, context: any) => void;
+  source: any,
+  value: any,
+  context: any
+) => void;
 
 /**
  * ACCESS

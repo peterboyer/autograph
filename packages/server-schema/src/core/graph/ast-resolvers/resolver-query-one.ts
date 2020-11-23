@@ -4,7 +4,7 @@ import TOptions from "./ast-resolvers-options";
 
 export function ResolverQueryOne(ast: TAST, options: TOptions) {
   return async (
-    ...resolverArgs: Parameters<TResolver<never, { id: string }>>
+    ...resolverArgs: Parameters<TResolver<undefined, { id: string }>>
   ) => {
     const [, args] = resolverArgs;
 
@@ -15,6 +15,8 @@ export function ResolverQueryOne(ast: TAST, options: TOptions) {
     } = await options.onQuery({
       name,
       id,
+      orders: [],
+      filters: [],
     });
 
     return item;

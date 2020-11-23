@@ -14,7 +14,11 @@ export function mapRoot(ast: TAST, options: TOptions) {
     if (resolverGet) {
       root[nodeName] = async (...resolverArgs) => {
         const { transactor } = resolverGet;
-        const result = await transactor()(...resolverArgs);
+        const result = await transactor(...resolverArgs);
+
+        // pass-through complete objects/arrays that don't need resolution
+        if (result && typeof result === "object") return result;
+
         if (type._is === "object") {
           const id = result;
           const name = type.name;
@@ -24,6 +28,8 @@ export function mapRoot(ast: TAST, options: TOptions) {
           } = await options.onQuery({
             name,
             id,
+            orders: [],
+            filters: [],
           });
 
           if (!item && type.isNonNull) {
