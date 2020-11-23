@@ -1,3 +1,4 @@
+// @ts-nocheck
 const getDataItemTransactors = <T extends { id: any | null }>(
   data: T[],
   resolverArgs: Parameters<IResolverAny>

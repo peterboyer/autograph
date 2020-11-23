@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Knex from "knex";
 import { pick } from "lodash";
 import { TFilter } from "../schema-graph-types";

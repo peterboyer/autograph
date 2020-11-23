@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { TFilter, TNode, TQuerier, TResolver } from "../schema-graph-types";
 import TResolverIOC from "./resolver-ioc";
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 export * from "./schema-graph";
 export * from "./schema-graph-types";
 export * from "./schema-graph-knex";

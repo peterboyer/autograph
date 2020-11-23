@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import Knex from "knex";
 import { TOptions } from "../schema-graph-types";
 import TableInfo from "./table-info";

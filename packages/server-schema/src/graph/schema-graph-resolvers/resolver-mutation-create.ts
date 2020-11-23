@@ -1,3 +1,4 @@
+// @ts-nocheck
 import getTransactors from "./resolver-mutation-transactors";
 
 const resolverMutationCreate: TResolver<

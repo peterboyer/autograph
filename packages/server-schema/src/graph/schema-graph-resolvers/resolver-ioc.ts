@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { TOptions } from "../schema-graph-types";
 
 export type TResolverIOC = {

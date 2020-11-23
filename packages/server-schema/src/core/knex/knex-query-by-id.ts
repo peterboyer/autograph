@@ -1,3 +1,4 @@
+// @ts-nocheck
 import TOptions from "./knex-options";
 import TGraphOptions from "../graph/ast-resolvers/ast-resolvers-options";
 

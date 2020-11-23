@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { TSchemaAST } from "../schema-graph-types";
 
 import ResolverRoot from "./resolver-root";
