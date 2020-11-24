@@ -5,42 +5,42 @@ import TOptions from "./ast-resolvers-options";
 export function mapRoot(ast: TAST, options: TOptions) {
   const root: Record<any, TResolver> = {};
 
-  for (const [nodeName, node] of Object.entries(ast.fields)) {
+  for (const [fieldName, field] of Object.entries(ast.fields)) {
     const {
       type,
       resolver: { get: resolverGet },
-    } = node;
+    } = field;
 
-    if (resolverGet) {
-      root[nodeName] = async (...resolverArgs) => {
-        const [, , context] = resolverArgs;
-        const { transactor } = resolverGet;
-        const result = await transactor(...resolverArgs);
+    if (!resolverGet) continue;
 
-        // pass-through complete objects/arrays that don't need resolution
-        if (result && typeof result === "object") return result;
+    root[fieldName] = async (...resolverArgs) => {
+      const [, , context] = resolverArgs;
+      const { transactor } = resolverGet;
+      const result = await transactor(...resolverArgs);
 
-        if (type._is === "object") {
-          const id = result;
-          const name = type.name;
+      // pass-through complete objects/arrays that don't need resolution
+      if (result && typeof result === "object") return result;
 
-          const {
-            items: [item],
-          } = await options.onQuery({
-            name,
-            id,
-            context,
-          });
+      if (type._is === "object") {
+        const id = result;
+        const name = type.name;
 
-          if (!item && type.isNonNull) {
-            throw new Error("@AS/NOT_FOUND");
-          }
+        const {
+          items: [item],
+        } = await options.onQuery({
+          name,
+          id,
+          context,
+        });
 
-          return item;
+        if (!item && type.isNonNull) {
+          throw new Error("@AS/NOT_FOUND");
         }
-        return result;
-      };
-    }
+
+        return item;
+      }
+      return result;
+    };
   }
 
   return root;

@@ -48,13 +48,13 @@ export type TField = {
 
 export type TNodeGetTransactor = TResolver;
 
-export type TNodeSetPreTransactor = (value: any, context: any) => void;
+export type TNodeSetPreTransactor = (value: any, context: any) => Promise<any>;
 
 export type TNodeSetPostTransactor = (
   source: any,
   value: any,
   context: any
-) => void;
+) => Promise<any>;
 
 /**
  * ACCESS

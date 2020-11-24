@@ -35,12 +35,12 @@ export default function TypeDefs(ast: TAST): TGraphTypeDefs {
       total: Int
       cursor: String
     }`;
-  const ROOT_CREATE = `
-    input ${name}Create {
+  const ROOT_CREATE_INPUT = `
+    input ${name}CreateInput {
       ${rootInput}
     }`;
-  const ROOT_UPDATE = `
-    input ${name}Update {
+  const ROOT_UPDATE_INPUT = `
+    input ${name}UpdateInput {
       id: ID!
       ${rootInputPartial}
     }`;
@@ -53,8 +53,8 @@ export default function TypeDefs(ast: TAST): TGraphTypeDefs {
   const Root = [
     ROOT,
     ROOT_LIST,
-    ROOT_CREATE,
-    ROOT_UPDATE,
+    ROOT_CREATE_INPUT,
+    ROOT_UPDATE_INPUT,
     hasFilters && ROOT_FILTERS,
     ROOT_INJECTED,
   ]
@@ -83,15 +83,15 @@ export default function TypeDefs(ast: TAST): TGraphTypeDefs {
     .join("\n");
 
   const MUTATION_CREATE = `
-    ${name}_create(
-      data: [${name}Create!]!
+    ${name}Create(
+      data: [${name}CreateInput!]!
     ): [${name}!]!`;
   const MUTATION_UPDATE = `
-    ${name}_update(
-      data: [${name}Update!]!
+    ${name}Update(
+      data: [${name}UpdateInput!]!
     ): [${name}!]!`;
   const MUTATION_DELETE = `
-    ${name}_delete(
+    ${name}Delete(
       ids: [ID!]!
     ): [ID!]!`;
   const MUTATION_INJECTED = typeDefs?.Mutation || "";

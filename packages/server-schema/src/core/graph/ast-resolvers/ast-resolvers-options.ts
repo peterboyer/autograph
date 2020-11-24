@@ -15,14 +15,22 @@ export type TQuery<TContext = unknown> = {
   context: TContext;
 };
 
+export type TMutation<TContext = unknown> = {
+  name: string;
+  id?: string;
+  data?: Record<string, any>;
+  context: TContext;
+};
+
 export type TQueryList = {
-  items: Object[];
+  items: Record<string, any>[];
   total: number;
   cursor?: string;
 };
 
 export type TOptions = {
   onQuery: (query: TQuery) => Promise<TQueryList>;
+  onMutation: (mutation: TMutation) => Promise<Record<string, any> | undefined>;
 };
 
 export default TOptions;
