@@ -13,6 +13,7 @@ export function mapRoot(ast: TAST, options: TOptions) {
 
     if (resolverGet) {
       root[nodeName] = async (...resolverArgs) => {
+        const [, , context] = resolverArgs;
         const { transactor } = resolverGet;
         const result = await transactor(...resolverArgs);
 
@@ -28,6 +29,7 @@ export function mapRoot(ast: TAST, options: TOptions) {
           } = await options.onQuery({
             name,
             id,
+            context,
           });
 
           if (!item && type.isNonNull) {

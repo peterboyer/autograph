@@ -13,12 +13,19 @@ import Filter from "./model-filter";
  */
 export function Model<
   Source extends {},
-  Config extends { Context: unknown },
-  ARGS extends TArgs = { Source: Source; Context: Config["Context"] },
+  Config extends { Context: TArgs["Context"]; Query: TArgs["Query"] },
+  ARGS extends TArgs = {
+    Source: Source;
+    Context: Config["Context"];
+    Query: Config["Query"];
+  },
   MODEL extends TModel<ARGS> = TModel<ARGS>
 >(model: MODEL) {
   const { name } = model;
 
+  /**
+   * FIELDS
+   */
   const fields = Object.entries(model.fields).reduce<TAST["fields"]>(
     (acc, [fieldName, field]) =>
       Object.assign(acc, {
@@ -27,6 +34,9 @@ export function Model<
     {}
   );
 
+  /**
+   * ACCESS
+   */
   const access: TAST["access"] = {
     create: model.access?.create || null,
     read: model.access?.read || null,
@@ -35,6 +45,9 @@ export function Model<
     default: model.access?.default || null,
   };
 
+  /**
+   * FILTERS
+   */
   const filters = Object.entries(model.filters || {}).reduce<TAST["filters"]>(
     (acc, [filterName, filter]) => {
       return Object.assign(acc, { [filterName]: Filter(filter) });
@@ -42,7 +55,7 @@ export function Model<
     {}
   );
 
-  // add default filters
+  // default scalar filters
   const SCALAR_OPERATORS = ["eq", "ne", "gt", "gte", "lt", "lte"];
   const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
 
@@ -88,13 +101,23 @@ export function Model<
     });
   });
 
+  /**
+   * QUERY
+   */
   const query: TAST["query"] = {
     one: model.query?.one || null,
     many: model.query?.many || null,
     default: model.query?.default || null,
   };
 
+  /**
+   * TYPEDEFS
+   */
   const typeDefs: TAST["typeDefs"] = model.typeDefs || {};
+
+  /**
+   * OPTIONS
+   */
   const limitDefault = model.limitDefault || 20;
   const limitMax = model.limitMax || 50;
 

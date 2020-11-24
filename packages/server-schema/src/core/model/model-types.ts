@@ -10,6 +10,7 @@ import { TQuery } from "../graph/ast-resolvers/ast-resolvers-options";
 export type TArgs = {
   Source: unknown;
   Context: unknown;
+  Query: TQuery;
 };
 
 export type TModel<A extends TArgs = TArgs> = {
@@ -18,7 +19,7 @@ export type TModel<A extends TArgs = TArgs> = {
   access?: Partial<
     Record<"create" | "read" | "update" | "delete" | "default", TAccessor<A>>
   >;
-  filters?: Record<any, TFilter>;
+  filters?: Record<any, TFilter<A>>;
   query?: Partial<Record<"one" | "many" | "default", TQuerier<A>>>;
   typeDefs?: Partial<TGraphTypeDefs>;
   limitDefault?: number;
@@ -98,10 +99,10 @@ export type TAccessor<A extends TArgs = TArgs> = TAccessorAST<
 /**
  * FILTER
  */
-export type TFilter = (modifiers: {
-  use: <A extends TScalar>(
-    type: A
-  ) => <R extends (query: TQuery, value: NonNullable<Typed<A>>) => void>(
+export type TFilter<A extends TArgs = TArgs> = (modifiers: {
+  use: <T extends TScalar>(
+    type: T
+  ) => <R extends (query: A["Query"], value: NonNullable<Typed<T>>) => void>(
     resolver: R
   ) => void;
 }) => void;
