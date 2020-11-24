@@ -74,11 +74,14 @@ export function Model<
       filters[filterName] = {
         arg,
         resolver: (query, value) => {
-          query.filters.push({
-            target,
-            operator,
-            value,
-          });
+          if (!("id" in query || "cursor" in query)) {
+            query.filters = query.filters || [];
+            query.filters.push({
+              target,
+              operator,
+              value,
+            });
+          }
           return query;
         },
       };

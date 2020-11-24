@@ -28,8 +28,6 @@ export function mapRoot(ast: TAST, options: TOptions) {
           } = await options.onQuery({
             name,
             id,
-            orders: [],
-            filters: [],
           });
 
           if (!item && type.isNonNull) {

@@ -1,18 +1,23 @@
-export type TQuery = {
+export type TQueryCursor<EXT = {}> = { name: string; cursor: string } & EXT;
+export type TQueryOne<EXT = {}> = { name: string; id: string } & EXT;
+export type TQueryMany<EXT = {}> = {
   name: string;
-  id?: string;
-  cursor?: string;
-  orders: {
+  limit: number;
+  order?: {
     target: string;
     direction: "asc" | "desc";
-  }[];
-  filters: {
+  };
+  filters?: {
     target: string;
     operator: string;
     value: any;
   }[];
-  limit?: number;
-};
+} & EXT;
+
+export type TQuery<EXT = {}> =
+  | TQueryCursor<EXT>
+  | TQueryOne<EXT>
+  | TQueryMany<EXT>;
 
 export type TQueryList = {
   items: Object[];

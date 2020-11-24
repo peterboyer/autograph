@@ -26,16 +26,15 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
     } = args;
 
     const { name } = ast;
+
+    if (cursorArg) {
+      return await options.onQuery({ name, cursor: cursorArg });
+    }
+
     const query: TQuery = {
       name,
       limit: Math.min(limitArg || ast.limitDefault, ast.limitMax),
-      orders: [],
-      filters: [],
     };
-
-    if (cursorArg) {
-      query.cursor = cursorArg;
-    }
 
     if (!cursorArg && orderArg) {
       const [, orderFieldName, orderDirection] =
@@ -47,10 +46,10 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
       if (!(field && field.orderTarget))
         throw new Error("INVALID_QUERY_ORDER_FIELD");
 
-      query.orders.push({
+      query.order = {
         target: field.orderTarget,
         direction: orderDirection as "asc" | "desc",
-      });
+      };
     }
 
     if (!cursorArg && filtersArg) {

@@ -6,18 +6,13 @@ export function ResolverQueryOne(ast: TAST, options: TOptions) {
   return async (
     ...resolverArgs: Parameters<TResolver<undefined, { id: string }>>
   ) => {
-    const [, args] = resolverArgs;
-
     const { name } = ast;
+    const [, args] = resolverArgs;
     const { id } = args;
+
     const {
       items: [item],
-    } = await options.onQuery({
-      name,
-      id,
-      orders: [],
-      filters: [],
-    });
+    } = await options.onQuery({ name, id });
 
     return item;
   };
