@@ -113,5 +113,5 @@ export type TFilter<A extends TArgs = TArgs> = (modifiers: {
 export type TQuerier<A extends TArgs = TArgs> = TQuerierAST<
   A["Source"],
   A["Context"],
-  unknown
+  A["Query"]
 >;

@@ -16,7 +16,13 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
       >
     >
   ) => {
+    const { name } = ast;
     const [, args, context] = resolverArgs;
+
+    const query_default: TQuery = {
+      name,
+      context,
+    };
 
     const {
       limit: limitArg,
@@ -25,16 +31,14 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
       filters: filtersArg,
     } = args;
 
-    const { name } = ast;
-
     if (cursorArg) {
-      return await options.onQuery({ name, cursor: cursorArg, context });
+      const query = { ...query_default, cursor: cursorArg };
+      return await options.onQuery(query);
     }
 
-    const query: TQuery = {
-      name,
+    const query = {
+      ...query_default,
       limit: Math.min(limitArg || ast.limitDefault, ast.limitMax),
-      context,
     };
 
     if (!cursorArg && orderArg) {
@@ -59,6 +63,12 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
         const _query = filter.resolver(query, value);
         if (_query) Object.assign(query, _query);
       });
+    }
+
+    const resolver = ast.query.many || ast.query.default;
+    if (resolver) {
+      const _query = await resolver(query, resolverArgs);
+      if (_query) Object.assign(query, _query);
     }
 
     const { items, total, cursor } = await options.onQuery(query);

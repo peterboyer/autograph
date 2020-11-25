@@ -75,8 +75,7 @@ export type TFilter<TArg extends TScalar = TScalar> = {
 /**
  * QUERY
  */
-export type TQuerier<
-  TSource = unknown,
-  TContext = unknown,
-  TQueryConfig = unknown
-> = (config: TQueryConfig) => TResolver<TSource, unknown, TContext>;
+export type TQuerier<Source = any, Context = any, Query = TQuery> = (
+  query: Query,
+  resolverArgs: Parameters<TResolver<Source, any, Context>>
+) => Query | Promise<Query> | void;
