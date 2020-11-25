@@ -1,6 +1,6 @@
 import { TAST } from "../../types/types-ast";
 import { TResolver } from "../../types/types-graphql";
-import TOptions from "./ast-resolvers-options";
+import TOptions, { TQuery } from "./ast-resolvers-options";
 
 export function ResolverQueryOne(ast: TAST, options: TOptions) {
   return async (
@@ -10,9 +10,23 @@ export function ResolverQueryOne(ast: TAST, options: TOptions) {
     const [, args, context] = resolverArgs;
     const { id } = args;
 
+    const query_default: TQuery = {
+      name,
+      context,
+    };
+
+    const query = {
+      ...query_default,
+      id,
+    };
+
+    const queryResolver = ast.query.one || ast.query.default || undefined;
+    const queryResolverWrapped =
+      queryResolver &&
+      ((query: Record<string, any>) => queryResolver(query, resolverArgs));
     const {
       items: [item],
-    } = await options.onQuery({ name, id, context });
+    } = await options.onQuery(query, queryResolverWrapped);
 
     return item;
   };

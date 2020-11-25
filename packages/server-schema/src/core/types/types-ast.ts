@@ -69,13 +69,21 @@ export type TAccessor<TSource, TContext> = (
  */
 export type TFilter<TArg extends TScalar = TScalar> = {
   arg: TArg;
-  resolver: (query: TQuery, value: Typed<TArg>) => TQuery | undefined;
+  resolver: (
+    query: TQuery,
+    value: Typed<TArg>,
+    resolverArgs: Parameters<TResolver>
+  ) => TQuery | undefined;
 };
 
 /**
  * QUERY
  */
-export type TQuerier<Source = any, Context = any, Query = TQuery> = (
+export type TQuerier<
+  Source = any,
+  Context = any,
+  Query = Record<string, any>
+> = (
   query: Query,
   resolverArgs: Parameters<TResolver<Source, any, Context>>
 ) => Query | Promise<Query> | void;

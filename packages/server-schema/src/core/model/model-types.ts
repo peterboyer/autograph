@@ -5,12 +5,11 @@ import {
   TAccessor as TAccessorAST,
   TQuerier as TQuerierAST,
 } from "../types/types-ast";
-import { TQuery } from "../graph/ast-resolvers/ast-resolvers-options";
 
 export type TArgs = {
-  Source: unknown;
-  Context: unknown;
-  Query: TQuery;
+  Source: any;
+  Context: any;
+  Query: any;
 };
 
 export type TModel<A extends TArgs = TArgs> = {
@@ -102,7 +101,13 @@ export type TAccessor<A extends TArgs = TArgs> = TAccessorAST<
 export type TFilter<A extends TArgs = TArgs> = (modifiers: {
   use: <T extends TScalar>(
     type: T
-  ) => <R extends (query: A["Query"], value: NonNullable<Typed<T>>) => void>(
+  ) => <
+    R extends (
+      query: A["Query"],
+      value: NonNullable<Typed<T>>,
+      resolverArgs: Parameters<TResolver<A["Source"], any, A["Context"]>>
+    ) => void
+  >(
     resolver: R
   ) => void;
 }) => void;

@@ -13,7 +13,7 @@ import Filter from "./model-filter";
  */
 export function Model<
   Source extends {},
-  Config extends { Context: TArgs["Context"]; Query: TArgs["Query"] },
+  Config extends { Context: unknown; Query: unknown },
   ARGS extends TArgs = {
     Source: Source;
     Context: Config["Context"];

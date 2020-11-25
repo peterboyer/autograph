@@ -60,18 +60,19 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
     if (!cursorArg && filtersArg) {
       Object.entries(filtersArg).forEach(([filterName, value]) => {
         const filter = ast.filters[filterName];
-        const _query = filter.resolver(query, value);
+        const _query = filter.resolver(query, value, resolverArgs);
         if (_query) Object.assign(query, _query);
       });
     }
 
-    const resolver = ast.query.many || ast.query.default;
-    if (resolver) {
-      const _query = await resolver(query, resolverArgs);
-      if (_query) Object.assign(query, _query);
-    }
-
-    const { items, total, cursor } = await options.onQuery(query);
+    const queryResolver = ast.query.one || ast.query.default || undefined;
+    const queryResolverWrapped =
+      queryResolver &&
+      ((query: Record<string, any>) => queryResolver(query, resolverArgs));
+    const { items, total, cursor } = await options.onQuery(
+      query,
+      queryResolverWrapped
+    );
 
     return {
       items: items,
