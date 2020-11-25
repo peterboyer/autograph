@@ -1,4 +1,6 @@
-export type TQuery<TContext = unknown> = {
+import { TResolver } from "../../types/types-graphql";
+
+export type TQuery<TContext = any> = {
   name: string;
   id?: string;
   cursor?: string;
@@ -15,7 +17,7 @@ export type TQuery<TContext = unknown> = {
   context: TContext;
 };
 
-export type TMutation<TContext = unknown> = {
+export type TMutation<TContext = any> = {
   name: string;
   id?: string;
   data?: Record<string, any>;
@@ -28,9 +30,13 @@ export type TQueryList = {
   cursor?: string;
 };
 
-export type TOptions = {
+export type TOptions<Context = any> = {
   onQuery: (query: TQuery) => Promise<TQueryList>;
   onMutation: (mutation: TMutation) => Promise<Record<string, any> | undefined>;
+  middleware?: (
+    resolverArgs: Parameters<TResolver<any, any, Context>>,
+    next: TResolver
+  ) => Promise<any>;
 };
 
 export default TOptions;

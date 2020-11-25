@@ -11,33 +11,41 @@ export function ResolverMutation(
 ) {
   return async (
     ...resolverArgs: Parameters<
-      TResolver<undefined, { ids: string[]; data: any[] }>
+      TResolver<undefined, { ids: string[]; data: Record<string, any>[] }>
     >
   ) => {
     const { name } = ast;
-
     const [, args, context] = resolverArgs;
+
+    const mutation_default: TMutation = {
+      name,
+      context,
+    };
 
     if (operation === "delete") {
       const { ids } = args;
       await Promise.all(
         ids.map(async (id) => {
-          const mutation: TMutation = {
-            name,
-            id,
-            context,
-          };
+          const mutation = { ...mutation_default, id };
           await options.onMutation(mutation);
         })
       );
       return ids;
     }
 
-    const { data: _datas } = args;
+    const { data: datas } = args;
     // resolve all setters for each item to resolve insert data
-    const datas = await Promise.all(
-      _datas.map(async (data) => {
-        const item: Record<string, any> = {};
+    const dataResolvers = await Promise.all(
+      datas.map(async (data) => {
+        /**
+         * id
+         */
+        const id = operation === "update" ? (data.id as string) : undefined;
+
+        /**
+         * preData
+         */
+        const preData: Record<string, any> = {};
         await Promise.all(
           Object.entries(data).map(async ([fieldName, value]) => {
             const field = ast.fields[fieldName];
@@ -47,30 +55,99 @@ export function ResolverMutation(
             if (!resolverSet) return;
             if (resolverSet.stage !== "pre") return;
             const { transactor } = resolverSet;
-            const result = await transactor(value, context);
-            if (result && typeof result === "object") {
-              Object.assign(item, result);
-            } else {
-              item[fieldName] = result;
+            const result = (await transactor(value, context)) as
+              | Record<string, any>
+              | undefined;
+            if (result) {
+              if (typeof result === "object") {
+                Object.assign(preData, result);
+              } else {
+                preData[fieldName] = result;
+              }
             }
           })
         );
-        return item;
+
+        /**
+         * postData
+         */
+        const postDataCallback = async (
+          source: Record<string, any>
+        ): Promise<Record<string, any>> => {
+          const postData: Record<string, any> = {};
+          await Promise.all(
+            Object.entries(data).map(async ([fieldName, value]) => {
+              const field = ast.fields[fieldName];
+              const {
+                resolver: { set: resolverSet },
+              } = field;
+              if (!resolverSet) return;
+              if (resolverSet.stage !== "post") return;
+              const { transactor } = resolverSet;
+              const result = (await transactor(source, value, context)) as
+                | Record<string, any>
+                | undefined;
+              if (result) {
+                if (typeof result === "object") {
+                  Object.assign(postData, result);
+                } else {
+                  postData[fieldName] = result;
+                }
+              }
+            })
+          );
+          return postData;
+        };
+
+        return {
+          id,
+          preData,
+          postDataCallback,
+        };
       })
     );
 
     const items: Record<string, any>[] = [];
     await Promise.all(
-      datas.map(async (data) => {
-        const id = operation === "update" ? data.id : undefined;
-        const mutation: TMutation = {
-          name,
+      dataResolvers.map(async ({ id, preData, postDataCallback }) => {
+        /**
+         * preMutation
+         */
+        const preMutation = {
+          ...mutation_default,
           id,
-          data,
-          context,
+          data: preData,
         };
-        const item = await options.onMutation(mutation);
-        if (item) items.push(item);
+
+        /**
+         * preItem --- to be used as source for postMutation
+         */
+        const preItem = await options.onMutation(preMutation);
+
+        /**
+         * postMutation
+         */
+        const source = preItem as NonNullable<typeof preItem>;
+        const postData = await postDataCallback(source);
+        // only if postData setters have provided new values
+        if (Object.keys(postData).length) {
+          const postMutation = {
+            ...mutation_default,
+            id,
+            data: postData,
+          };
+
+          /**
+           * postItem -> result
+           */
+          const postItem = await options.onMutation(postMutation);
+          if (postItem) items.push(postItem);
+        }
+
+        /**
+         * preItem -> result
+         */
+        if (preItem) items.push(preItem);
       })
     );
 

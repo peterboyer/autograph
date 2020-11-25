@@ -10,4 +10,4 @@ export type TResolver<
   args: TArgs,
   context: TContext,
   info: GraphQLResolveInfo
-) => TReturn;
+) => TReturn | Promise<TReturn>;
