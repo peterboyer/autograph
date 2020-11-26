@@ -83,7 +83,12 @@ export function Field(field: TField, fieldName: string): TFieldAST {
 
   const resolverSet = ((): TFieldAST["resolver"]["set"] => {
     const _resolver = field.resolver;
-    const _resolverType = type._is === "object" ? Types.ID : (type as TScalar);
+    const _resolverType =
+      type._is === "object"
+        ? type.isNonNull
+          ? Types.ID.NonNull
+          : Types.ID
+        : (type as TScalar);
 
     if (!_resolver) {
       return {
