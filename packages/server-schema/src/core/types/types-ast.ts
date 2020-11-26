@@ -6,10 +6,7 @@ import { TQuery } from "../graph/ast-resolvers/ast-resolvers-options";
 export type TAST = {
   name: string;
   fields: Record<string, TField>;
-  access: Record<
-    "create" | "read" | "update" | "delete" | "default",
-    TAccessor<any, any> | null
-  >;
+  hooks: THooks;
   filters: Record<string, TFilter>;
   query: Record<"one" | "many" | "default", TQuerier | null>;
   typeDefs: Partial<TGraphTypeDefs>;
@@ -40,7 +37,7 @@ export type TField = {
           transactor: TNodeSetPostTransactor;
         };
   };
-  access: Partial<Record<"get" | "set" | "default", TAccessor<any, any>>>;
+  // access: Partial<Record<"get" | "set" | "default", TAccessor<any, any>>>;
   orderTarget: null | string;
   filterTarget: null | string;
   default?: any;
@@ -61,12 +58,17 @@ export type TNodeSetPostTransactor = (
 ) => Promise<any>;
 
 /**
- * ACCESS
+ * HOOKS
  */
-export type TAccessor<TSource, TContext> = (
-  source: TSource,
-  context: TContext
-) => void;
+export type THooks<Source = Record<string, any>, Context = any> = {
+  preUpdate:
+    | ((
+        source: Source | undefined,
+        data: Partial<Source>,
+        context: Context
+      ) => Promise<void> | void)
+    | null;
+};
 
 /**
  * FILTER

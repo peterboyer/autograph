@@ -35,14 +35,10 @@ export function Model<
   );
 
   /**
-   * ACCESS
+   * HOOKS
    */
-  const access: TAST["access"] = {
-    create: model.access?.create || null,
-    read: model.access?.read || null,
-    update: model.access?.update || null,
-    delete: model.access?.delete || null,
-    default: model.access?.default || null,
+  const hooks: TAST["hooks"] = {
+    preUpdate: model.hooks?.preUpdate || null,
   };
 
   /**
@@ -125,7 +121,7 @@ export function Model<
   const ast = {
     name,
     fields,
-    access,
+    hooks,
     filters,
     query,
     typeDefs,

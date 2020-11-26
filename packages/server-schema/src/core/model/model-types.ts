@@ -2,7 +2,7 @@ import { TResolver } from "../types/types-graphql";
 import { TType, TScalar, Typed, TypedDict } from "../types/types-types";
 import { TGraphTypeDefs } from "../types/types-graph";
 import {
-  TAccessor as TAccessorAST,
+  THooks as THooksAST,
   TQuerier as TQuerierAST,
 } from "../types/types-ast";
 
@@ -15,9 +15,7 @@ export type TArgs = {
 export type TModel<A extends TArgs = TArgs> = {
   name: string;
   fields: Record<any, TField<A>>;
-  access?: Partial<
-    Record<"create" | "read" | "update" | "delete" | "default", TAccessor<A>>
-  >;
+  hooks?: THooks<A>;
   filters?: Record<any, TFilter<A>>;
   query?: Partial<Record<"one" | "many" | "default", TQuerier<A>>>;
   typeDefs?: Partial<TGraphTypeDefs>;
@@ -38,7 +36,7 @@ export type TField<A extends TArgs = TArgs> =
             get?: null | string | TFieldGetResolver<A>;
             set?: null | string | TFieldSetResolver<A>;
           };
-      access?: Partial<Record<"get" | "set" | "default", TAccessor<A>>>;
+      // access?: Partial<Record<"get" | "set" | "default", TAccessor<A>>>;
       orderTarget?: string;
       filterTarget?: string;
       default?: any;
@@ -96,7 +94,7 @@ type TFieldSetResolver<A extends TArgs = TArgs> = (
 /**
  * ACCESS
  */
-export type TAccessor<A extends TArgs = TArgs> = TAccessorAST<
+export type THooks<A extends TArgs = TArgs> = THooksAST<
   A["Source"],
   A["Context"]
 >;

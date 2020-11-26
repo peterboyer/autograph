@@ -173,6 +173,7 @@ export function ResolverMutation(
 
         return {
           id,
+          source,
           preData,
           postDataCallback,
         };
@@ -181,7 +182,14 @@ export function ResolverMutation(
 
     const items: Record<string, any>[] = [];
     await Promise.all(
-      dataResolvers.map(async ({ id, preData, postDataCallback }) => {
+      dataResolvers.map(async (dataResolver) => {
+        const {
+          id,
+          source: preSource,
+          preData,
+          postDataCallback,
+        } = dataResolver;
+
         /**
          * preMutation
          */
@@ -190,6 +198,10 @@ export function ResolverMutation(
           id,
           data: preData,
         };
+
+        // hook
+        ast.hooks.preUpdate &&
+          (await ast.hooks.preUpdate(preSource, preData, context));
 
         /**
          * preItem --- to be used as source for postMutation
