@@ -8,6 +8,7 @@ export function mapFieldsInput(fields: Map<any, TField>, partial = false) {
 
     const resolverSet = field.resolver.set;
     if (!resolverSet) continue;
+    if (!resolverSet.arg) continue;
 
     const { arg } = resolverSet;
     const fieldArg = getType(arg, partial);

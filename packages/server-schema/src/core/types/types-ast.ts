@@ -10,7 +10,7 @@ export type TAST = {
     "create" | "read" | "update" | "delete" | "default",
     TAccessor<any, any> | null
   >;
-  filters: Record<string, TFilter<TScalar>>;
+  filters: Record<string, TFilter>;
   query: Record<"one" | "many" | "default", TQuerier | null>;
   typeDefs: Partial<TGraphTypeDefs>;
   limitDefault: number;
@@ -31,12 +31,12 @@ export type TField = {
       | null
       | {
           stage: "pre";
-          arg: TScalar;
+          arg: TScalar | null;
           transactor: TNodeSetPreTransactor;
         }
       | {
           stage: "post";
-          arg: TScalar;
+          arg: TScalar | null;
           transactor: TNodeSetPostTransactor;
         };
   };
@@ -48,11 +48,15 @@ export type TField = {
 
 export type TNodeGetTransactor = TResolver;
 
-export type TNodeSetPreTransactor = (value: any, context: any) => Promise<any>;
+export type TNodeSetPreTransactor = (
+  value: any,
+  source: any,
+  context: any
+) => Promise<any>;
 
 export type TNodeSetPostTransactor = (
-  source: any,
   value: any,
+  source: any,
   context: any
 ) => Promise<any>;
 
@@ -67,23 +71,19 @@ export type TAccessor<TSource, TContext> = (
 /**
  * FILTER
  */
-export type TFilter<TArg extends TScalar = TScalar> = {
-  arg: TArg;
+export type TFilter = {
+  arg: TScalar;
   resolver: (
+    value: Typed<TScalar>,
     query: TQuery,
-    value: Typed<TArg>,
-    resolverArgs: Parameters<TResolver>
+    context: Parameters<TResolver>
   ) => TQuery | undefined;
 };
 
 /**
  * QUERY
  */
-export type TQuerier<
-  Source = any,
-  Context = any,
-  Query = Record<string, any>
-> = (
+export type TQuerier<Query = Record<string, any>, Context = any> = (
   query: Query,
-  resolverArgs: Parameters<TResolver<Source, any, Context>>
+  context: Context
 ) => Query | Promise<Query> | void;

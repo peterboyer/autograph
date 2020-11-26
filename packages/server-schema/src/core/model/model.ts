@@ -87,7 +87,7 @@ export function Model<
 
       filters[filterName] = {
         arg,
-        resolver: (query, value) => {
+        resolver: (value, query) => {
           if (!("id" in query || "cursor" in query)) {
             query.filters = query.filters || [];
             query.filters.push({

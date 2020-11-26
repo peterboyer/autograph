@@ -66,16 +66,22 @@ type TFieldGetResolver<A extends TArgs = TArgs> = (
 
 type TFieldSetResolverModifiers<A extends TArgs = TArgs> = {
   pre: <T extends TScalar>(
-    arg: T
-  ) => <R extends (value: Typed<T>, context: A["Context"]) => void>(
+    arg: T | null
+  ) => <
+    R extends (
+      value: Typed<T>,
+      source: A["Source"] | undefined,
+      context: A["Context"]
+    ) => void
+  >(
     transactor: R
   ) => void;
   post: <T extends TScalar>(
-    arg: T
+    arg: T | null
   ) => <
     R extends (
-      source: A["Source"],
       value: Typed<T>,
+      source: A["Source"],
       context: A["Context"]
     ) => void
   >(
@@ -103,9 +109,9 @@ export type TFilter<A extends TArgs = TArgs> = (modifiers: {
     type: T
   ) => <
     R extends (
-      query: A["Query"],
       value: NonNullable<Typed<T>>,
-      resolverArgs: Parameters<TResolver<A["Source"], any, A["Context"]>>
+      query: A["Query"],
+      context: A["Context"]
     ) => void
   >(
     resolver: R
@@ -116,7 +122,6 @@ export type TFilter<A extends TArgs = TArgs> = (modifiers: {
  * QUERY
  */
 export type TQuerier<A extends TArgs = TArgs> = TQuerierAST<
-  A["Source"],
-  A["Context"],
-  A["Query"]
+  A["Query"],
+  A["Context"]
 >;

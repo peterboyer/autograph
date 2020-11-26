@@ -60,7 +60,7 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
     if (!cursorArg && filtersArg) {
       Object.entries(filtersArg).forEach(([filterName, value]) => {
         const filter = ast.filters[filterName];
-        const _query = filter.resolver(query, value, resolverArgs);
+        const _query = filter.resolver(value, query, context);
         if (_query) Object.assign(query, _query);
       });
     }
@@ -68,7 +68,7 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
     const queryResolver = ast.query.one || ast.query.default || undefined;
     const queryResolverWrapped =
       queryResolver &&
-      ((query: Record<string, any>) => queryResolver(query, resolverArgs));
+      ((query: Record<string, any>) => queryResolver(query, context));
     const { items, total, cursor } = await options.onQuery(
       query,
       queryResolverWrapped

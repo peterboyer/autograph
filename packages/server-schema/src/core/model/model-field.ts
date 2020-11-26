@@ -126,7 +126,7 @@ export function Field(field: TField, fieldName: string): TFieldAST {
 
     if (typeof _resolverSet === "function") {
       // @ts-ignore
-      const resolver: TField["resolver"]["set"] = {};
+      const resolver: TFieldAST["resolver"]["set"] = {};
 
       _resolverSet({
         pre: (arg) => (transactor) =>

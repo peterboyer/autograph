@@ -23,7 +23,7 @@ export function ResolverQueryOne(ast: TAST, options: TOptions) {
     const queryResolver = ast.query.one || ast.query.default || undefined;
     const queryResolverWrapped =
       queryResolver &&
-      ((query: Record<string, any>) => queryResolver(query, resolverArgs));
+      ((query: Record<string, any>) => queryResolver(query, context));
     const {
       items: [item],
     } = await options.onQuery(query, queryResolverWrapped);

@@ -38,24 +38,70 @@ export function ResolverMutation(
     const dataResolvers = await Promise.all(
       datas.map(async (data) => {
         /**
-         * id
+         * id to source
          */
         const id = operation === "update" ? (data.id as string) : undefined;
+        let source: Record<string, any> | undefined = undefined;
+
+        if (id) {
+          // attempt to reslve source using id
+          const queryResolver = ast.query.one || ast.query.default || undefined;
+          const queryResolverWrapped =
+            queryResolver &&
+            ((query: Record<string, any>) => queryResolver(query, context));
+
+          const query = { ...mutation_default, id };
+          const {
+            items: [item],
+          } = await options.onQuery(query, queryResolverWrapped);
+
+          // throw if item not found, can't update
+          if (!item) {
+            throw new Error("NOT_FOUND");
+          }
+
+          // use item as source
+          source = item;
+        }
 
         /**
          * preData
+         * go through all fields of data and resolve those fields
          */
         const preData: Record<string, any> = {};
         await Promise.all(
           Object.entries(data).map(async ([fieldName, value]) => {
             const field = ast.fields[fieldName];
-            const {
-              resolver: { set: resolverSet },
-            } = field;
+            const resolverSet = field.resolver.set;
             if (!resolverSet) return;
             if (resolverSet.stage !== "pre") return;
             const { transactor } = resolverSet;
-            const result = (await transactor(value, context)) as
+            const result = (await transactor(value, source, context)) as
+              | Record<string, any>
+              | undefined;
+            if (result) {
+              if (typeof result === "object") {
+                Object.assign(preData, result);
+              } else {
+                preData[fieldName] = result;
+              }
+            }
+          })
+        );
+
+        /**
+         * preData -> non-settables
+         * go through all fields of data and resolve non-settables fields to preData
+         */
+        await Promise.all(
+          Object.entries(ast.fields).map(async ([fieldName, field]) => {
+            const resolverSet = field.resolver.set;
+            if (!resolverSet) return;
+            if (resolverSet.stage !== "pre") return;
+            // skip fields that use an argument to set a value
+            if (resolverSet.arg) return;
+            const { transactor } = resolverSet;
+            const result = (await transactor(null, source, context)) as
               | Record<string, any>
               | undefined;
             if (result) {
@@ -84,7 +130,7 @@ export function ResolverMutation(
               if (!resolverSet) return;
               if (resolverSet.stage !== "post") return;
               const { transactor } = resolverSet;
-              const result = (await transactor(source, value, context)) as
+              const result = (await transactor(value, source, context)) as
                 | Record<string, any>
                 | undefined;
               if (result) {
@@ -96,6 +142,32 @@ export function ResolverMutation(
               }
             })
           );
+
+          /**
+           * postData -> non-settables
+           * go through all fields of data and resolve non-settables fields
+           */
+          await Promise.all(
+            Object.entries(ast.fields).map(async ([fieldName, field]) => {
+              const resolverSet = field.resolver.set;
+              if (!resolverSet) return;
+              if (resolverSet.stage !== "post") return;
+              // skip fields that use an argument to set a value
+              if (resolverSet.arg) return;
+              const { transactor } = resolverSet;
+              const result = (await transactor(null, source, context)) as
+                | Record<string, any>
+                | undefined;
+              if (result) {
+                if (typeof result === "object") {
+                  Object.assign(preData, result);
+                } else {
+                  preData[fieldName] = result;
+                }
+              }
+            })
+          );
+
           return postData;
         };
 
