@@ -76,12 +76,13 @@ export function Model<
       // skip if already defined
       if (filters[filterName]) return;
 
-      const arg = (field.type._is === "scalar"
+      let arg = (field.type._is === "scalar"
         ? field.type
         : Types.ID) as TScalar;
 
       if (["in", "ni"].includes(operator)) {
-        arg.isList = true;
+        // @ts-ignore
+        if ("List" in arg) arg = arg.List;
       }
 
       filters[filterName] = {

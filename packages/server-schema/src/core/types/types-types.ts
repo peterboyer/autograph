@@ -2,13 +2,13 @@ import omit from "lodash.omit";
 
 export type TYPE = "scalar" | "object";
 
-export type TType<T = TYPE, V = unknown> = {
+export type TType<T = TYPE, V = unknown> = Readonly<{
   _is: T;
   _type: V;
   name: string;
   isNonNull: boolean;
   isList: boolean;
-};
+}>;
 
 // constructor
 
@@ -65,7 +65,7 @@ export const Type = <T extends TYPE, V>(_is: T, name: string) => {
     },
   };
 
-  return self as Required<typeof self>;
+  return Object.freeze(self);
 };
 
 // constructor aliases
@@ -74,7 +74,8 @@ export type TScalar<V = unknown> = TType<"scalar", V>;
 export const Scalar = <V>(name: string) => Type<"scalar", V>("scalar", name);
 
 export type TObject<V = unknown> = TType<"scalar", V>;
-export const Object = (name: string) => Type<"object", never>("object", name);
+const _Object = (name: string) => Type<"object", never>("object", name);
+export { _Object as Object };
 
 // core types
 
@@ -85,7 +86,7 @@ export const Types = {
   String: Scalar<string>("String"),
   Boolean: Scalar<boolean>("Boolean"),
   Scalar,
-  Object,
+  Object: _Object,
 } as const;
 
 // type helpers
