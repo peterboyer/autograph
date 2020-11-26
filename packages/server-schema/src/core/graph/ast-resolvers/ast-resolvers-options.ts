@@ -1,9 +1,8 @@
 import { TResolver } from "../../types/types-graphql";
-import { TQuerier } from "../../types/types-ast";
 
 export type TQuery<TContext = any> = {
   name: string;
-  id?: string;
+  id?: string | null;
   cursor?: string;
   limit?: number;
   order?: {
