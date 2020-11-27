@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "yarn build:ts",
-    "build:ts": "tsc --skipLibCheck",
+    "build:ts": "tsc",
     "watch:ts": "yarn build:ts -w",
     "watch:yalc": "yalc push && nodemon --delay 2500ms --exec \"yalc push --changed\"",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
