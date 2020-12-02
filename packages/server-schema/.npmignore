@@ -1,4 +1,6 @@
 src
 docs
-README.md
+jest.config.js
+nodemon.json
+*.md
 tsconfig.json
