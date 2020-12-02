@@ -1,135 +1,146 @@
+import { TModel as TSchema, TArgs as TSchemaOptions } from "./model-types";
 import { TAST } from "../types/types-ast";
 import { TScalar, Types } from "../types/types-types";
-import { TModel, TArgs } from "./model-types";
 import Field from "./model-field";
 import Filter from "./model-filter";
 
-/**
- * Parses a source object into a source tree object for compilation.
- * TSource describes your object as returned from a data source.
- * TArgs describes other parts:
- *   - Context, which describes the graph context
- *   - QueryConfig, which ?
- */
-export function Model<
-  Source extends {},
-  Config extends { Context: unknown; Query: unknown },
-  ARGS extends TArgs = {
-    Source: Source;
-    Context: Config["Context"];
-    Query: Config["Query"];
+type TSchemaSource = Record<string, any>;
+type ModelOptions = { Context: any; Query: any };
+
+export class Model<
+  SchemaSource extends TSchemaSource,
+  SchemaOptions extends ModelOptions,
+  SchemaArgs extends TSchemaOptions = {
+    Source: SchemaSource;
+    Context: SchemaOptions["Context"];
+    Query: SchemaOptions["Query"];
   },
-  MODEL extends TModel<ARGS> = TModel<ARGS>
->(model: MODEL) {
-  const { name } = model;
+  Schema extends TSchema<SchemaArgs> = TSchema<SchemaArgs>
+> {
+  ast: TAST;
 
-  /**
-   * FIELDS
-   */
-  const fields = Object.entries(model.fields).reduce<TAST["fields"]>(
-    (acc, [fieldName, field]) =>
-      Object.assign(acc, {
-        [fieldName]: Field(field, fieldName),
-      }),
-    {}
-  );
+  constructor(schemaName: Schema["name"]) {
+    this.ast = {
+      name: schemaName,
+      fields: {},
+      filters: {},
+      hooks: {
+        preUpdate: null,
+      },
+      query: {
+        one: null,
+        many: null,
+        default: null,
+      },
+      typeDefs: {},
+      limitDefault: 20,
+      limitMax: 50,
+    };
+  }
 
-  /**
-   * HOOKS
-   */
-  const hooks: TAST["hooks"] = {
-    preUpdate: model.hooks?.preUpdate || null,
-  };
+  fields(schemaFields: Schema["fields"]) {
+    this.ast.fields = Object.entries(schemaFields).reduce<TAST["fields"]>(
+      (acc, [fieldName, field]) =>
+        Object.assign(acc, {
+          [fieldName]: Field(field, fieldName),
+        }),
+      {}
+    );
 
-  /**
-   * FILTERS
-   */
-  const filters = Object.entries(model.filters || {}).reduce<TAST["filters"]>(
-    (acc, [filterName, filter]) => {
-      return Object.assign(acc, { [filterName]: Filter(filter) });
-    },
-    {}
-  );
+    const SCALAR_OPERATORS = ["eq", "ne", "gt", "gte", "lt", "lte"];
+    const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
 
-  // default scalar filters
-  const SCALAR_OPERATORS = ["eq", "ne", "gt", "gte", "lt", "lte"];
-  const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
+    Object.entries(this.ast.fields).forEach(([fieldName, field]) => {
+      const target = field.filterTarget;
+      if (!target) return;
 
-  Object.entries(fields).forEach(([fieldName, field]) => {
-    const target = field.filterTarget;
-    if (!target) return;
+      const operators =
+        field.type._is === "scalar"
+          ? SCALAR_OPERATORS
+          : field.type._is === "object"
+          ? OBJECT_OPERATORS
+          : [];
 
-    const operators =
-      field.type._is === "scalar"
-        ? SCALAR_OPERATORS
-        : field.type._is === "object"
-        ? OBJECT_OPERATORS
-        : [];
+      operators.forEach((operator) => {
+        const filterName = `${fieldName}_${operator}`;
 
-    operators.forEach((operator) => {
-      const filterName = `${fieldName}_${operator}`;
+        // skip if already defined
+        if (this.ast.filters[filterName]) return;
 
-      // skip if already defined
-      if (filters[filterName]) return;
+        let arg = (field.type._is === "scalar"
+          ? field.type
+          : Types.ID) as TScalar;
 
-      let arg = (field.type._is === "scalar"
-        ? field.type
-        : Types.ID) as TScalar;
+        if (["in", "ni"].includes(operator)) {
+          // @ts-ignore
+          if ("List" in arg) arg = arg.List;
+        }
 
-      if (["in", "ni"].includes(operator)) {
-        // @ts-ignore
-        if ("List" in arg) arg = arg.List;
-      }
-
-      filters[filterName] = {
-        arg,
-        resolver: (value, query) => {
-          if (!("id" in query || "cursor" in query)) {
-            query.filters = query.filters || [];
-            query.filters.push({
-              target,
-              operator,
-              value,
-            });
-          }
-          return query;
-        },
-      };
+        this.ast.filters[filterName] = {
+          arg,
+          resolver: (value, query) => {
+            if (!("id" in query || "cursor" in query)) {
+              query.filters = query.filters || [];
+              query.filters.push({
+                target,
+                operator,
+                value,
+              });
+            }
+            return query;
+          },
+        };
+      });
     });
-  });
 
-  /**
-   * QUERY
-   */
-  const query: TAST["query"] = {
-    one: model.query?.one || null,
-    many: model.query?.many || null,
-    default: model.query?.default || null,
-  };
+    return this;
+  }
 
-  /**
-   * TYPEDEFS
-   */
-  const typeDefs: TAST["typeDefs"] = model.typeDefs || {};
+  filters(schemaFilters: Schema["filters"]) {
+    this.ast.filters = Object.entries(schemaFilters || {}).reduce<
+      TAST["filters"]
+    >((acc, [filterName, filter]) => {
+      return Object.assign(acc, { [filterName]: Filter(filter) });
+    }, {});
 
-  /**
-   * OPTIONS
-   */
-  const limitDefault = model.limitDefault || 20;
-  const limitMax = model.limitMax || 50;
+    return this;
+  }
 
-  const ast = {
-    name,
-    fields,
-    hooks,
-    filters,
-    query,
-    typeDefs,
-    limitDefault,
-    limitMax,
-  };
+  hooks(schemaHooks: Schema["hooks"]) {
+    this.ast.hooks = {
+      preUpdate: schemaHooks.preUpdate || null,
+    };
 
-  return ast;
+    return this;
+  }
+
+  query(schemaQuery: Schema["query"]) {
+    this.ast.query = {
+      one: schemaQuery.one || null,
+      many: schemaQuery.many || null,
+      default: schemaQuery.default || null,
+    };
+
+    return this;
+  }
+
+  typeDefs(schemaTypeDefs: Schema["typeDefs"]) {
+    this.ast.typeDefs = schemaTypeDefs;
+
+    return this;
+  }
+
+  limitDefault(schemaLimitDefault: Schema["limitDefault"]) {
+    this.ast.limitDefault = schemaLimitDefault;
+
+    return this;
+  }
+
+  limitMax(schemaLimitMax: Schema["limitMax"]) {
+    this.ast.limitMax = schemaLimitMax;
+
+    return this;
+  }
 }
 
 export default Model;

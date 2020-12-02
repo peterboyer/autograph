@@ -15,12 +15,12 @@ export type TArgs = {
 export type TModel<A extends TArgs = TArgs> = {
   name: string;
   fields: Record<any, TField<A>>;
-  hooks?: THooks<A>;
-  filters?: Record<any, TFilter<A>>;
-  query?: Partial<Record<"one" | "many" | "default", TQuerier<A>>>;
-  typeDefs?: Partial<TGraphTypeDefs>;
-  limitDefault?: number;
-  limitMax?: number;
+  hooks: Partial<THooks<A>>;
+  filters: Record<any, TFilter<A>>;
+  query: Partial<Record<"one" | "many" | "default", TQuerier<A>>>;
+  typeDefs: Partial<TGraphTypeDefs>;
+  limitDefault: number;
+  limitMax: number;
 };
 
 /**
