@@ -48,12 +48,12 @@ type TFieldGetResolverModifiers<A extends TArgs = TArgs> = {
   ) => {
     transactor: R;
   };
-  args: <A extends { [key: string]: TType }>(
-    args: A
-  ) => <R extends TResolver<A["Source"], TypedDict<A>, A["Context"]>>(
+  args: <T extends Record<string, TType>>(
+    args: T
+  ) => <R extends TResolver<A["Source"], TypedDict<T>, A["Context"]>>(
     transactor: R
   ) => {
-    args: A;
+    args: T;
     transactor: R;
   };
 };

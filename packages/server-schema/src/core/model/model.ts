@@ -9,7 +9,7 @@ type ModelOptions = { Context: any; Query: any };
 
 export class Model<
   SchemaSource extends TSchemaSource,
-  SchemaOptions extends ModelOptions,
+  SchemaOptions extends ModelOptions = ModelOptions,
   SchemaArgs extends TSchemaOptions = {
     Source: SchemaSource;
     Context: SchemaOptions["Context"];
