@@ -4,6 +4,10 @@ import { TScalar, Types } from "../types/types-types";
 import Field from "./model-field";
 import Filter from "./model-filter";
 
+import TGraphOptions from "../graph/ast-resolvers/ast-resolvers-options";
+import TypeDefs from "../graph/ast-typedefs/ast-typedefs";
+import Resolvers from "../graph/ast-resolvers/ast-resolvers";
+
 type TSchemaSource = Record<string, any>;
 type ModelOptions = { Context: any; Query: any };
 
@@ -140,6 +144,17 @@ export class Model<
     this.ast.limitMax = schemaLimitMax;
 
     return this;
+  }
+
+  toGraph(options: TGraphOptions) {
+    return {
+      typeDefs: TypeDefs(this.ast),
+      resolvers: Resolvers(this.ast, options),
+    };
+  }
+
+  toString() {
+    return this.ast.name;
   }
 }
 
