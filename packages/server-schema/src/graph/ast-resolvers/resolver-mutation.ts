@@ -27,7 +27,7 @@ export function ResolverMutation(
       await Promise.all(
         ids.map(async (id) => {
           const mutation = { ...mutation_default, id };
-          await options.onMutation(mutation);
+          await options.adapter.onMutation(mutation);
         })
       );
       return ids;
@@ -53,7 +53,7 @@ export function ResolverMutation(
           const query = { ...mutation_default, id };
           const {
             items: [item],
-          } = await options.onQuery(query, queryResolverWrapped);
+          } = await options.adapter.onQuery(query, queryResolverWrapped);
 
           // throw if item not found, can't update
           if (!item) {
@@ -206,7 +206,7 @@ export function ResolverMutation(
         /**
          * preItem --- to be used as source for postMutation
          */
-        const preItem = await options.onMutation(preMutation);
+        const preItem = await options.adapter.onMutation(preMutation);
 
         /**
          * postMutation
@@ -224,7 +224,7 @@ export function ResolverMutation(
           /**
            * postItem -> result
            */
-          const postItem = await options.onMutation(postMutation);
+          const postItem = await options.adapter.onMutation(postMutation);
           if (postItem) items.push(postItem);
         }
 

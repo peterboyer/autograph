@@ -26,7 +26,7 @@ export function ResolverQueryOne(ast: TAST, options: TOptions) {
       ((query: Record<string, any>) => queryResolver(query, context));
     const {
       items: [item],
-    } = await options.onQuery(query, queryResolverWrapped);
+    } = await options.adapter.onQuery(query, queryResolverWrapped);
 
     return item;
   };

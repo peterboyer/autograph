@@ -27,7 +27,7 @@ export function mapRoot(ast: TAST, options: TOptions) {
 
         const {
           items: [item],
-        } = await options.onQuery({
+        } = await options.adapter.onQuery({
           name,
           id,
           context,

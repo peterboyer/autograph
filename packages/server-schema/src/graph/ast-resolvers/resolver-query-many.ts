@@ -33,7 +33,7 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
 
     if (cursorArg) {
       const query = { ...query_default, cursor: cursorArg };
-      return await options.onQuery(query);
+      return await options.adapter.onQuery(query);
     }
 
     const query = {
@@ -69,7 +69,7 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
     const queryResolverWrapped =
       queryResolver &&
       ((query: Record<string, any>) => queryResolver(query, context));
-    const { items, total, cursor } = await options.onQuery(
+    const { items, total, cursor } = await options.adapter.onQuery(
       query,
       queryResolverWrapped
     );

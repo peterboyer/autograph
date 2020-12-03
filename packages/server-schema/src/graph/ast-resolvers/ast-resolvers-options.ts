@@ -34,15 +34,13 @@ export type TQueryResolver = (
   query: Record<string, any>
 ) => Record<string, any> | Promise<Record<string, any>> | void;
 
+export interface Adapter {
+  onQuery(query: TQuery, queryResolver?: TQueryResolver): Promise<TQueryList>;
+  onMutation(mutation: TMutation): Promise<Record<string, any> | undefined>;
+}
+
 export type TOptions<Context = any> = {
-  onQuery: (
-    query: TQuery,
-    queryResolver?: TQueryResolver
-  ) => Promise<TQueryList>;
-  onMutation: (
-    mutation: TMutation
-    // queryResolver?: TQueryResolver
-  ) => Promise<Record<string, any> | undefined>;
+  adapter: Adapter;
   middleware?: (
     resolverArgs: Parameters<TResolver<any, any, Context>>,
     next: TResolver
