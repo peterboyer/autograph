@@ -5,8 +5,6 @@
   "description": "Generate TypeDefs, Resolvers, and Tables for your GraphQL/Knex backends.",
   "repository": "https://github.com/armix-io/armix-server",
   "license": "MIT",
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
   "engines": {
     "node": ">=14"
   },
@@ -14,12 +12,12 @@
     "build": "yarn build:ts",
     "build:ts": "tsc",
     "watch:ts": "yarn build:ts -w",
-    "watch:yalc": "yalc push && nodemon --delay 2500ms --exec \"yalc push --changed\"",
+    "watch:yalc": "cp ./package.json lib && nodemon --delay 1500ms --exec \"cd ./lib && yalc push --replace\"",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
+    "deploy": "../../publish.sh",
+    "test": "jest",
     "docs": "jsdoc src/*.js -d ./docs/",
-    "docs:open": "open ./docs/index.html",
-    "push": "../../publish.sh",
-    "test": "jest"
+    "docs:open": "open ./docs/index.html"
   },
   "dependencies": {
     "@types/lodash.omit": "^4.5.6",

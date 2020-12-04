@@ -4,4 +4,4 @@ export {
   TQueryResolver,
   TOptions as TGraphOptions,
 } from "./ast-resolvers/ast-resolvers-options";
-export { mergeTypeDefs, mergeResolvers } from "./utils";
+export { mergeTypeDefs, mergeResolvers, wrapResolvers } from "./utils";

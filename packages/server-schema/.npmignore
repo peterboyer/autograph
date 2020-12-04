@@ -1,6 +1,0 @@
-src
-docs
-jest.config.js
-nodemon.json
-*.md
-tsconfig.json

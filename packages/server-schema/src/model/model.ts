@@ -4,6 +4,7 @@ import { TScalar, Types } from "../types/types-types";
 import Field from "./model-field";
 import Filter from "./model-filter";
 
+import { TGraph } from "../types/types-graph";
 import TGraphOptions from "../graph/ast-resolvers/ast-resolvers-options";
 import TypeDefs from "../graph/ast-typedefs/ast-typedefs";
 import Resolvers from "../graph/ast-resolvers/ast-resolvers";
@@ -146,7 +147,7 @@ export class Model<
     return this;
   }
 
-  toGraph(options: TGraphOptions) {
+  toGraph(options: TGraphOptions): TGraph {
     return {
       typeDefs: TypeDefs(this.ast),
       resolvers: Resolvers(this.ast, options),
