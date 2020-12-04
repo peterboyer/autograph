@@ -12,7 +12,7 @@
     "build": "yarn build:ts",
     "build:ts": "tsc",
     "watch:ts": "yarn build:ts -w",
-    "watch:yalc": "cp ./package.json lib && nodemon --delay 1500ms --exec \"cd ./lib && yalc push --replace\"",
+    "watch:yalc": "cp ./package.json lib/package.json && nodemon --delay 1500ms --exec \"cd ./lib && yalc push --replace\"",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
     "deploy": "../../publish.sh",
     "test": "jest",
