@@ -4,7 +4,7 @@ export type TOptions<User, UserToken> = {
   resolveHeader?: (req: http.RequestOptions) => string | undefined;
   resolveToken: (raw: string) => Promise<UserToken | undefined>;
   resolveUser: (token: UserToken) => Promise<User | undefined>;
-  predicate?: (token: UserToken) => boolean;
+  predicate?: (token: UserToken) => Promise<boolean> | boolean;
   onSuccess?: (token: UserToken) => Promise<void>;
   onResolveError?: () => Promise<void>;
   onPredicateError?: (token: UserToken) => Promise<void>;
@@ -74,7 +74,7 @@ export class AuthMiddleware<User, UserToken> {
     }
 
     if (this.options.predicate) {
-      if (!this.options.predicate(token)) {
+      if (!(await this.options.predicate(token))) {
         this.options.onPredicateError &&
           (await this.options.onPredicateError(token));
       }
