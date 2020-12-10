@@ -147,7 +147,7 @@ export class Model<
     return this;
   }
 
-  toGraph(options: TGraphOptions): TGraph {
+  toGraph(options: TGraphOptions<SchemaArgs["Context"]>): TGraph {
     return {
       typeDefs: TypeDefs(this.ast),
       resolvers: Resolvers(this.ast, options),
