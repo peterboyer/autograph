@@ -34,7 +34,7 @@ export function mapRoot(ast: TAST, options: TOptions) {
         });
 
         if (!item && type.isNonNull) {
-          throw new Error("@AS/NOT_FOUND");
+          throw new Error("NOT_FOUND");
         }
 
         return item;
