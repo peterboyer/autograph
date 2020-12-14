@@ -30,7 +30,10 @@ export class Model<
       fields: {},
       filters: {},
       hooks: {
-        preUpdate: null,
+        preUpsert: null,
+        postUpsert: null,
+        preDelete: null,
+        postDelete: null,
       },
       query: {
         one: null,
@@ -113,7 +116,10 @@ export class Model<
 
   hooks(schemaHooks: Schema["hooks"]) {
     this.ast.hooks = {
-      preUpdate: schemaHooks.preUpdate || null,
+      preUpsert: schemaHooks.preUpsert || null,
+      postUpsert: schemaHooks.postUpsert || null,
+      preDelete: schemaHooks.preDelete || null,
+      postDelete: schemaHooks.postDelete || null,
     };
 
     return this;

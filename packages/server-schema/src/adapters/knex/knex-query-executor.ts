@@ -24,6 +24,7 @@ class KnexQueryExecutor {
 
     const exec = this.knex(from);
 
+    // console.log("[debug.knex.query] has trx?", !!trx);
     if (trx) exec.transacting(trx);
 
     if (limit) exec.limit(limit);

@@ -19,6 +19,7 @@ class KnexMutationExecutor {
 
     const exec = this.knex(from);
 
+    // console.log("[debug.knex.mutation] has trx?", !!trx);
     if (trx) exec.transacting(trx);
 
     /**

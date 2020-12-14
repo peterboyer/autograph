@@ -14,18 +14,22 @@ const constructor = ({
   const tableNames = _tableNames || new Map<string, string>();
   const knexMutationExecutor = new KnexMutationExecutor(knex);
 
-  const useMutation: TOnMutationOptions["useMutation"] = async (query) => {
-    const { name: queryName } = query;
+  const useMutation: TOnMutationOptions["useMutation"] = async (
+    graphMutation
+  ) => {
+    const { name: queryName } = graphMutation;
     const from = tableNames.get(queryName) || queryName;
+    const trx = graphMutation.context?.trx;
 
-    const { id: queryId } = query;
+    const { id: queryId } = graphMutation;
     const id = (queryId && parseInt(queryId)) || undefined;
 
-    const { data: queryData } = query;
+    const { data: queryData } = graphMutation;
     const data = queryData;
 
     const knexMutation: TKnexMutation = {
       from,
+      trx,
       id,
       data,
     };

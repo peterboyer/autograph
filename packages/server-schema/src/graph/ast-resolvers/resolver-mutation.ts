@@ -22,12 +22,38 @@ export function ResolverMutation(
       context,
     };
 
+    async function getItemOrThrow(id: string) {
+      // attempt to reslve source using id
+      const queryResolver = ast.query.one || ast.query.default || undefined;
+      const queryResolverWrapped =
+        queryResolver &&
+        ((query: Record<string, any>) => queryResolver(query, context));
+
+      const query = { ...mutation_default, id };
+      const {
+        items: [item],
+      } = await options.adapter.onQuery(query, queryResolverWrapped);
+
+      // throw if item not found
+      if (!item) throw new Error("NOT_FOUND");
+
+      return item;
+    }
+
     if (operation === "delete") {
       const { ids } = args;
       await Promise.all(
         ids.map(async (id) => {
+          const source = await getItemOrThrow(id);
+
+          // hook
+          ast.hooks.preDelete && (await ast.hooks.preDelete(source, context));
+
           const mutation = { ...mutation_default, id };
           await options.adapter.onMutation(mutation);
+
+          // hook
+          ast.hooks.postDelete && (await ast.hooks.postDelete(source, context));
         })
       );
       return ids;
@@ -44,24 +70,7 @@ export function ResolverMutation(
         let source: Record<string, any> | undefined = undefined;
 
         if (id) {
-          // attempt to reslve source using id
-          const queryResolver = ast.query.one || ast.query.default || undefined;
-          const queryResolverWrapped =
-            queryResolver &&
-            ((query: Record<string, any>) => queryResolver(query, context));
-
-          const query = { ...mutation_default, id };
-          const {
-            items: [item],
-          } = await options.adapter.onQuery(query, queryResolverWrapped);
-
-          // throw if item not found, can't update
-          if (!item) {
-            throw new Error("NOT_FOUND");
-          }
-
-          // use item as source
-          source = item;
+          source = await getItemOrThrow(id);
         }
 
         /**
@@ -200,18 +209,19 @@ export function ResolverMutation(
         };
 
         // hook
-        ast.hooks.preUpdate &&
-          (await ast.hooks.preUpdate(preSource, preData, context));
+        if (preSource)
+          ast.hooks.preUpsert &&
+            (await ast.hooks.preUpsert(preSource, preData, context));
 
         /**
-         * preItem --- to be used as source for postMutation
+         * postSource --- to be used as source for postMutation
          */
-        const preItem = await options.adapter.onMutation(preMutation);
+        let postSource = await options.adapter.onMutation(preMutation);
 
         /**
          * postMutation
          */
-        const source = preItem as NonNullable<typeof preItem>;
+        const source = postSource as NonNullable<typeof postSource>;
         const postData = await postDataCallback(source);
         // only if postData setters have provided new values
         if (Object.keys(postData).length) {
@@ -224,14 +234,20 @@ export function ResolverMutation(
           /**
            * postItem -> result
            */
-          const postItem = await options.adapter.onMutation(postMutation);
-          if (postItem) items.push(postItem);
+          postSource = await options.adapter.onMutation(postMutation);
         }
 
+        // hook
+        ast.hooks.postUpsert &&
+          (await ast.hooks.postUpsert(
+            postSource as NonNullable<typeof postSource>,
+            context
+          ));
+
         /**
-         * preItem -> result
+         * postSource -> result
          */
-        if (preItem) items.push(preItem);
+        if (postSource) items.push(postSource);
       })
     );
 

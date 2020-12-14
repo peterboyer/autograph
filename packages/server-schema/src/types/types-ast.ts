@@ -61,12 +61,21 @@ export type TNodeSetPostTransactor = (
  * HOOKS
  */
 export type THooks<Source = Record<string, any>, Context = any> = {
-  preUpdate:
+  preUpsert:
     | ((
         source: Source | undefined,
         data: Partial<Source>,
         context: Context
       ) => Promise<void> | void)
+    | null;
+  postUpsert:
+    | ((source: Source, context: Context) => Promise<void> | void)
+    | null;
+  preDelete:
+    | ((source: Source, context: Context) => Promise<void> | void)
+    | null;
+  postDelete:
+    | ((source: Source, context: Context) => Promise<void> | void)
     | null;
 };
 

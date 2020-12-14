@@ -12,7 +12,6 @@ export type TOnMutationOptions = {
 
 const constructor = ({ useQuery, useMutation }: TOnMutationOptions) => {
   const onMutation: Adapter["onMutation"] = async (mutation) => {
-    // raises NOT_FOUND
     const id = await useMutation(mutation);
 
     if (id) {
@@ -28,6 +27,7 @@ const constructor = ({ useQuery, useMutation }: TOnMutationOptions) => {
 
       return item;
     }
+
     return undefined;
   };
   return onMutation;
