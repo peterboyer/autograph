@@ -70,7 +70,7 @@ type TFieldSetResolverModifiers<A extends TArgs = TArgs> = {
       value: Typed<T>,
       source: A["Source"] | undefined,
       context: A["Context"]
-    ) => void
+    ) => Promise<Partial<A["Source"]> | void> | Partial<A["Source"]> | void
   >(
     transactor: R
   ) => void;
@@ -81,7 +81,7 @@ type TFieldSetResolverModifiers<A extends TArgs = TArgs> = {
       value: Typed<T>,
       source: A["Source"],
       context: A["Context"]
-    ) => void
+    ) => Promise<Partial<A["Source"]> | void> | Partial<A["Source"]> | void
   >(
     transactor: R
   ) => void;
