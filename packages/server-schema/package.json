@@ -1,6 +1,6 @@
 {
   "name": "@armix/server-schema",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "author": "Peter Boyer <@ptboyer>",
   "description": "Generate TypeDefs and Resolvers for your GraphQL backends.",
   "repository": "https://github.com/armix-io/armix-server",
