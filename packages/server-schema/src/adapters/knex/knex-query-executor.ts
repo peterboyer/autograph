@@ -8,6 +8,7 @@ export type TKnexQuery = {
   orders?: { column: string; order: "asc" | "desc" }[];
   joins?: any[][];
   trx?: Knex.Transaction;
+  count?: boolean;
 };
 
 class KnexQueryExecutor {
@@ -20,7 +21,16 @@ class KnexQueryExecutor {
   async execute<T extends Record<string, any>>(
     query: TKnexQuery
   ): Promise<T[]> {
-    const { trx, from, limit, selects, wheres, orders, joins } = query;
+    const {
+      trx,
+      from,
+      limit,
+      selects,
+      wheres,
+      orders,
+      joins,
+      count = false,
+    } = query;
 
     const exec = this.knex(from);
 
@@ -44,6 +54,13 @@ class KnexQueryExecutor {
         // @ts-ignore
         exec.join(...joinArgs);
       });
+
+    if (count) {
+      exec.clear("limit");
+      exec.clear("select");
+      exec.clear("order");
+      exec.select([this.knex.raw("count(*)")]);
+    }
 
     // console.log("[debug.knex.query]", exec.toSQL().toNative());
 

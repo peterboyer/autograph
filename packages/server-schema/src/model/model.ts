@@ -85,8 +85,9 @@ export class Model<
         }
 
         this.ast.filters[filterName] = {
+          stage: "pre",
           arg,
-          resolver: (value, query) => {
+          transactor: (value, query) => {
             if (!("id" in query || "cursor" in query)) {
               query.filters = query.filters || [];
               query.filters.push({

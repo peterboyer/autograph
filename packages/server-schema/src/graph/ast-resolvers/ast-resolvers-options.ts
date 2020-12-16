@@ -30,9 +30,7 @@ export type TQueryList = {
   cursor?: string;
 };
 
-export type TQueryResolver = (
-  query: Record<string, any>
-) => Record<string, any> | Promise<Record<string, any>> | void;
+export type TQueryResolver = (query: Record<string, any>) => void;
 
 export interface Adapter {
   onQuery(query: TQuery, queryResolver?: TQueryResolver): Promise<TQueryList>;

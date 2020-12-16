@@ -43,11 +43,8 @@ const constructor = ({
     /**
      * queryResolver wrapper to mutate graphQuery
      */
-    const useQueryResolver = async (query: TKnexQuery) => {
-      if (queryResolver) {
-        const result = await queryResolver(query);
-        if (result) Object.assign(query, result);
-      }
+    const useQueryResolver = (query: TKnexQuery) => {
+      queryResolver && queryResolver(query);
     };
 
     /**
@@ -65,7 +62,7 @@ const constructor = ({
     const from = tableNames.get(queryName) || queryName;
     const trx = graphQuery.context?.trx;
 
-    const dataQuery: TKnexQuery = {
+    const knexQuery: TKnexQuery = {
       from,
       trx,
     };
@@ -74,7 +71,7 @@ const constructor = ({
      * [knex]
      * joins <- knex.joins
      */
-    dataQuery.joins = [];
+    knexQuery.joins = [];
 
     /**
      * [endpoint]
@@ -83,11 +80,11 @@ const constructor = ({
     if (graphQuery.id) {
       const { id } = graphQuery;
 
-      dataQuery.selects = [`${from}.*`];
-      dataQuery.wheres = [[`${from}.id`, "=", id]];
+      knexQuery.selects = [`${from}.*`];
+      knexQuery.wheres = [[`${from}.id`, "=", id]];
 
-      await useQueryResolver(dataQuery);
-      const items = await knexQueryExecutor.execute(dataQuery);
+      useQueryResolver(knexQuery);
+      const items = await knexQueryExecutor.execute(knexQuery);
       return { items, total: items.length };
     }
 
@@ -105,7 +102,7 @@ const constructor = ({
      * apply filters first, will affect count and normal fetches
      */
     const { filters: queryFilters = [] } = graphQuery;
-    dataQuery.wheres = queryFilters.map((filter) => {
+    knexQuery.wheres = queryFilters.map((filter) => {
       const { target, operator: _operator, value } = filter;
       const operator = FILTER_OPERATOR_MAP.get(_operator) || _operator;
       return [`${from}.${target}`, operator, value];
@@ -119,10 +116,10 @@ const constructor = ({
     const total = await (async function () {
       if (index !== undefined) return -1;
 
-      const countQuery = cloneDeep(dataQuery);
-      countQuery.selects = [knex.raw("count(*)")];
+      const countQuery = cloneDeep(knexQuery);
+      countQuery.count = true;
+      useQueryResolver(countQuery);
 
-      await useQueryResolver(countQuery);
       const [row] = await knexQueryExecutor.execute<{ count: string }>(
         countQuery
       );
@@ -149,7 +146,7 @@ const constructor = ({
       const $operator = direction === "asc" ? ">=" : "<=";
       const $values = values.map((v) => `'${v}'`).join(",");
 
-      dataQuery.wheres.push([
+      knexQuery.wheres.push([
         knex.raw(`((${$targets}) ${$operator} (${$values}))`),
       ]);
     }
@@ -158,15 +155,15 @@ const constructor = ({
      * [knex]
      * selects <- knex.selects
      */
-    dataQuery.selects = [`${from}.*`];
+    knexQuery.selects = [`${from}.*`];
 
     /**
      * [knex]
      * orders <- order
      */
-    dataQuery.orders = [{ column: `${from}.id`, order: "asc" }];
+    knexQuery.orders = [{ column: `${from}.id`, order: "asc" }];
     if (queryOrder)
-      dataQuery.orders.unshift({
+      knexQuery.orders.unshift({
         column: `${from}.${queryOrder.target}`,
         order: queryOrder.direction,
       });
@@ -178,20 +175,20 @@ const constructor = ({
      */
     const { limit: queryLimit } = graphQuery;
     if (queryLimit === undefined) throw new Error("USE_QUERY_LIMIT_REQUIRED");
-    dataQuery.limit = queryLimit + 1;
+    knexQuery.limit = queryLimit + 1;
 
     /**
      * [result]
      * items
      */
-    await useQueryResolver(dataQuery);
-    const items = await knexQueryExecutor.execute<any>(dataQuery);
+    useQueryResolver(knexQuery);
+    const items = await knexQueryExecutor.execute<any>(knexQuery);
 
     /**
      * [result]
      * index
      */
-    const nextItem = items.length === dataQuery.limit ? items.pop() : undefined;
+    const nextItem = items.length === knexQuery.limit ? items.pop() : undefined;
     const nextIndex =
       nextItem &&
       [

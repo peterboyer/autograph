@@ -5,6 +5,7 @@ import {
   THooks as THooksAST,
   TQuerier as TQuerierAST,
 } from "../types/types-ast";
+import { TQuery } from "../graph/ast-resolvers/ast-resolvers-options";
 
 export type TArgs = {
   Source: any;
@@ -42,7 +43,7 @@ export type TField<A extends TArgs = TArgs> =
       default?: any;
     };
 
-type TFieldGetResolverModifiers<A extends TArgs = TArgs> = {
+type TFieldGetResolver<A extends TArgs = TArgs> = (modifiers: {
   use: <R extends TResolver<A["Source"], TypedDict<{}>, A["Context"]>>(
     transactor: R
   ) => {
@@ -56,13 +57,9 @@ type TFieldGetResolverModifiers<A extends TArgs = TArgs> = {
     args: T;
     transactor: R;
   };
-};
+}) => void;
 
-type TFieldGetResolver<A extends TArgs = TArgs> = (
-  modifiers: TFieldGetResolverModifiers<A>
-) => void;
-
-type TFieldSetResolverModifiers<A extends TArgs = TArgs> = {
+type TFieldSetResolver<A extends TArgs = TArgs> = (modifiers: {
   pre: <T extends TScalar>(
     arg: T | null
   ) => <
@@ -85,11 +82,7 @@ type TFieldSetResolverModifiers<A extends TArgs = TArgs> = {
   >(
     transactor: R
   ) => void;
-};
-
-type TFieldSetResolver<A extends TArgs = TArgs> = (
-  modifiers: TFieldSetResolverModifiers<A>
-) => void;
+}) => void;
 
 /**
  * ACCESS
@@ -103,7 +96,18 @@ export type THooks<A extends TArgs = TArgs> = THooksAST<
  * FILTER
  */
 export type TFilter<A extends TArgs = TArgs> = (modifiers: {
-  use: <T extends TScalar>(
+  pre: <T extends TScalar>(
+    type: T
+  ) => <
+    R extends (
+      value: NonNullable<Typed<T>>,
+      query: TQuery<A["Context"]>,
+      context: A["Context"]
+    ) => void
+  >(
+    resolver: R
+  ) => void;
+  post: <T extends TScalar>(
     type: T
   ) => <
     R extends (

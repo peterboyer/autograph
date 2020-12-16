@@ -41,7 +41,7 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
       limit: Math.min(limitArg || ast.limitDefault, ast.limitMax),
     };
 
-    if (!cursorArg && orderArg) {
+    if (orderArg) {
       const [, orderFieldName, orderDirection] =
         orderArg.match(/^([\w\d]+)(?::(asc|desc))?$/) || [];
       if (!orderFieldName || !orderDirection)
@@ -57,18 +57,25 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
       };
     }
 
-    if (!cursorArg && filtersArg) {
+    if (filtersArg) {
       Object.entries(filtersArg).forEach(([filterName, value]) => {
         const filter = ast.filters[filterName];
-        const _query = filter.resolver(value, query, context);
-        if (_query) Object.assign(query, _query);
+        if (filter.stage !== "pre") return;
+        filter.transactor(value, query, context);
       });
     }
 
     const queryResolver = ast.query.one || ast.query.default || undefined;
-    const queryResolverWrapped =
-      queryResolver &&
-      ((query: Record<string, any>) => queryResolver(query, context));
+    const queryResolverWrapped = (query: Record<string, any>) => {
+      if (filtersArg) {
+        Object.entries(filtersArg).forEach(([filterName, value]) => {
+          const filter = ast.filters[filterName];
+          if (filter.stage !== "post") return;
+          filter.transactor(value, query, context);
+        });
+      }
+      queryResolver && queryResolver(query, context);
+    };
     const { items, total, cursor } = await options.adapter.onQuery(
       query,
       queryResolverWrapped

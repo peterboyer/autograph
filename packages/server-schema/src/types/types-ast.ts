@@ -22,40 +22,19 @@ export type TField = {
   resolver: {
     get: null | {
       args: Record<any, TScalar>;
-      transactor: TNodeGetTransactor;
+      transactor: TResolver;
     };
-    set:
-      | null
-      | {
-          stage: "pre";
-          arg: TScalar | null;
-          transactor: TNodeSetPreTransactor;
-        }
-      | {
-          stage: "post";
-          arg: TScalar | null;
-          transactor: TNodeSetPostTransactor;
-        };
+    set: null | {
+      stage: "pre" | "post";
+      arg: TScalar | null;
+      transactor: (value: any, source: any, context: any) => Promise<any>;
+    };
   };
   // access: Partial<Record<"get" | "set" | "default", TAccessor<any, any>>>;
   orderTarget: null | string;
   filterTarget: null | string;
   default?: any;
 };
-
-export type TNodeGetTransactor = TResolver;
-
-export type TNodeSetPreTransactor = (
-  value: any,
-  source: any,
-  context: any
-) => Promise<any>;
-
-export type TNodeSetPostTransactor = (
-  value: any,
-  source: any,
-  context: any
-) => Promise<any>;
 
 /**
  * HOOKS
@@ -84,11 +63,12 @@ export type THooks<Source = Record<string, any>, Context = any> = {
  */
 export type TFilter = {
   arg: TScalar;
-  resolver: (
+  stage: "pre" | "post";
+  transactor: (
     value: Typed<TScalar>,
-    query: TQuery,
+    query: any,
     context: Parameters<TResolver>
-  ) => TQuery | undefined;
+  ) => void;
 };
 
 /**
@@ -97,4 +77,4 @@ export type TFilter = {
 export type TQuerier<Query = Record<string, any>, Context = any> = (
   query: Query,
   context: Context
-) => Query | Promise<Query> | void;
+) => Promise<void> | void;
