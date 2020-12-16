@@ -9,18 +9,24 @@
     "node": ">=14"
   },
   "scripts": {
-    "build": "yarn build:ts",
+    "clean": "rm -rf ./lib",
+    "build": "yarn clean && yarn build:ts && yarn build:package",
     "build:ts": "tsc",
+    "build:package": "cp package.json README.md ./lib",
     "watch:ts": "yarn build:ts -w",
-    "watch:yalc": "cp ./package.json lib/package.json && nodemon --delay 1500ms --exec \"cd ./lib && yalc push --replace\"",
+    "watch:yalc": "yarn build:package && nodemon --delay 1500ms --exec \"yarn dev:push\"",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
-    "deploy": "../../publish.sh",
+    "dev:push": "cd ./lib && yalc push --replace",
+    "deploy": "../../deploy.sh",
     "test": "jest"
   },
   "dependencies": {
     "lodash.clonedeep": "^4.5.0",
     "lodash.identity": "^3.0.0",
     "lodash.omit": "^4.5.0"
+  },
+  "peerDependencies": {
+    "graphql": "*"
   },
   "devDependencies": {
     "@types/jest": "^26.0.15",
