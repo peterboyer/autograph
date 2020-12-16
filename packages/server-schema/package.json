@@ -8,6 +8,9 @@
   "engines": {
     "node": ">=14"
   },
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "clean": "rm -rf ./lib",
     "build": "yarn clean && yarn build:ts && yarn build:package",
