@@ -45,7 +45,7 @@ class KnexQueryExecutor {
         exec.join(...joinArgs);
       });
 
-    console.log("[debug.knex.query]", exec.toSQL().toNative());
+    // console.log("[debug.knex.query]", exec.toSQL().toNative());
 
     return await exec;
   }
