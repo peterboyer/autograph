@@ -2,7 +2,7 @@
   "name": "@armix/server-schema",
   "version": "0.2.1",
   "author": "Peter Boyer <@ptboyer>",
-  "description": "Generate TypeDefs, Resolvers, and Tables for your GraphQL/Knex backends.",
+  "description": "Generate TypeDefs and Resolvers for your GraphQL backends.",
   "repository": "https://github.com/armix-io/armix-server",
   "license": "MIT",
   "engines": {
@@ -15,20 +15,18 @@
     "watch:yalc": "cp ./package.json lib/package.json && nodemon --delay 1500ms --exec \"cd ./lib && yalc push --replace\"",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch:ts\" \"yarn watch:yalc\"",
     "deploy": "../../publish.sh",
-    "test": "jest",
-    "docs": "jsdoc src/*.js -d ./docs/",
-    "docs:open": "open ./docs/index.html"
+    "test": "jest"
   },
   "dependencies": {
-    "@types/lodash.omit": "^4.5.6",
-    "@types/lodash.pick": "^4.4.6",
-    "lodash": "^4.17.15",
-    "lodash.omit": "^4.5.0",
-    "lodash.pick": "^4.4.0"
+    "lodash.clonedeep": "^4.5.0",
+    "lodash.identity": "^3.0.0",
+    "lodash.omit": "^4.5.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.15",
-    "@types/lodash": "^4.14.159",
+    "@types/lodash.clonedeep": "^4.5.6",
+    "@types/lodash.identity": "^3.0.6",
+    "@types/lodash.omit": "^4.5.6",
     "@typescript-eslint/eslint-plugin": "^3.9.0",
     "@typescript-eslint/parser": "^3.9.0",
     "apollo-server": "^2.19.0",
@@ -37,13 +35,8 @@
     "eslint": "^7.6.0",
     "graphql": "^14.0.0",
     "jest": "^26.6.3",
-    "jsdoc": "^3.6.4",
     "knex": "^0.21.12",
-    "knex-postgis": "^0.12.0",
     "nodemon": "^2.0.4",
-    "pg": "^8.4.2",
-    "prettier": "^2.0.5",
-    "sqlite3": "^5.0.0",
     "ts-jest": "^26.4.4",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.2"

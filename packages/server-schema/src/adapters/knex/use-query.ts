@@ -2,8 +2,8 @@ import Knex from "knex";
 import { TQuery } from "../../graph/ast-resolvers/ast-resolvers-options";
 import { TOnQueryOptions } from "./on-query";
 import KnexQueryExecutor, { TKnexQuery } from "./knex-query-executor";
-import lodash from "lodash";
-const { cloneDeep, identity } = lodash;
+import identity from "lodash.identity";
+import cloneDeep from "lodash.clonedeep";
 
 export type TKnexQueryOptions = {
   knex: Knex;
