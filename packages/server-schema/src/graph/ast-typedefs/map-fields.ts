@@ -5,7 +5,7 @@ import { getTypeDictArgs } from "./get-type-dict-args";
 export function mapFields(fields: Map<any, TField>) {
   const acc = new Set<string>();
   for (const [fieldName, field] of fields) {
-    const resolverGet = field.resolver.get;
+    const resolverGet = field.get;
     if (!resolverGet) continue;
 
     const { args } = resolverGet;

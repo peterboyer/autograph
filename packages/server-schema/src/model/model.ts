@@ -9,6 +9,9 @@ import TGraphOptions from "../graph/ast-resolvers/ast-resolvers-options";
 import TypeDefs from "../graph/ast-typedefs/ast-typedefs";
 import Resolvers from "../graph/ast-resolvers/ast-resolvers";
 
+const SCALAR_OPERATORS = ["eq", "ne", "gt", "gte", "lt", "lte"];
+const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
+
 type TSchemaSource = Record<string, any>;
 type ModelOptions = { Context: any; Query: any };
 
@@ -47,18 +50,11 @@ export class Model<
   }
 
   fields(schemaFields: Schema["fields"]) {
-    this.ast.fields = Object.entries(schemaFields).reduce<TAST["fields"]>(
-      (acc, [fieldName, field]) =>
-        Object.assign(acc, {
-          [fieldName]: Field(field, fieldName),
-        }),
-      {}
-    );
+    Object.entries(schemaFields).forEach(([fieldName, fieldDefinition]) => {
+      this.ast.fields[fieldName] = Field(fieldDefinition, fieldName);
 
-    const SCALAR_OPERATORS = ["eq", "ne", "gt", "gte", "lt", "lte"];
-    const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
+      const field = this.ast.fields[fieldName];
 
-    Object.entries(this.ast.fields).forEach(([fieldName, field]) => {
       const target = field.filterTarget;
       if (!target) return;
 
@@ -106,38 +102,27 @@ export class Model<
   }
 
   filters(schemaFilters: Schema["filters"]) {
-    this.ast.filters = Object.entries(schemaFilters || {}).reduce<
-      TAST["filters"]
-    >((acc, [filterName, filter]) => {
-      return Object.assign(acc, { [filterName]: Filter(filter) });
-    }, {});
+    Object.entries(schemaFilters || {}).forEach(([filterName, filter]) => {
+      this.ast.filters[filterName] = Filter(filter);
+    });
 
     return this;
   }
 
-  hooks(schemaHooks: Schema["hooks"]) {
-    this.ast.hooks = {
-      preUpsert: schemaHooks.preUpsert || null,
-      postUpsert: schemaHooks.postUpsert || null,
-      preDelete: schemaHooks.preDelete || null,
-      postDelete: schemaHooks.postDelete || null,
-    };
+  hooks(schemaHooks: Partial<Schema["hooks"]>) {
+    Object.assign(this.ast.hooks, schemaHooks);
 
     return this;
   }
 
-  query(schemaQuery: Schema["query"]) {
-    this.ast.query = {
-      one: schemaQuery.one || null,
-      many: schemaQuery.many || null,
-      default: schemaQuery.default || null,
-    };
+  query(schemaQuery: Partial<Schema["query"]>) {
+    Object.assign(this.ast.query, schemaQuery);
 
     return this;
   }
 
-  typeDefs(schemaTypeDefs: Schema["typeDefs"]) {
-    this.ast.typeDefs = schemaTypeDefs;
+  typeDefs(schemaTypeDefs: Partial<Schema["typeDefs"]>) {
+    Object.assign(this.ast.typeDefs, schemaTypeDefs);
 
     return this;
   }

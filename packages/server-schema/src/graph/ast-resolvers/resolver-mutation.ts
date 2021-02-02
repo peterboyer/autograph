@@ -15,7 +15,7 @@ export function ResolverMutation(
     >
   ) => {
     const { name } = ast;
-    const [, args, context] = resolverArgs;
+    const [, args, context, info] = resolverArgs;
 
     const mutation_default: TMutation = {
       name,
@@ -49,11 +49,26 @@ export function ResolverMutation(
           // hook
           ast.hooks.preDelete && (await ast.hooks.preDelete(source, context));
 
+          // field hooks
+          await Promise.all(
+            Object.values(ast.fields).map(async (field) => {
+              field.onDelete && (await field.onDelete(source, context, info));
+            })
+          );
+
           const mutation = { ...mutation_default, id };
           await options.adapter.onMutation(mutation);
 
           // hook
           ast.hooks.postDelete && (await ast.hooks.postDelete(source, context));
+
+          // field hooks
+          await Promise.all(
+            Object.values(ast.fields).map(async (field) => {
+              field.onDelete_afterCommit &&
+                (await field.onDelete_afterCommit(source, context, info));
+            })
+          );
         })
       );
       return ids;
@@ -81,7 +96,7 @@ export function ResolverMutation(
         await Promise.all(
           Object.entries(data).map(async ([fieldName, value]) => {
             const field = ast.fields[fieldName];
-            const resolverSet = field.resolver.set;
+            const resolverSet = field.set;
             if (!resolverSet) return;
             if (resolverSet.stage !== "pre") return;
             const { transactor } = resolverSet;
@@ -98,27 +113,35 @@ export function ResolverMutation(
           })
         );
 
-        /**
-         * preData -> non-settables
-         * go through all fields of data and resolve non-settables fields to preData
-         */
-        await Promise.all(
-          Object.entries(ast.fields).map(async ([fieldName, field]) => {
-            const resolverSet = field.resolver.set;
-            if (!resolverSet) return;
-            if (resolverSet.stage !== "pre") return;
-            // skip fields that use an argument to set a value
-            if (resolverSet.arg) return;
-            const { transactor } = resolverSet;
-            const result = (await transactor(null, source, context)) as
-              | Record<string, any>
-              | undefined;
-            if (result) {
-              if (typeof result === "object") {
+        // field hooks
+        if (operation === "create") {
+          await Promise.all(
+            Object.values(ast.fields).map(async (field) => {
+              if (field.onCreate) {
+                const result = await field.onCreate(context, info);
                 Object.assign(preData, result);
-              } else {
-                preData[fieldName] = result;
               }
+            })
+          );
+        } else if (operation === "update") {
+          await Promise.all(
+            Object.values(ast.fields).map(async (field) => {
+              if (field.onUpdate) {
+                const result = await field.onUpdate(source, context, info);
+                Object.assign(preData, result);
+              }
+            })
+          );
+        }
+        await Promise.all(
+          Object.values(ast.fields).map(async (field) => {
+            if (field.onCreateAndUpdate) {
+              const result = await field.onCreateAndUpdate(
+                source,
+                context,
+                info
+              );
+              Object.assign(preData, result);
             }
           })
         );
@@ -133,9 +156,7 @@ export function ResolverMutation(
           await Promise.all(
             Object.entries(data).map(async ([fieldName, value]) => {
               const field = ast.fields[fieldName];
-              const {
-                resolver: { set: resolverSet },
-              } = field;
+              const { set: resolverSet } = field;
               if (!resolverSet) return;
               if (resolverSet.stage !== "post") return;
               const { transactor } = resolverSet;
@@ -147,31 +168,6 @@ export function ResolverMutation(
                   Object.assign(postData, result);
                 } else {
                   postData[fieldName] = result;
-                }
-              }
-            })
-          );
-
-          /**
-           * postData -> non-settables
-           * go through all fields of data and resolve non-settables fields
-           */
-          await Promise.all(
-            Object.entries(ast.fields).map(async ([fieldName, field]) => {
-              const resolverSet = field.resolver.set;
-              if (!resolverSet) return;
-              if (resolverSet.stage !== "post") return;
-              // skip fields that use an argument to set a value
-              if (resolverSet.arg) return;
-              const { transactor } = resolverSet;
-              const result = (await transactor(null, source, context)) as
-                | Record<string, any>
-                | undefined;
-              if (result) {
-                if (typeof result === "object") {
-                  Object.assign(preData, result);
-                } else {
-                  preData[fieldName] = result;
                 }
               }
             })
@@ -243,6 +239,32 @@ export function ResolverMutation(
             postSource as NonNullable<typeof postSource>,
             context
           ));
+
+        // field hooks
+        if (operation === "create") {
+          await Promise.all(
+            Object.values(ast.fields).map(async (field) => {
+              if (field.onCreate_afterCommit) {
+                await field.onCreate_afterCommit(source, context, info);
+              }
+            })
+          );
+        } else if (operation === "update") {
+          await Promise.all(
+            Object.values(ast.fields).map(async (field) => {
+              if (field.onUpdate_afterCommit) {
+                await field.onUpdate_afterCommit(source, context, info);
+              }
+            })
+          );
+        }
+        await Promise.all(
+          Object.values(ast.fields).map(async (field) => {
+            if (field.onCreateAndUpdate_afterCommit) {
+              await field.onCreateAndUpdate_afterCommit(source, context, info);
+            }
+          })
+        );
 
         /**
          * postSource -> result

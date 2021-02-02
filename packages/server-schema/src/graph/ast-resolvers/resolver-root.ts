@@ -6,10 +6,7 @@ export function mapRoot(ast: TAST, options: TOptions) {
   const root: Record<any, TResolver> = {};
 
   for (const [fieldName, field] of Object.entries(ast.fields)) {
-    const {
-      type,
-      resolver: { get: resolverGet },
-    } = field;
+    const { type, get: resolverGet } = field;
 
     if (!resolverGet) continue;
 

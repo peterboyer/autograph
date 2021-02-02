@@ -1,3 +1,4 @@
+import { GraphQLResolveInfo } from "graphql";
 import { TResolver } from "../types/types-graphql";
 import { TType, TScalar, Typed, TypedDict } from "../types/types-types";
 import { TGraphTypeDefs } from "../types/types-graph";
@@ -24,24 +25,88 @@ export type TModel<A extends TArgs = TArgs> = {
   limitMax: number;
 };
 
+type ArgsSourceKeys<A extends TArgs = TArgs> = Extract<
+  keyof A["Source"],
+  string
+>;
+
+type MutationData<A extends TArgs = TArgs> = Partial<Omit<A["Source"], "id">>;
+
 /**
  * FIELDS
  */
 export type TField<A extends TArgs = TArgs> =
-  | TType
+  | FieldAsType
+  | FieldAsDefinition<A>;
+
+type FieldAsType = TType;
+type FieldAsDefinition<A extends TArgs = TArgs> = {
+  type: TType;
+} & (
   | {
-      type: TType;
-      resolver?:
-        | string
-        | {
-            get?: null | string | TFieldGetResolver<A>;
-            set?: null | string | TFieldSetResolver<A>;
-          };
-      // access?: Partial<Record<"get" | "set" | "default", TAccessor<A>>>;
-      orderTarget?: string;
-      filterTarget?: string;
-      default?: any;
-    };
+      alias: ArgsSourceKeys<A>;
+    }
+  | {
+      alias?: never;
+      get?: null | ArgsSourceKeys<A> | TFieldGetResolver<A>;
+      set?: null | ArgsSourceKeys<A> | TFieldSetResolver<A>;
+    }
+) & {
+    // targets
+    orderTarget?: ArgsSourceKeys<A>;
+    filterTarget?: ArgsSourceKeys<A>;
+    // misc
+    default?: any;
+  } & {
+    // hooks
+    onCreate?: (
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<MutationData<A> | undefined> | MutationData<A> | undefined;
+    onCreate_afterCommit?: (
+      source: A["Source"],
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<void> | void;
+    onUpdate?: (
+      source: A["Source"],
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<MutationData<A> | undefined> | MutationData<A> | undefined;
+    onUpdate_afterCommit?: (
+      source: A["Source"],
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<void> | void;
+    onCreateAndUpdate?: (
+      source: A["Source"],
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<MutationData<A> | undefined> | MutationData<A> | undefined;
+    onCreateAndUpdate_afterCommit?: (
+      source: A["Source"],
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<void> | void;
+    onDelete?: (
+      source: A["Source"],
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<void> | void;
+    onDelete_afterCommit?: (
+      source: A["Source"],
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<void> | void;
+    onMutation?: (
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<void> | void;
+    onMutation_afterCommit?: (
+      context: A["Context"],
+      info: GraphQLResolveInfo
+    ) => Promise<void> | void;
+  };
 
 type TFieldGetResolver<A extends TArgs = TArgs> = (modifiers: {
   use: <R extends TResolver<A["Source"], TypedDict<{}>, A["Context"]>>(
@@ -61,7 +126,7 @@ type TFieldGetResolver<A extends TArgs = TArgs> = (modifiers: {
 
 type TFieldSetResolver<A extends TArgs = TArgs> = (modifiers: {
   pre: <T extends TScalar>(
-    arg: T | null
+    arg: T
   ) => <
     R extends (
       value: Typed<T>,
@@ -72,7 +137,7 @@ type TFieldSetResolver<A extends TArgs = TArgs> = (modifiers: {
     transactor: R
   ) => void;
   post: <T extends TScalar>(
-    arg: T | null
+    arg: T
   ) => <
     R extends (
       value: Typed<T>,

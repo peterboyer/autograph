@@ -34,6 +34,10 @@ const constructor = ({ useQuery, cursorStore }: TOnQueryOptions) => {
       if (!cursor) {
         throw new Error("QUERY_CURSOR_INVALID");
       }
+
+      // overwrite cursor query context (to prevent stale trx)
+      cursor.query.context = query.context;
+
       const { items, index } = await useQuery(cursor.query, {
         index: cursor.index,
         queryResolver,

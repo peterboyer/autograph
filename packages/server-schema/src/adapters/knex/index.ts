@@ -1,7 +1,7 @@
 export { default } from "./knex-adapter";
 
 export { default as KnexAdapter } from "./knex-adapter";
-export { TKnexQuery } from "./knex-query-executor";
+export { QueryMessage, op } from "./knex-query-executor";
 export { TKnexMutation } from "./knex-mutation-executor";
 
 export { default as Cursor } from "./cursor/cursor";

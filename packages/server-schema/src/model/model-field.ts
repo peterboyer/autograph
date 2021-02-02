@@ -6,12 +6,12 @@ export function Field(field: TField, fieldName: string): TFieldAST {
   if ("_is" in field) {
     const type = field;
 
-    const resolverGet: TFieldAST["resolver"]["get"] = {
+    const resolverGet: TFieldAST["get"] = {
       args: {},
       transactor: (source) => source[fieldName],
     };
 
-    const resolverSet: TFieldAST["resolver"]["set"] = {
+    const resolverSet: TFieldAST["set"] = {
       stage: "pre",
       arg: type._is === "object" ? Types.ID : (type as TScalar),
       transactor: async (value) => ({ [fieldName]: value }),
@@ -19,23 +19,19 @@ export function Field(field: TField, fieldName: string): TFieldAST {
 
     return {
       type,
-      resolver: {
-        get: resolverGet,
-        set: resolverSet,
-      },
-      // hooks: {},
-      orderTarget: type._is === "scalar" ? fieldName : null,
-      filterTarget: type._is === "scalar" ? fieldName : null,
-      default: null,
+      get: resolverGet,
+      set: resolverSet,
+      orderTarget: type._is === "scalar" ? fieldName : undefined,
+      filterTarget: type._is === "scalar" ? fieldName : undefined,
     };
   }
 
   const type = field.type;
 
-  const resolverGet = ((): TFieldAST["resolver"]["get"] => {
-    const _resolver = field.resolver;
+  const resolverGet = ((): TFieldAST["get"] => {
+    const _resolver = "get" in field ? field.get : field.alias;
 
-    if (!_resolver) {
+    if (_resolver === undefined) {
       return {
         args: {},
         transactor: (source) => source[fieldName],
@@ -49,27 +45,11 @@ export function Field(field: TField, fieldName: string): TFieldAST {
       };
     }
 
-    const _resolverGet = _resolver.get;
-
-    if (_resolverGet === undefined) {
-      return {
-        args: {},
-        transactor: (source) => source[fieldName],
-      };
-    }
-
-    if (typeof _resolverGet === "string") {
-      return {
-        args: {},
-        transactor: (source) => source[_resolverGet],
-      };
-    }
-
-    if (typeof _resolverGet === "function") {
+    if (typeof _resolver === "function") {
       // @ts-ignore
       const resolver: TFieldAST["resolver"]["get"] = {};
 
-      _resolverGet({
+      _resolver({
         use: (transactor) => Object.assign(resolver, { args: {}, transactor }),
         args: (args) => (transactor) =>
           Object.assign(resolver, { args, transactor }),
@@ -77,12 +57,11 @@ export function Field(field: TField, fieldName: string): TFieldAST {
 
       return resolver;
     }
-
-    return null;
   })();
 
-  const resolverSet = ((): TFieldAST["resolver"]["set"] => {
-    const _resolver = field.resolver;
+  const resolverSet = ((): TFieldAST["set"] => {
+    const _resolver = "set" in field ? field.set : field.alias;
+
     const _resolverType =
       type._is === "object"
         ? type.isNonNull
@@ -90,7 +69,7 @@ export function Field(field: TField, fieldName: string): TFieldAST {
           : Types.ID
         : (type as TScalar);
 
-    if (!_resolver) {
+    if (_resolver === undefined) {
       return {
         stage: "pre",
         arg: _resolverType,
@@ -106,29 +85,11 @@ export function Field(field: TField, fieldName: string): TFieldAST {
       };
     }
 
-    const _resolverSet = _resolver.set;
-
-    if (_resolverSet === undefined) {
-      return {
-        stage: "pre",
-        arg: _resolverType,
-        transactor: async (value) => ({ [fieldName]: value }),
-      };
-    }
-
-    if (typeof _resolverSet === "string") {
-      return {
-        stage: "pre",
-        arg: _resolverType,
-        transactor: async (value) => ({ [_resolverSet]: value }),
-      };
-    }
-
-    if (typeof _resolverSet === "function") {
+    if (typeof _resolver === "function") {
       // @ts-ignore
-      const resolver: TFieldAST["resolver"]["set"] = {};
+      const resolver: TFieldAST["set"] = {};
 
-      _resolverSet({
+      _resolver({
         pre: (arg) => (transactor) =>
           Object.assign(resolver, { stage: "pre", arg, transactor }),
         post: (arg) => (transactor) =>
@@ -137,51 +98,36 @@ export function Field(field: TField, fieldName: string): TFieldAST {
 
       return resolver;
     }
-
-    return null;
   })();
 
   const orderTarget = ((): TFieldAST["orderTarget"] => {
     if (field.orderTarget) return field.orderTarget;
 
-    if (type._is !== "scalar") return null;
-    const _resolver = field.resolver;
+    if (type._is !== "scalar") return;
+    const _resolver = "get" in field ? field.get : field.alias;
 
     if (!_resolver) return fieldName;
 
     if (typeof _resolver === "string") return _resolver;
-
-    if (typeof _resolver.get === "string") return _resolver.get;
-
-    return null;
   })();
 
   const filterTarget = ((): TFieldAST["filterTarget"] => {
     if (field.filterTarget) return field.filterTarget;
 
-    const _resolver = field.resolver;
+    const _resolver = "get" in field ? field.get : field.alias;
 
     if (!_resolver) return fieldName;
 
     if (typeof _resolver === "string") return _resolver;
-
-    if (typeof _resolver.get === "string") return _resolver.get;
-
-    return null;
   })();
 
-  const _default = field.default || null;
-
   return {
+    ...field,
     type,
-    resolver: {
-      get: resolverGet,
-      set: resolverSet,
-    },
-    // hooks: {},
+    get: resolverGet,
+    set: resolverSet,
     orderTarget,
     filterTarget,
-    default: _default,
   };
 }
 

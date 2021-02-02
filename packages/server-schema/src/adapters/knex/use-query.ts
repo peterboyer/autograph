@@ -1,7 +1,7 @@
 import Knex from "knex";
 import { TQuery } from "../../graph/ast-resolvers/ast-resolvers-options";
 import { TOnQueryOptions } from "./on-query";
-import KnexQueryExecutor, { TKnexQuery } from "./knex-query-executor";
+import KnexQueryExecutor, { QueryMessage, op } from "./knex-query-executor";
 import identity from "lodash.identity";
 import cloneDeep from "lodash.clonedeep";
 
@@ -38,12 +38,12 @@ const constructor = ({
 
   const useQuery: TOnQueryOptions["useQuery"] = async (
     graphQuery: TQuery<{ trx?: Knex.Transaction }>,
-    { index, queryResolver } = {}
+    { index: indexes, queryResolver } = {}
   ) => {
     /**
      * queryResolver wrapper to mutate graphQuery
      */
-    const useQueryResolver = (query: TKnexQuery) => {
+    const useQueryResolver = (query: QueryMessage) => {
       queryResolver && queryResolver(query);
     };
 
@@ -59,19 +59,14 @@ const constructor = ({
      * trx <- graph.context.trx
      */
     const { name: queryName } = graphQuery;
-    const from = tableNames.get(queryName) || queryName;
+    const table = tableNames.get(queryName) || queryName;
     const trx = graphQuery.context?.trx;
 
-    const knexQuery: TKnexQuery = {
-      from,
-      trx,
-    };
+    const ops: QueryMessage["ops"] = [];
+    const queryMessage: QueryMessage = { table, ops };
 
-    /**
-     * [knex]
-     * joins <- knex.joins
-     */
-    knexQuery.joins = [];
+    ops.push(op((query) => query.from(table), "from"));
+    if (trx) ops.push(op((query) => query.transacting(trx), "trx"));
 
     /**
      * [endpoint]
@@ -80,11 +75,11 @@ const constructor = ({
     if (graphQuery.id) {
       const { id } = graphQuery;
 
-      knexQuery.selects = [`${from}.*`];
-      knexQuery.wheres = [[`${from}.id`, "=", id]];
+      ops.push(op((query) => query.select(`${table}.*`), "select"));
+      ops.push(op((query) => query.where(`${table}.id`, "=", id), "where"));
 
-      useQueryResolver(knexQuery);
-      const items = await knexQueryExecutor.execute(knexQuery);
+      useQueryResolver(queryMessage);
+      const items = await knexQueryExecutor.execute(queryMessage);
       return { items, total: items.length };
     }
 
@@ -102,10 +97,15 @@ const constructor = ({
      * apply filters first, will affect count and normal fetches
      */
     const { filters: queryFilters = [] } = graphQuery;
-    knexQuery.wheres = queryFilters.map((filter) => {
+    queryFilters.forEach((filter) => {
       const { target, operator: _operator, value } = filter;
       const operator = FILTER_OPERATOR_MAP.get(_operator) || _operator;
-      return [`${from}.${target}`, operator, value];
+      ops.push(
+        op(
+          (query) => query.where(`${table}.${target}`, operator, value),
+          `where-${target}-${_operator}`
+        )
+      );
     });
 
     /**
@@ -114,81 +114,95 @@ const constructor = ({
      * if index is provided, a cursor is being used, thus total already fetched
      */
     const total = await (async function () {
-      if (index !== undefined) return -1;
+      if (indexes !== undefined) return -1;
 
-      const countQuery = cloneDeep(knexQuery);
-      countQuery.count = true;
-      useQueryResolver(countQuery);
-
+      const countMessage = cloneDeep(queryMessage);
+      countMessage.ops.filter(({ tag }) => tag !== "trx");
+      countMessage.ops.push(
+        op(
+          (query, knex) =>
+            query
+              .clear("select")
+              .clear("limit")
+              .clear("order")
+              .select(knex.raw("count(*)")),
+          "count"
+        )
+      );
+      useQueryResolver(countMessage);
       const [row] = await knexQueryExecutor.execute<{ count: string }>(
-        countQuery
+        countMessage
       );
       return parseInt(row.count);
     })();
 
     /**
      * [knex]
-     * if index given, create a complex where statement using
-     *   id => index[0] --- if query order not given (default sort by id)
-     *   order,id => index[0],index[1] --- if query order given
+     * if indexes given, create a complex where statement using
+     *   id => indexes[0] --- if query order not given (default sort by id)
+     *   order,id => indexes[0],indexes[1] --- if query order given
      * order must be before id to prioritise it
      */
     const { order: queryOrder } = graphQuery;
-    if (index) {
+    if (indexes) {
       const targets = [
-        queryOrder && `"${from}"."${queryOrder.target}"`,
-        `"${from}"."id"`,
+        queryOrder && `"${table}"."${queryOrder.target}"`,
+        `"${table}"."id"`,
       ].filter(identity);
       const direction = queryOrder?.direction || "asc";
-      const values = index.filter(identity);
+      const values = indexes.filter(identity);
 
       const $targets = targets.map((v) => `${v}`).join(",");
       const $operator = direction === "asc" ? ">=" : "<=";
       const $values = values.map((v) => `'${v}'`).join(",");
 
-      knexQuery.wheres.push([
-        knex.raw(`((${$targets}) ${$operator} (${$values}))`),
-      ]);
+      ops.push(
+        op(
+          (query, knex) =>
+            query.where(knex.raw(`((${$targets}) ${$operator} (${$values}))`)),
+          "where"
+        )
+      );
     }
 
     /**
-     * [knex]
-     * selects <- knex.selects
+     * selects
      */
-    knexQuery.selects = [`${from}.*`];
+    ops.push(op((query) => query.select(`${table}.*`), "select"));
 
     /**
-     * [knex]
-     * orders <- order
+     * order
      */
-    knexQuery.orders = [{ column: `${from}.id`, order: "asc" }];
+    const orders = [
+      { column: `${table}.id`, order: queryOrder?.direction || "asc" },
+    ];
     if (queryOrder)
-      knexQuery.orders.unshift({
-        column: `${from}.${queryOrder.target}`,
+      orders.unshift({
+        column: `${table}.${queryOrder.target}`,
         order: queryOrder.direction,
       });
+    ops.push(op((query) => query.orderBy(orders), "order"));
 
     /**
-     * [knex]
-     * limit <- limit
-     * add 1 to limit, so that if n+1 item fetched, index will be returned
+     * limit
      */
     const { limit: queryLimit } = graphQuery;
     if (queryLimit === undefined) throw new Error("USE_QUERY_LIMIT_REQUIRED");
-    knexQuery.limit = queryLimit + 1;
+    const limit = queryLimit + 1;
+    ops.push(op((query) => query.limit(limit), "limit"));
 
     /**
      * [result]
      * items
      */
-    useQueryResolver(knexQuery);
-    const items = await knexQueryExecutor.execute<any>(knexQuery);
+    useQueryResolver(queryMessage);
+    const items = await knexQueryExecutor.execute<any>(queryMessage);
 
     /**
      * [result]
      * index
      */
-    const nextItem = items.length === knexQuery.limit ? items.pop() : undefined;
+    const nextItem = items.length === limit ? items.pop() : undefined;
     const nextIndex =
       nextItem &&
       [

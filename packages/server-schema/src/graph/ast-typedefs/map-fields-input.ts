@@ -6,7 +6,7 @@ export function mapFieldsInput(fields: Map<any, TField>, partial = false) {
   for (const [fieldName, field] of fields) {
     if (fieldName === "id") continue;
 
-    const resolverSet = field.resolver.set;
+    const resolverSet = field.set;
     if (!resolverSet) continue;
     if (!resolverSet.arg) continue;
 
