@@ -1,6 +1,6 @@
 import { GraphQLResolveInfo } from "graphql";
 import { TResolver } from "../types/types-graphql";
-import { TType, TScalar, Typed, TypedDict } from "../types/types-types";
+import { TType, TScalar, Typed, TypedRecord } from "../types/types-types";
 import { TGraphTypeDefs } from "../types/types-graph";
 import {
   THooks as THooksAST,
@@ -109,14 +109,14 @@ type FieldAsDefinition<A extends TArgs = TArgs> = {
   };
 
 type TFieldGetResolver<A extends TArgs = TArgs> = (modifiers: {
-  use: <R extends TResolver<A["Source"], TypedDict<{}>, A["Context"]>>(
+  use: <R extends TResolver<A["Source"], TypedRecord<{}>, A["Context"]>>(
     transactor: R
   ) => {
     transactor: R;
   };
   args: <T extends Record<string, TType>>(
     args: T
-  ) => <R extends TResolver<A["Source"], TypedDict<T>, A["Context"]>>(
+  ) => <R extends TResolver<A["Source"], TypedRecord<T>, A["Context"]>>(
     transactor: R
   ) => {
     args: T;

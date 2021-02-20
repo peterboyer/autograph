@@ -1,7 +1,6 @@
 // @ts-nocheck
 import test from "tape";
-
-import { Types, Scalar, Complex } from "../graph/field-types";
+import { Types, Scalar, Complex } from "./type";
 
 test("types", (t) => {
   t.test("scalar type", (t) => {
