@@ -31,11 +31,38 @@ const User = new Model("User").field("id", Types.String.NonNull, ({ get }) => ({
   // }
 }));
 
-const Place = new Model("Place").field(
-  "name",
-  Types.String.NonNull,
-  ({ get, set }) => ({
-    get: get((source) => source.position),
-    set: set((value) => ({ name: value })),
-  })
-);
+const Place = new Model("Place", {
+  queryMany: false,
+  mutationDelete: false,
+})
+  .field("name", Types.String.NonNull, ({ get, set }) => ({
+    get: get((source) => {
+      return source.name;
+    }),
+    set: set((value, source) => {
+      return {
+        name: value,
+      };
+    }),
+    setCreate: set.create((value, context, info) => {
+      return {
+        name: value,
+      };
+    }),
+    setUpdate: set.update.with(Types.Int.NonNull)((value, source) => {
+      return {
+        name: value.toString(),
+      };
+    }),
+  }))
+  .field("position", Types.String.NonNull, ({ get, set }) => ({
+    get: get((source) => {
+      return source.position + "_something_more";
+    }),
+    set: null,
+    setUpdate: set.update((value) => {
+      return {
+        position: value + new Date().toISOString(),
+      };
+    }),
+  }));

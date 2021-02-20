@@ -33,7 +33,13 @@ export type TypedIsList<
  * if Type is not a Scalar return as ID type, with correct List/NonNull options
  */
 export type AsScalar<T extends Type> = T["_is"] extends "scalar"
-  ? T
+  ? {
+      _is: "scalar";
+      _type: T["_type"];
+      name: T["name"];
+      isList: T["isList"];
+      isNonNull: T["isNonNull"];
+    }
   : T["isList"] extends true
   ? T["isNonNull"] extends true
     ? typeof Types.ID.List.NonNull

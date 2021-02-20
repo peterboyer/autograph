@@ -1,22 +1,17 @@
 import { Type, Scalar } from "../types/type";
 import { asScalar } from "../types/type-utils";
 import { Sources } from "../types/sources";
-import { Context } from "../types/context";
 import { Field } from "./field";
-import { OptionsCallback, GetMapper, SetMapper } from "./field-options";
-import { Filter } from "./filter";
+import { Options, OptionsCallback } from "./field-options";
+import { Filter, InternalResolver, AdapterResolver } from "./filter";
 import { Hook } from "./hook";
-
-import { TGraph } from "../types/types-graph";
-import TGraphOptions from "../graph/ast-resolvers/ast-resolvers-options";
-import TypeDefs from "../graph/ast-typedefs/ast-typedefs";
-import Resolvers from "../graph/ast-resolvers/ast-resolvers";
+import { useMappers } from "./use-mappers";
 
 export class FieldAccessError extends Error {}
 
-export class Model<Name extends keyof Sources> {
+export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
   name: string;
-  fields: Map<string, Field<Sources[Name]>>;
+  fields: Map<string, Field<Source>>;
   filters: Map<string, Filter>;
   hooks: Map<string, Hook>;
   typedefs: Map<string, string>;
@@ -34,7 +29,7 @@ export class Model<Name extends keyof Sources> {
     name: Name,
     options?: Partial<
       Pick<
-        Model<any>,
+        Model<any, any>,
         | "queryOne"
         | "queryMany"
         | "mutationCreate"
@@ -65,44 +60,71 @@ export class Model<Name extends keyof Sources> {
   field<T extends Type>(
     name: string,
     type: T,
-    options?: OptionsCallback<Sources[Name], T>
+    options?: OptionsCallback<Source, T>
   ) {
-    const get: GetMapper<Sources[Name], T> = (resolver) => ({
-      resolver: (...args) => resolver(args[0], args[2], args[3]),
-      args: undefined,
-    });
-    get.with = (args) => (resolver) => ({
-      resolver,
-      args,
-    });
+    const mappers = useMappers<Source, T>(type);
 
-    const set: SetMapper<Sources[Name], T> = (resolver) => ({
-      resolver,
-      type,
-    });
-    set.with = (type) => (resolver) => ({
-      resolver,
-      type,
-    });
+    const {
+      alias,
+      get,
+      set,
+      setCreate,
+      setUpdate,
+      setCreateToAction,
+      setUpdateToAction,
+      orderTarget,
+      filterTarget,
+      useDefaultFilters = true,
+      ...opts
+    } = options ? options(mappers) : ({} as Options<Source>);
+    const key = alias || (name as keyof Source);
 
-    const opts = options ? options({ get, set }) : {};
-    const key = opts.alias || (name as keyof Sources[Name]);
+    const setResolverDefault = (value: any) =>
+      Object.assign({} as Partial<Source>, { [key]: value });
 
     this.fields.set(name, {
       name,
       type,
-      get: {
-        resolver: (source) => source[key],
-      },
-      set: {
-        resolver: (value) =>
-          Object.assign({} as Partial<Sources[Name]>, { [key]: value }),
-        type: asScalar(type),
-      },
-      orderTarget: type._is === "scalar" ? key : undefined,
-      filterTarget: type._is === "scalar" ? key : undefined,
+      get:
+        get === null
+          ? undefined
+          : get || {
+              resolver: (source) => source[key],
+            },
+      setCreate:
+        setCreate === null
+          ? undefined
+          : setCreate || set === null
+          ? undefined
+          : set || {
+              type: asScalar(type),
+              stage: "data",
+              resolver: setResolverDefault,
+            } ||
+            undefined,
+      setUpdate:
+        setUpdate === null
+          ? undefined
+          : setUpdate || set === null
+          ? undefined
+          : set || {
+              type: asScalar(type),
+              stage: "data",
+              resolver: setResolverDefault,
+            } ||
+            undefined,
+      setCreateToAction,
+      setUpdateToAction,
+      orderTarget:
+        orderTarget ?? (!get && type._is === "scalar" ? key : undefined),
+      filterTarget:
+        filterTarget ?? (!get && type._is === "scalar" ? key : undefined),
       ...opts,
     });
+
+    if (useDefaultFilters) {
+      // TODO: migrate filters from below
+    }
 
     return this;
   }
@@ -159,7 +181,13 @@ export class Model<Name extends keyof Sources> {
   //   return this;
   // }
 
-  filter(name: string) {}
+  filter<T extends Scalar>(name: string, type: T, resolver: AdapterResolver) {
+    this.filters.set(name, {
+      type,
+      message: "adapter",
+      resolver,
+    });
+  }
 
   // filters(schemaFilters: Schema["filters"]) {
   //   Object.entries(schemaFilters || {}).forEach(([filterName, filter]) => {
@@ -201,19 +229,19 @@ export class Model<Name extends keyof Sources> {
   //   return this;
   // }
 
-  toGraph(options: TGraphOptions<Context>): TGraph {
-    const model = {
-      name: this.name,
-      fields: this.fields,
-      hooks: this.hooks,
-      typedefs: this.typedefs,
-    };
+  // toGraph(options: TGraphOptions<Context>): TGraph {
+  //   const model = {
+  //     name: this.name,
+  //     fields: this.fields,
+  //     hooks: this.hooks,
+  //     typedefs: this.typedefs,
+  //   };
 
-    return {
-      typeDefs: TypeDefs(model),
-      resolvers: Resolvers(model, options),
-    };
-  }
+  //   return {
+  //     typeDefs: TypeDefs(model),
+  //     resolvers: Resolvers(model, options),
+  //   };
+  // }
 
   toString() {
     return this.name;
