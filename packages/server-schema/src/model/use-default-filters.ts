@@ -1,5 +1,3 @@
-import { Scalar } from "../types/type";
-import { Types } from "../types/types";
 import { asScalar, asList } from "../types/type-utils";
 import { Field } from "./field";
 import { Filter } from "./filter";
@@ -9,7 +7,7 @@ const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
 
 export function useDefaultFilters(
   field: Field<any>,
-  filters: Map<string, Filter>
+  filters: Partial<Record<string, Filter>>
 ) {
   const target = field.filterTarget;
   if (!target) return;
@@ -25,14 +23,15 @@ export function useDefaultFilters(
     const name = `${field.name}_${operator}`;
 
     // skip if already defined
-    if (filters.has(name)) return;
+    if (filters[name]) return;
 
     let type = asScalar(field.type);
     if (["in", "ni"].includes(operator)) {
       type = asList(type);
     }
 
-    filters.set(name, {
+    filters[name] = {
+      name,
       type,
       transport: "internal-query",
       resolver: (value, query) => {

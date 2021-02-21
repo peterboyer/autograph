@@ -1,3 +1,4 @@
+import { MaybePromise } from "../types/utils";
 import { Type, Scalar } from "../types/type";
 import { Typed, TypedRecord } from "../types/type-utils";
 import { Context } from "../types/context";
@@ -35,12 +36,17 @@ export type GetResolver<
   args: TypedRecord<A>,
   context: Context,
   info: Info
-) => Typed<T>;
+) => MaybePromise<Typed<T>>;
 
 export type SetResolver<
   Source,
   T extends Scalar = any,
   Return = Partial<Source>
-> = (value: Typed<T>, source: Source, context: Context, info: Info) => Return;
+> = (
+  value: Typed<T>,
+  source: Source,
+  context: Context,
+  info: Info
+) => MaybePromise<Return>;
 
 export type MutationStage = "data" | "action";

@@ -1,9 +1,9 @@
 import { Sources } from "./sources";
 import { Context } from "./context";
 
-export interface Transports {
+export interface QueryTransports {
   "internal-query": {
-    name: keyof Sources;
+    name: Exclude<keyof Sources, number | symbol>;
     id?: string | null;
     cursor?: string;
     limit?: number;
@@ -18,14 +18,13 @@ export interface Transports {
     }[];
     context: Context;
   };
+}
+
+export interface MutationTransports<Source = {}> {
   "internal-mutation": {
     name: string;
     id?: string;
-    data?: Record<string, any>;
+    data?: Partial<Record<Exclude<keyof Source, number | symbol>, any>>;
     context: Context;
   };
 }
-
-export type QueryTransports = Omit<Transports, "internal-mutation">;
-
-export type MutationTransports = Pick<Transports, "internal-mutation">;

@@ -2,30 +2,31 @@ import { Type, Scalar } from "../types/type";
 import { asScalar } from "../types/type-utils";
 import { Sources } from "../types/sources";
 import { QueryTransports } from "../types/transports";
-import { Field } from "./field";
+import { Hooks } from "../types/hooks";
+import { Field, GetResolver } from "./field";
 import { Options, OptionsCallback } from "./field-options";
 import { Filter, FilterResolver } from "./filter";
-import { Hook } from "./hook";
 import { useMappers } from "./use-mappers";
 import { useDefaultFilters } from "./use-default-filters";
 
-export class FieldAccessError extends Error {}
+export type Node = "root" | "query" | "mutation";
 
 export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
-  name: string;
-  fields: Map<string, Field<Source>>;
-  filters: Map<string, Filter>;
-  hooks: Map<string, Hook>;
-  typedefs: Map<string, string>;
+  readonly name: string;
 
-  queryOne: boolean;
-  queryMany: boolean;
-  mutationCreate: boolean;
-  mutationUpdate: boolean;
-  mutationDelete: boolean;
+  readonly fields: Partial<Record<string, Field<Source>>>;
+  readonly filters: Partial<Record<string, Filter>>;
+  readonly hooks: Partial<Hooks<Source>>;
+  readonly typeDefs: Record<Node, string[]>;
+  readonly resolvers: Record<Node, GetResolver<any>[]>;
 
-  limitDefault: number;
-  limitMax: number;
+  readonly queryOne: boolean;
+  readonly queryMany: boolean;
+  readonly mutationCreate: boolean;
+  readonly mutationUpdate: boolean;
+  readonly mutationDelete: boolean;
+  readonly limitDefault: number;
+  readonly limitMax: number;
 
   constructor(
     name: Name,
@@ -44,17 +45,17 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
   ) {
     this.name = name;
 
-    this.fields = new Map();
-    this.filters = new Map();
-    this.hooks = new Map();
-    this.typedefs = new Map();
+    this.fields = {};
+    this.filters = {};
+    this.hooks = {};
+    this.typeDefs = { root: [], query: [], mutation: [] };
+    this.resolvers = { root: [], query: [], mutation: [] };
 
     this.queryOne = options?.queryOne ?? true;
     this.queryMany = options?.queryMany ?? true;
     this.mutationCreate = options?.mutationCreate ?? true;
     this.mutationUpdate = options?.mutationUpdate ?? true;
     this.mutationDelete = options?.mutationDelete ?? true;
-
     this.limitDefault = options?.limitDefault ?? 20;
     this.limitMax = options?.limitMax ?? 50;
   }
@@ -84,7 +85,7 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
     const setResolverDefault = (value: any) =>
       Object.assign({} as Partial<Source>, { [key]: value });
 
-    this.fields.set(name, {
+    this.fields[name] = {
       name,
       type,
       get:
@@ -120,10 +121,10 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
       orderTarget: orderTarget ?? get === undefined ? key : undefined,
       filterTarget: filterTarget ?? get === undefined ? key : undefined,
       ...opts,
-    });
+    };
 
     if (enableDefaultFilters) {
-      useDefaultFilters(this.fields.get(name)!, this.filters);
+      useDefaultFilters(this.fields[name]!, this.filters);
     }
 
     return this;
@@ -141,69 +142,27 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
     transport: Tr,
     resolver: FilterResolver<T, Tr>
   ) {
-    this.filters.set(name, {
+    this.filters[name] = {
+      name,
       type,
       transport,
       resolver,
-    });
+    };
   }
 
-  // filters(schemaFilters: Schema["filters"]) {
-  //   Object.entries(schemaFilters || {}).forEach(([filterName, filter]) => {
-  //     this.ast.filters[filterName] = Filter(filter);
-  //   });
+  hook<T extends keyof Hooks<Source>, H extends Hooks<Source>[T]>(
+    type: T,
+    handler: H
+  ) {
+    this.hooks[type] = handler;
+  }
 
-  //   return this;
-  // }
+  typeDef(node: Node, value: string) {
+    this.typeDefs[node].push(value);
+  }
 
-  hook() {}
-
-  // hooks(schemaHooks: Partial<Schema["hooks"]>) {
-  //   Object.assign(this.ast.hooks, schemaHooks);
-
-  //   return this;
-  // }
-
-  // query(schemaQuery: Partial<Schema["query"]>) {
-  //   Object.assign(this.ast.query, schemaQuery);
-
-  //   return this;
-  // }
-
-  // typeDefs(schemaTypeDefs: Partial<Schema["typeDefs"]>) {
-  //   Object.assign(this.ast.typeDefs, schemaTypeDefs);
-
-  //   return this;
-  // }
-
-  // limitDefault(schemaLimitDefault: Schema["limitDefault"]) {
-  //   this.ast.limitDefault = schemaLimitDefault;
-
-  //   return this;
-  // }
-
-  // limitMax(schemaLimitMax: Schema["limitMax"]) {
-  //   this.ast.limitMax = schemaLimitMax;
-
-  //   return this;
-  // }
-
-  // toGraph(options: TGraphOptions<Context>): TGraph {
-  //   const model = {
-  //     name: this.name,
-  //     fields: this.fields,
-  //     hooks: this.hooks,
-  //     typedefs: this.typedefs,
-  //   };
-
-  //   return {
-  //     typeDefs: TypeDefs(model),
-  //     resolvers: Resolvers(model, options),
-  //   };
-  // }
-
-  toString() {
-    return this.name;
+  resolver(node: Node, resolver: GetResolver<any>) {
+    this.resolvers[node].push(resolver);
   }
 }
 

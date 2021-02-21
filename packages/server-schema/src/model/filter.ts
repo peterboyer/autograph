@@ -5,6 +5,7 @@ import { Context } from "../types/context";
 import { Info } from "../types/info";
 
 export type Filter = {
+  name: string;
   type: Scalar;
   transport: keyof QueryTransports;
   resolver: FilterResolver;

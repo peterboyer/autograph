@@ -60,10 +60,12 @@ const Place = new Model("Place", {
       return source.position + "_something_more";
     }),
     set: null,
-    setUpdate: set.update((value) => {
+    setUpdate: set.update(async (value) => {
       return {
         position: value + new Date().toISOString(),
       };
     }),
   }))
-  .filter("foobar", Types.Int, "internal-query", (value, query) => {});
+  .filter("foobar", Types.Int, "internal-query", (value, query) => {
+    query.id = "1";
+  });
