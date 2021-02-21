@@ -62,6 +62,24 @@ export const asScalar = <T extends Type>(type: T) =>
     ? Types.ID.NonNull
     : Types.ID;
 
+/**
+ * converts any given type to it's List variant
+ */
+export const asList = <T extends Type>(type: T) =>
+  ({
+    _is: type["_is"],
+    _type: type["_type"],
+    name: type["name"],
+    isList: true,
+    isNonNull: type["isNonNull"],
+  } as {
+    _is: T["_is"];
+    _type: T["_type"];
+    name: T["name"];
+    isList: true;
+    isNonNull: T["isNonNull"];
+  });
+
 // tests
 
 const is_string_only = Types.ID.NonNull;

@@ -1,12 +1,13 @@
 import { Type, Scalar } from "../types/type";
 import { asScalar } from "../types/type-utils";
 import { Sources } from "../types/sources";
-import { Transports } from "../types/transports";
+import { QueryTransports } from "../types/transports";
 import { Field } from "./field";
 import { Options, OptionsCallback } from "./field-options";
 import { Filter, FilterResolver } from "./filter";
 import { Hook } from "./hook";
 import { useMappers } from "./use-mappers";
+import { useDefaultFilters } from "./use-default-filters";
 
 export class FieldAccessError extends Error {}
 
@@ -75,10 +76,10 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
       setUpdateToAction,
       orderTarget,
       filterTarget,
-      useDefaultFilters = true,
+      enableDefaultFilters = true,
       ...opts
     } = options ? options(mappers) : ({} as Options<Source>);
-    const key = alias || (name as keyof Source);
+    const key = alias || (name as Exclude<keyof Source, number | symbol>);
 
     const setResolverDefault = (value: any) =>
       Object.assign({} as Partial<Source>, { [key]: value });
@@ -116,71 +117,17 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
             undefined,
       setCreateToAction,
       setUpdateToAction,
-      orderTarget:
-        orderTarget ?? (!get && type._is === "scalar" ? key : undefined),
-      filterTarget:
-        filterTarget ?? (!get && type._is === "scalar" ? key : undefined),
+      orderTarget: orderTarget ?? get === undefined ? key : undefined,
+      filterTarget: filterTarget ?? get === undefined ? key : undefined,
       ...opts,
     });
 
-    if (useDefaultFilters) {
-      // TODO: migrate filters from below
+    if (enableDefaultFilters) {
+      useDefaultFilters(this.fields.get(name)!, this.filters);
     }
 
     return this;
   }
-
-  // fields(schemaFields: Schema["fields"]) {
-  //   Object.entries(schemaFields).forEach(([fieldName, fieldDefinition]) => {
-  //     this.ast.fields[fieldName] = Field(fieldDefinition, fieldName);
-
-  //     const field = this.ast.fields[fieldName];
-
-  //     const target = field.filterTarget;
-  //     if (!target) return;
-
-  //     const operators =
-  //       field.type._is === "scalar"
-  //         ? SCALAR_OPERATORS
-  //         : field.type._is === "object"
-  //         ? OBJECT_OPERATORS
-  //         : [];
-
-  //     operators.forEach((operator) => {
-  //       const filterName = `${fieldName}_${operator}`;
-
-  //       // skip if already defined
-  //       if (this.ast.filters[filterName]) return;
-
-  //       let arg = (field.type._is === "scalar"
-  //         ? field.type
-  //         : Types.ID) as TScalar;
-
-  //       if (["in", "ni"].includes(operator)) {
-  //         // @ts-ignore
-  //         if ("List" in arg) arg = arg.List;
-  //       }
-
-  //       this.ast.filters[filterName] = {
-  //         stage: "pre",
-  //         arg,
-  //         transactor: (value, query) => {
-  //           if (!("id" in query || "cursor" in query)) {
-  //             query.filters = query.filters || [];
-  //             query.filters.push({
-  //               target,
-  //               operator,
-  //               value,
-  //             });
-  //           }
-  //           return query;
-  //         },
-  //       };
-  //     });
-  //   });
-
-  //   return this;
-  // }
 
   /**
    *
@@ -188,7 +135,7 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
    * @param type graph type to receive value
    * @param resolver
    */
-  filter<T extends Scalar, Tr extends keyof Transports>(
+  filter<T extends Scalar, Tr extends keyof QueryTransports>(
     name: string,
     type: T,
     transport: Tr,

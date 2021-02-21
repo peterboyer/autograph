@@ -14,7 +14,7 @@ export type Options<Source> = {
   setUpdateToAction?: Setter<Source, void>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
-  useDefaultFilters?: boolean;
+  enableDefaultFilters?: boolean;
 };
 
 export type OptionsCallback<Source, T extends Type> = (mappers: {

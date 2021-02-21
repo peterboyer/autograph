@@ -11,8 +11,8 @@ export type Field<Source> = {
   setUpdate?: Setter<Source>;
   setCreateToAction?: Setter<Source, void>;
   setUpdateToAction?: Setter<Source, void>;
-  orderTarget?: keyof Source;
-  filterTarget?: keyof Source;
+  orderTarget?: Exclude<keyof Source, number | symbol>;
+  filterTarget?: Exclude<keyof Source, number | symbol>;
 };
 
 export type Getter<Source> = {

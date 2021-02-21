@@ -7,9 +7,6 @@ import ResolverQueryOne from "./resolver-query-one";
 import ResolverQueryMany from "./resolver-query-many";
 import ResolverMutation from "./resolver-mutation";
 
-const SCALAR_OPERATORS = ["eq", "ne", "gt", "gte", "lt", "lte"];
-const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
-
 export default function Resolvers(ast: TAST, options: TOptions) {
   const { name } = ast;
 
