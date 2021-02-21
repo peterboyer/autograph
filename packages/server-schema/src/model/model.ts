@@ -1,9 +1,10 @@
 import { Type, Scalar } from "../types/type";
 import { asScalar } from "../types/type-utils";
 import { Sources } from "../types/sources";
+import { Transports } from "../types/transports";
 import { Field } from "./field";
 import { Options, OptionsCallback } from "./field-options";
-import { Filter, InternalResolver, AdapterResolver } from "./filter";
+import { Filter, FilterResolver } from "./filter";
 import { Hook } from "./hook";
 import { useMappers } from "./use-mappers";
 
@@ -181,10 +182,21 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
   //   return this;
   // }
 
-  filter<T extends Scalar>(name: string, type: T, resolver: AdapterResolver) {
+  /**
+   *
+   * @param name name of filter
+   * @param type graph type to receive value
+   * @param resolver
+   */
+  filter<T extends Scalar, Tr extends keyof Transports>(
+    name: string,
+    type: T,
+    transport: Tr,
+    resolver: FilterResolver<T, Tr>
+  ) {
     this.filters.set(name, {
       type,
-      message: "adapter",
+      transport,
       resolver,
     });
   }

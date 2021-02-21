@@ -65,4 +65,5 @@ const Place = new Model("Place", {
         position: value + new Date().toISOString(),
       };
     }),
-  }));
+  }))
+  .filter("foobar", Types.Int, "internal-query", (value, query) => {});

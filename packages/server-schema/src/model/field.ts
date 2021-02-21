@@ -1,5 +1,5 @@
 import { Type, Scalar } from "../types/type";
-import { Typed, TypedRecord, AsScalar } from "../types/type-utils";
+import { Typed, TypedRecord } from "../types/type-utils";
 import { Context } from "../types/context";
 import { Info } from "../types/info";
 
