@@ -1,15 +1,15 @@
-import Cursor from "./cursor";
-import CursorStore from "./cursor-store";
+import { Cursor } from "./cursor";
+import { CursorStore } from "./cursor-store";
 
 type TGenerator = () => string;
 
-class MemoryCursorStore implements CursorStore {
+export class MemoryCursorStore implements CursorStore {
   store: Map<string, Cursor>;
   generator: TGenerator;
 
-  constructor(generator: TGenerator) {
+  constructor(generator?: TGenerator) {
     this.store = new Map();
-    this.generator = generator;
+    this.generator = generator || (() => Math.random().toString().substr(2));
   }
 
   async newId() {
@@ -32,5 +32,3 @@ class MemoryCursorStore implements CursorStore {
     this.store.delete(id);
   }
 }
-
-export default MemoryCursorStore;

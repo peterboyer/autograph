@@ -1,20 +1,14 @@
 import Knex from "knex";
+import { MutationTransport } from "./transports";
 
-export type TKnexMutation = {
-  from: string;
-  id?: number;
-  data?: any;
-  trx?: Knex.Transaction;
-};
-
-class KnexMutationExecutor {
+export class KnexMutationExecutor {
   knex: Knex;
 
   constructor(knex: Knex) {
     this.knex = knex;
   }
 
-  async execute(mutation: TKnexMutation) {
+  async execute(mutation: MutationTransport) {
     const { trx, from, id, data } = mutation;
 
     const exec = this.knex(from);
@@ -49,5 +43,3 @@ class KnexMutationExecutor {
     throw new Error("USE_MUTATION_INVALID_QUERY");
   }
 }
-
-export default KnexMutationExecutor;

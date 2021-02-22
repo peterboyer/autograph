@@ -1,6 +1,6 @@
 import { ModelAny } from "../../model/model";
 import { Resolver } from "../../types/resolver";
-import { Adapter, QueryModifier } from "../adapter";
+import { Adapter, QueryModifier } from "../../types/adapter";
 import { QueryTransport } from "../../types/transports";
 
 type Args = {

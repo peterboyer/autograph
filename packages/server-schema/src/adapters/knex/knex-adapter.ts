@@ -1,39 +1,27 @@
 import Knex from "knex";
-import { Adapter } from "../../graph/resolvers-utils/ast-resolvers-options";
+import { Adapter } from "../../types/adapter";
+import { CursorStore, MemoryCursorStore } from "../../cursor";
+import { onQuery } from "./on-query";
+import { onMutation } from "./on-mutation";
+import getUseQuery from "./use-query";
+import getUseMutation from "./use-mutation";
 
-import CursorStore from "./cursor/cursor-store";
-
-import OnQuery from "./on-query";
-import UseQuery from "./use-query";
-import OnMutation from "./on-mutation";
-import UseMutation from "./use-mutation";
-
-type TOptions = {
-  tableNames: Map<string, string>;
-  cursorStore: CursorStore;
+type Options = {
+  tableNames?: Map<string, string>;
+  cursorStore?: CursorStore;
 };
 
-class KnexAdapter implements Adapter {
-  _onQuery: Adapter["onQuery"];
-  _onMutation: Adapter["onMutation"];
+export class KnexAdapter implements Adapter {
+  onQuery: Adapter["onQuery"];
+  onMutation: Adapter["onMutation"];
 
-  constructor(knex: Knex, options: TOptions) {
-    const { tableNames, cursorStore } = options;
+  constructor(knex: Knex, options: Options) {
+    const { tableNames, cursorStore = new MemoryCursorStore() } = options;
 
-    const useQuery = UseQuery({ knex, tableNames });
-    this._onQuery = OnQuery({ useQuery, cursorStore });
+    const useQuery = getUseQuery(knex, { tableNames });
+    this.onQuery = onQuery({ useQuery, cursorStore });
 
-    const useMutation = UseMutation({ knex, tableNames });
-    this._onMutation = OnMutation({ useQuery, useMutation });
-  }
-
-  onQuery(...args: Parameters<Adapter["onQuery"]>) {
-    return this._onQuery(...args);
-  }
-
-  onMutation(...args: Parameters<Adapter["onMutation"]>) {
-    return this._onMutation(...args);
+    const useMutation = getUseMutation(knex, { tableNames });
+    this.onMutation = onMutation({ useQuery, useMutation });
   }
 }
-
-export default KnexAdapter;

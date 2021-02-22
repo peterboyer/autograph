@@ -20,7 +20,7 @@ export interface QueryTransport {
 
 export interface MutationTransport<Source = {}> {
   context: Context;
-  name: string;
+  name: Exclude<keyof Sources, number | symbol>;
   id?: string;
   data?: Partial<Record<Exclude<keyof Source, number | symbol>, any>>;
 }

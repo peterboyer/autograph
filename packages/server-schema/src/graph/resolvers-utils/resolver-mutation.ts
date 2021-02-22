@@ -1,6 +1,6 @@
 import { ModelAny } from "../../model/model";
 import { Resolver } from "../../types/resolver";
-import { Adapter } from "../adapter";
+import { Adapter } from "../../types/adapter";
 import { MutationTransport } from "../../types/transports";
 import { useGetOne } from "./use-get-one";
 
@@ -14,6 +14,7 @@ export function getMutationResolver(
   operation: Operation
 ) {
   const getOne = useGetOne(model, adapter);
+
   return async (...resolverArgs: Parameters<Resolver<undefined, Args>>) => {
     const { name, fields, hooks } = model;
     const [, args, context, info] = resolverArgs;
@@ -210,6 +211,11 @@ export function getMutationResolver(
           id,
           data,
         });
+
+        if (!source)
+          throw new TypeError(
+            `[adapter.onMutation(${operation})] expected result, got undefined`
+          );
 
         await callback(source);
 

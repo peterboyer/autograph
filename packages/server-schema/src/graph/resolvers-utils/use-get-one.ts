@@ -1,5 +1,5 @@
 import { ModelAny } from "../../model/model";
-import { Adapter, QueryModifier } from "../adapter";
+import { Adapter, QueryModifier } from "../../types/adapter";
 import { QueryTransport } from "../../types/transports";
 import { Context } from "../../types/context";
 import { Info } from "../../types/info";

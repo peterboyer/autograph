@@ -1,25 +1,27 @@
 import Knex from "knex";
-import { TOnMutationOptions } from "./on-mutation";
-import KnexMutationExecutor, { TKnexMutation } from "./knex-mutation-executor";
+import { MutationTransport as GraphMutationTransport } from "../../types/transports";
+import { KnexMutationExecutor } from "./knex-mutation-executor";
 
-type TKnexMutationOption = {
-  knex: Knex;
-  tableNames: Map<string, string>;
+type Options = {
+  tableNames?: Map<string, string>;
 };
 
-const constructor = ({
-  knex,
-  tableNames: _tableNames,
-}: TKnexMutationOption) => {
-  const tableNames = _tableNames || new Map<string, string>();
+export interface UseMutation {
+  (mutation: GraphMutationTransport): Promise<number | undefined>;
+}
+
+const constructor = (knex: Knex, options: Options) => {
+  const tableNames = options.tableNames || new Map<string, string>();
   const knexMutationExecutor = new KnexMutationExecutor(knex);
 
-  const useMutation: TOnMutationOptions["useMutation"] = async (
+  const useMutation: UseMutation = async (
     graphMutation
-  ) => {
+  ): ReturnType<UseMutation> => {
     const { name: queryName } = graphMutation;
     const from = tableNames.get(queryName) || queryName;
-    const trx = graphMutation.context?.trx;
+
+    // @ts-ignore
+    const trx: Knex.Transaction = graphMutation.context?.trx;
 
     const { id: queryId } = graphMutation;
     const id = (queryId && parseInt(queryId)) || undefined;
@@ -27,17 +29,14 @@ const constructor = ({
     const { data: queryData } = graphMutation;
     const data = queryData;
 
-    const knexMutation: TKnexMutation = {
-      from,
+    const nextId = await knexMutationExecutor.execute({
       trx,
+      from,
       id,
       data,
-    };
+    });
 
-    const nextId = await knexMutationExecutor.execute(knexMutation);
-    const _nextId = (nextId && nextId.toString()) || undefined;
-
-    return _nextId;
+    return nextId;
   };
 
   return useMutation;

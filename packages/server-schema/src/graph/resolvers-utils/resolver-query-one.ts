@@ -1,6 +1,6 @@
 import { ModelAny } from "../../model/model";
 import { Resolver } from "../../types/resolver";
-import { Adapter } from "../adapter";
+import { Adapter } from "../../types/adapter";
 import { useGetOne } from "./use-get-one";
 
 type Args = { id: string };

@@ -1,4 +1,4 @@
-import Cursor from "./cursor";
+import { Cursor } from "./cursor";
 
 export interface CursorStore {
   newId(): Promise<string>;
@@ -6,5 +6,3 @@ export interface CursorStore {
   set(id: string, cursor: Cursor): Promise<void>;
   remove(id: string): Promise<void>;
 }
-
-export default CursorStore;
