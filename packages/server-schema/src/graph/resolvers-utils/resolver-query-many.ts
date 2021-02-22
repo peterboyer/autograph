@@ -51,7 +51,7 @@ export function getQueryManyResolver(model: ModelAny, adapter: Adapter) {
     if (args.filters) {
       Object.entries(args.filters).forEach(([filterName, value]) => {
         const filter = model.filters[filterName];
-        if (filter.transport !== "query") return;
+        if (filter.transport !== "internal") return;
         filter.resolver(value, query, context, info);
       });
     }

@@ -1,4 +1,5 @@
 import omit from "lodash.omit";
+import { Sources } from "./sources";
 
 export type Is = "scalar" | "object";
 
@@ -72,5 +73,10 @@ const _Scalar = <V>(name: string) => Type<"scalar", V>("scalar", name);
 export { _Scalar as Scalar };
 
 type _Object<V = unknown> = Type<"scalar", V>;
-const _Object = (name: string) => Type<"object", never>("object", name);
+const _Object = <
+  N extends string | Ns,
+  Ns extends Exclude<keyof Sources, number | symbol>
+>(
+  name: N
+) => Type<"object", N extends Ns ? Sources[N] : any>("object", name);
 export { _Object as Object };

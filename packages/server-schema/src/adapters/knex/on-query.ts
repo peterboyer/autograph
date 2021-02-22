@@ -1,6 +1,6 @@
 import { Adapter } from "../../types/adapter";
 import { QueryTransport as KnexQueryTransport } from "./transports";
-import { CursorStore } from "../../cursor/cursor-store";
+import { CursorStore } from "../../types/cursor";
 import { UseQuery } from "./use-query";
 
 type Options = {

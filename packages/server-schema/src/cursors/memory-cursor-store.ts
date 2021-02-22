@@ -1,13 +1,13 @@
-import { Cursor } from "./cursor";
-import { CursorStore } from "./cursor-store";
+import { Cursor } from "../types/cursor";
+import { CursorStore } from "../types/cursor";
 
-type TGenerator = () => string;
+export type Generator = () => string;
 
 export class MemoryCursorStore implements CursorStore {
   store: Map<string, Cursor>;
-  generator: TGenerator;
+  generator: Generator;
 
-  constructor(generator?: TGenerator) {
+  constructor(generator?: Generator) {
     this.store = new Map();
     this.generator = generator || (() => Math.random().toString().substr(2));
   }

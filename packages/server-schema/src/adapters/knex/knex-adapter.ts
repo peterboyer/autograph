@@ -1,6 +1,7 @@
 import Knex from "knex";
 import { Adapter } from "../../types/adapter";
-import { CursorStore, MemoryCursorStore } from "../../cursor";
+import { CursorStore } from "../../types/cursor";
+import { MemoryCursorStore } from "../../cursors";
 import { onQuery } from "./on-query";
 import { onMutation } from "./on-mutation";
 import getUseQuery from "./use-query";

@@ -1,4 +1,4 @@
-import { Type, Scalar, Object } from "./type";
+import { Type, Scalar } from "./type";
 import { Types } from "./types";
 
 /**

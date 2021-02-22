@@ -66,7 +66,7 @@ const Place = new Model("Place", {
       };
     }),
   }))
-  .filter("foobar", Types.Int, "query", (value, query) => {
+  .filter("foobar", Types.Int, "internal", (value, query) => {
     query.id = "1";
   })
   .hook("on-query", (query, context, info) => {});

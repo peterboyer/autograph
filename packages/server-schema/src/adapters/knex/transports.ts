@@ -10,14 +10,14 @@ export const op = (func: Op["func"], tag?: Op["tag"]): Op => ({
   func,
 });
 
-export type QueryTransport = {
+export interface QueryTransport {
   table: string;
   ops: Op[];
-};
+}
 
-export type MutationTransport = {
+export interface MutationTransport {
   from: string;
   id?: number;
   data?: any;
   trx?: Knex.Transaction;
-};
+}

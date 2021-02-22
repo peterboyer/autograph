@@ -30,7 +30,10 @@ export function useDefaultFilters(
       type = asList(type);
     }
 
-    const resolver: FilterResolver<typeof type, "query"> = (value, query) => {
+    const resolver: FilterResolver<typeof type, "internal"> = (
+      value,
+      query
+    ) => {
       if (!("id" in query || "cursor" in query)) {
         query.filters = query.filters || [];
         query.filters.push({
@@ -45,7 +48,7 @@ export function useDefaultFilters(
     filters[name] = {
       name,
       type,
-      transport: "query",
+      transport: "internal",
       resolver,
     };
   });

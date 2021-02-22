@@ -1,5 +1,6 @@
 import { Sources } from "./sources";
 import { Context } from "./context";
+import { Config } from "./config";
 
 export interface QueryTransport {
   context: Context;
@@ -25,4 +26,6 @@ export interface MutationTransport<Source = {}> {
   data?: Partial<Record<Exclude<keyof Source, number | symbol>, any>>;
 }
 
-export interface AdapterTransport {}
+export type AdapterTransport = "AdapterTransport" extends keyof Config
+  ? Config["AdapterTransport"]
+  : unknown;

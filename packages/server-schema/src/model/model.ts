@@ -2,7 +2,6 @@ import { Type, Scalar } from "../types/type";
 import { asScalar } from "../types/type-utils";
 import { Node } from "../types/graph";
 import { Sources } from "../types/sources";
-import { QueryTransport, AdapterTransport } from "../types/transports";
 import { Hooks } from "../types/hooks";
 import { Field, GetResolver } from "./field";
 import { Options, OptionsCallback } from "./field-options";
@@ -76,7 +75,7 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
   field<T extends Type>(
     name: string,
     type: T,
-    options?: OptionsCallback<Source, T>
+    options?: Options<Source> | OptionsCallback<Source, T>
   ) {
     const mappers = useMappers<Source, T>(type);
 
@@ -86,6 +85,7 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
       set,
       setCreate,
       setUpdate,
+      setAfterData,
       setCreateAfterData,
       setUpdateAfterData,
       hooks,
@@ -93,7 +93,11 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
       filterTarget,
       defaultFilters = true,
       ...opts
-    } = options ? options(mappers) : ({} as Options<Source>);
+    } = options
+      ? typeof options === "function"
+        ? options(mappers)
+        : options
+      : ({} as Options<Source>);
     const key = alias || (name as Exclude<keyof Source, number | symbol>);
 
     const setResolverDefault = (value: any) =>
@@ -129,8 +133,8 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
               resolver: setResolverDefault,
             } ||
             undefined,
-      setCreateAfterData,
-      setUpdateAfterData,
+      setCreateAfterData: setCreateAfterData || setAfterData,
+      setUpdateAfterData: setUpdateAfterData || setAfterData,
       hooks: hooks ?? {},
       orderTarget: orderTarget ?? get === undefined ? key : undefined,
       filterTarget: filterTarget ?? get === undefined ? key : undefined,
@@ -166,11 +170,11 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
     return this;
   }
 
-  hook<T extends keyof Hooks<Source>, H extends Hooks<Source>[T]>(
-    type: T,
+  hook<E extends keyof Hooks<Source>, H extends Hooks<Source>[E]>(
+    event: E,
     handler: H
   ) {
-    this.hooks[type] = handler;
+    this.hooks[event] = handler;
 
     return this;
   }

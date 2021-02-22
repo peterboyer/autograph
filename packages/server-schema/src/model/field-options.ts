@@ -1,3 +1,4 @@
+import { MaybePromise } from "../types/utils";
 import { Type, Scalar } from "../types/type";
 import { Typed, AsScalar } from "../types/type-utils";
 import { Hooks } from "../types/hooks";
@@ -11,6 +12,7 @@ export type Options<Source> = {
   set?: Setter<Source | undefined, Partial<Source>> | null;
   setCreate?: Setter<undefined, Partial<Source>> | null;
   setUpdate?: Setter<Source> | null;
+  setAfterData?: Setter<Source, void>;
   setCreateAfterData?: Setter<Source, void>;
   setUpdateAfterData?: Setter<Source, void>;
   hooks?: Partial<Hooks<Source>>;
@@ -29,7 +31,13 @@ export type OptionsCallback<Source, T extends Type> = (mappers: {
  */
 
 export interface GetMapper<Source, T extends Type> {
-  (resolver: (source: Source, context: Context, info: Info) => Typed<T>): {
+  (
+    resolver: (
+      source: Source,
+      context: Context,
+      info: Info
+    ) => MaybePromise<Typed<T>>
+  ): {
     args: {};
     resolver: GetResolver<Source, T, {}>;
   };

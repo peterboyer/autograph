@@ -1,4 +1,10 @@
-import { Cursor } from "./cursor";
+import { QueryTransport } from "./transports";
+
+export interface Cursor {
+  query: QueryTransport;
+  total: number;
+  position: number;
+}
 
 export interface CursorStore {
   newId(): Promise<string>;
