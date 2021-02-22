@@ -33,7 +33,7 @@ export function useDefaultFilters(
     filters[name] = {
       name,
       type,
-      transport: "internal-query",
+      transport: "query",
       resolver: (value, query) => {
         if (!("id" in query || "cursor" in query)) {
           query.filters = query.filters || [];

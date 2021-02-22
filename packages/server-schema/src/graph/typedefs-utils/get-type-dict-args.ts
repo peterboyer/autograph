@@ -1,7 +1,7 @@
-import { TType } from "../../types/types-types";
+import { Type } from "../../types/type";
 import { getType } from "./get-type";
 
-export function getTypeDictArgs(args: Record<any, TType>) {
+export function getTypeDictArgs(args: Record<string, Type>) {
   return Object.entries(args)
     .map(([key, type]) => `${key}: ${getType(type)}`)
     .join(" ");

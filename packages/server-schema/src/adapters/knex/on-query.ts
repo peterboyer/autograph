@@ -3,7 +3,7 @@ import {
   Adapter,
   TQuery,
   TQueryResolver,
-} from "../../graph/ast-resolvers/ast-resolvers-options";
+} from "../../graph/resolvers-utils/ast-resolvers-options";
 
 export type TOnQueryOptions = {
   useQuery: (

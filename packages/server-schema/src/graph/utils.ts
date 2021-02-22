@@ -1,16 +1,12 @@
-import { TResolver } from "../types/types-graphql";
-import {
-  TGraphTypeDefs,
-  TGraphResolvers,
-  TGraphNodeType,
-} from "../types/types-graph";
+import { Resolver } from "../types/resolver";
+import { Graph, Node } from "../types/graph";
 
 /**
  * Combines many typedefs of nodeType into a single string (with newlines).
  */
 export function mergeTypeDefs(
-  manyTypeDefs: TGraphTypeDefs[],
-  nodeType: TGraphNodeType = "Root"
+  manyTypeDefs: Graph["typeDefs"][],
+  nodeType: Node = "root"
 ) {
   return manyTypeDefs.reduce<string>(
     (acc, oneTypeDefs) => `${acc}\n${oneTypeDefs[nodeType]}`,
@@ -22,33 +18,33 @@ export function mergeTypeDefs(
  * Combines many resolvers of nodeType into a single object.
  */
 export function mergeResolvers(
-  manyResolvers: TGraphResolvers[],
-  nodeType: TGraphNodeType = "Root"
+  manyResolvers: Graph["resolvers"][],
+  nodeType: Node = "root"
 ) {
   return manyResolvers.reduce<
-    Record<string, TResolver | Record<string, TResolver>>
+    Record<string, Resolver | Record<string, Resolver>>
   >((acc, oneResolvers) => Object.assign(acc, oneResolvers[nodeType]), {});
 }
 
-export type TMiddleware = (next: TResolver) => TResolver;
+// export type TMiddleware = (next: Resolver) => Resolver;
 
-/**
- * Recursively walk `resolvers` (resolvers|objects) and wrap with `middleware`.
- */
-export const wrapResolvers = (
-  resolvers: Record<string, TResolver | Record<string, TResolver>>,
-  middleware: TMiddleware
-) => {
-  const wrapObject = (
-    object: Record<string, TResolver | Record<string, TResolver>>
-  ): Record<string, TResolver> =>
-    Object.entries(object).reduce<Record<string, TResolver>>(
-      (acc, [key, value]) =>
-        Object.assign(acc, {
-          [key]:
-            typeof value === "object" ? wrapObject(value) : middleware(value),
-        }),
-      {}
-    );
-  return wrapObject(resolvers);
-};
+// /**
+//  * Recursively walk `resolvers` (resolvers|objects) and wrap with `middleware`.
+//  */
+// export const wrapResolvers = (
+//   resolvers: Record<string, Resolver | Record<string, Resolver>>,
+//   middleware: TMiddleware
+// ) => {
+//   const wrapObject = (
+//     object: Record<string, Resolver | Record<string, Resolver>>
+//   ): Record<string, Resolver> =>
+//     Object.entries(object).reduce<Record<string, Resolver>>(
+//       (acc, [key, value]) =>
+//         Object.assign(acc, {
+//           [key]:
+//             typeof value === "object" ? wrapObject(value) : middleware(value),
+//         }),
+//       {}
+//     );
+//   return wrapObject(resolvers);
+// };

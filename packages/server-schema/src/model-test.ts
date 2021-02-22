@@ -1,4 +1,4 @@
-import { Model } from "./model";
+import { Model } from "./model/model";
 import { Types } from "./types/types";
 
 declare module "./types/sources" {
@@ -68,4 +68,5 @@ const Place = new Model("Place", {
   }))
   .filter("foobar", Types.Int, "internal-query", (value, query) => {
     query.id = "1";
-  });
+  })
+  .hook("on-query", (query, context, info) => {});

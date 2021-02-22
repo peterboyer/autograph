@@ -1,5 +1,6 @@
 import { Type, Scalar } from "../types/type";
 import { Typed, AsScalar } from "../types/type-utils";
+import { Hooks } from "../types/hooks";
 import { Context } from "../types/context";
 import { Info } from "../types/info";
 import { Getter, Setter, GetResolver, SetResolver } from "./field";
@@ -10,11 +11,12 @@ export type Options<Source> = {
   set?: Setter<Source | undefined, Partial<Source>> | null;
   setCreate?: Setter<undefined, Partial<Source>> | null;
   setUpdate?: Setter<Source> | null;
-  setCreateToAction?: Setter<Source, void>;
-  setUpdateToAction?: Setter<Source, void>;
+  setCreateAfterData?: Setter<Source, void>;
+  setUpdateAfterData?: Setter<Source, void>;
+  hooks?: Partial<Hooks<Source>>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
-  enableDefaultFilters?: boolean;
+  defaultFilters?: boolean;
 };
 
 export type OptionsCallback<Source, T extends Type> = (mappers: {
@@ -28,7 +30,7 @@ export type OptionsCallback<Source, T extends Type> = (mappers: {
 
 export interface GetMapper<Source, T extends Type> {
   (resolver: (source: Source, context: Context, info: Info) => Typed<T>): {
-    args: undefined;
+    args: {};
     resolver: GetResolver<Source, T, {}>;
   };
   with<A extends Record<string, Scalar>>(

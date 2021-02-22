@@ -1,6 +1,6 @@
-import { TType } from "../../types/types-types";
+import { Type } from "../../types/type";
 
-export function getType(type: TType, partial = false) {
+export function getType(type: Type, partial = false) {
   return `${type.isList ? `[${type.name}!]` : type.name}${
     !partial && type.isNonNull ? "!" : ""
   }`;

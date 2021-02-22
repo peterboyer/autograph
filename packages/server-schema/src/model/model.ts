@@ -1,46 +1,43 @@
 import { Type, Scalar } from "../types/type";
 import { asScalar } from "../types/type-utils";
+import { Node } from "../types/graph";
 import { Sources } from "../types/sources";
-import { QueryTransports } from "../types/transports";
+import { QueryTransport } from "../types/transports";
 import { Hooks } from "../types/hooks";
 import { Field, GetResolver } from "./field";
 import { Options, OptionsCallback } from "./field-options";
-import { Filter, FilterResolver } from "./filter";
+import { Filter, FilterResolver, Transport } from "./filter";
 import { useMappers } from "./use-mappers";
 import { useDefaultFilters } from "./use-default-filters";
 
-export type Node = "root" | "query" | "mutation";
-
 export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
-  readonly name: string;
+  readonly name: Name;
 
-  readonly fields: Partial<Record<string, Field<Source>>>;
-  readonly filters: Partial<Record<string, Filter>>;
+  readonly fields: Record<string, Field<Source>>;
+  readonly filters: Record<string, Filter>;
   readonly hooks: Partial<Hooks<Source>>;
   readonly typeDefs: Record<Node, string[]>;
   readonly resolvers: Record<Node, GetResolver<any>[]>;
 
-  readonly queryOne: boolean;
-  readonly queryMany: boolean;
-  readonly mutationCreate: boolean;
-  readonly mutationUpdate: boolean;
-  readonly mutationDelete: boolean;
+  readonly queryOne: string | undefined;
+  readonly queryMany: string | undefined;
+  readonly mutationCreate: string | undefined;
+  readonly mutationUpdate: string | undefined;
+  readonly mutationDelete: string | undefined;
   readonly limitDefault: number;
   readonly limitMax: number;
+  readonly defaultDocs: boolean;
 
   constructor(
     name: Name,
     options?: Partial<
-      Pick<
-        Model<any, any>,
-        | "queryOne"
-        | "queryMany"
-        | "mutationCreate"
-        | "mutationUpdate"
-        | "mutationDelete"
-        | "limitDefault"
-        | "limitMax"
-      >
+      {
+        queryOne?: string | boolean;
+        queryMany?: string | boolean;
+        mutationCreate?: string | boolean;
+        mutationUpdate?: string | boolean;
+        mutationDelete?: string | boolean;
+      } & Pick<Model<any, any>, "limitDefault" | "limitMax" | "defaultDocs">
     >
   ) {
     this.name = name;
@@ -51,13 +48,29 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
     this.typeDefs = { root: [], query: [], mutation: [] };
     this.resolvers = { root: [], query: [], mutation: [] };
 
-    this.queryOne = options?.queryOne ?? true;
-    this.queryMany = options?.queryMany ?? true;
-    this.mutationCreate = options?.mutationCreate ?? true;
-    this.mutationUpdate = options?.mutationUpdate ?? true;
-    this.mutationDelete = options?.mutationDelete ?? true;
-    this.limitDefault = options?.limitDefault ?? 20;
-    this.limitMax = options?.limitMax ?? 50;
+    const {
+      queryOne = true,
+      queryMany = true,
+      mutationCreate = true,
+      mutationUpdate = true,
+      mutationDelete = true,
+      limitDefault = 20,
+      limitMax = 50,
+      defaultDocs = true,
+    } = options || {};
+
+    this.queryOne = queryOne === true ? `${name}` : queryOne || undefined;
+    this.queryMany =
+      queryMany === true ? `${name}Many` : queryMany || undefined;
+    this.mutationCreate =
+      mutationCreate === true ? `${name}Create` : mutationCreate || undefined;
+    this.mutationUpdate =
+      mutationUpdate === true ? `${name}Update` : mutationUpdate || undefined;
+    this.mutationDelete =
+      mutationDelete === true ? `${name}Delete` : mutationDelete || undefined;
+    this.limitDefault = limitDefault;
+    this.limitMax = limitMax;
+    this.defaultDocs = defaultDocs;
   }
 
   field<T extends Type>(
@@ -73,11 +86,12 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
       set,
       setCreate,
       setUpdate,
-      setCreateToAction,
-      setUpdateToAction,
+      setCreateAfterData,
+      setUpdateAfterData,
+      hooks,
       orderTarget,
       filterTarget,
-      enableDefaultFilters = true,
+      defaultFilters = true,
       ...opts
     } = options ? options(mappers) : ({} as Options<Source>);
     const key = alias || (name as Exclude<keyof Source, number | symbol>);
@@ -92,6 +106,7 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
         get === null
           ? undefined
           : get || {
+              args: {},
               resolver: (source) => source[key],
             },
       setCreate:
@@ -101,7 +116,6 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
           ? undefined
           : set || {
               type: asScalar(type),
-              stage: "data",
               resolver: setResolverDefault,
             } ||
             undefined,
@@ -112,18 +126,18 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
           ? undefined
           : set || {
               type: asScalar(type),
-              stage: "data",
               resolver: setResolverDefault,
             } ||
             undefined,
-      setCreateToAction,
-      setUpdateToAction,
+      setCreateAfterData,
+      setUpdateAfterData,
+      hooks: hooks ?? {},
       orderTarget: orderTarget ?? get === undefined ? key : undefined,
       filterTarget: filterTarget ?? get === undefined ? key : undefined,
       ...opts,
     };
 
-    if (enableDefaultFilters) {
+    if (defaultFilters) {
       useDefaultFilters(this.fields[name]!, this.filters);
     }
 
@@ -136,7 +150,7 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
    * @param type graph type to receive value
    * @param resolver
    */
-  filter<T extends Scalar, Tr extends keyof QueryTransports>(
+  filter<T extends Scalar, Tr extends Transport>(
     name: string,
     type: T,
     transport: Tr,
@@ -148,6 +162,8 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
       transport,
       resolver,
     };
+
+    return this;
   }
 
   hook<T extends keyof Hooks<Source>, H extends Hooks<Source>[T]>(
@@ -155,15 +171,22 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
     handler: H
   ) {
     this.hooks[type] = handler;
+
+    return this;
   }
 
   typeDef(node: Node, value: string) {
     this.typeDefs[node].push(value);
+
+    return this;
   }
 
   resolver(node: Node, resolver: GetResolver<any>) {
     this.resolvers[node].push(resolver);
+
+    return this;
   }
 }
 
-export default Model;
+// @ts-ignore
+export type ModelAny = Model<keyof Sources, { [key: string]: any }>;

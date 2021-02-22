@@ -1,31 +1,26 @@
-import { TResolver } from "../types/types-graphql";
-import {
-  TGraph,
-  TGraphNodeType,
-  TGraphTypeDefs,
-  TGraphResolvers,
-} from "../types/types-graph";
+import { Graph, Node } from "../types/graph";
+import { Resolver } from "../types/resolver";
 
-export function mapGraphs(graphs: TGraph[]) {
-  const _typeDefs = graphs.map((graph) => graph.typeDefs);
-  const _resolvers = graphs.map((graph) => graph.resolvers);
+export function mapGraphs(graphs: Graph[]) {
+  const typeDefs = graphs.map((graph) => graph.typeDefs);
+  const resolvers = graphs.map((graph) => graph.resolvers);
   return {
     typeDefs: `
-      ${mergeTypeDefs(_typeDefs)}
+      ${mergeTypeDefs(typeDefs)}
       type Query {
-        ${mergeTypeDefs(_typeDefs, "Query")}
+        ${mergeTypeDefs(typeDefs, "query")}
       }
       type Mutation {
-        ${mergeTypeDefs(_typeDefs, "Mutation")}
+        ${mergeTypeDefs(typeDefs, "mutation")}
       }
     `,
     resolvers: {
-      ...mergeResolvers(_resolvers),
+      ...mergeResolvers(resolvers),
       Query: {
-        ...mergeResolvers(_resolvers, "Query"),
+        ...mergeResolvers(resolvers, "query"),
       },
       Mutation: {
-        ...mergeResolvers(_resolvers, "Mutation"),
+        ...mergeResolvers(resolvers, "mutation"),
       },
     },
   };
@@ -35,8 +30,8 @@ export function mapGraphs(graphs: TGraph[]) {
  * Convenience function to return merge many schemas' typeDefs.
  */
 export function mergeTypeDefs(
-  allTypeDefs: TGraphTypeDefs[],
-  node: TGraphNodeType = "Root"
+  allTypeDefs: Graph["typeDefs"][],
+  node: Node = "root"
 ) {
   return allTypeDefs.map((typeDefs) => typeDefs[node]).join("\n");
 }
@@ -45,10 +40,10 @@ export function mergeTypeDefs(
  * Convenience function to return merge many schemas' resolvers.
  */
 export function mergeResolvers(
-  resolversMaps: TGraphResolvers[],
-  node: TGraphNodeType = "Root"
+  resolversMaps: Graph["resolvers"][],
+  node: Node = "root"
 ) {
-  const merged: Record<string, TResolver> = {};
+  const merged: Record<string, Resolver> = {};
 
   for (const resolverMap of resolversMaps) {
     Object.assign(merged, resolverMap[node]);

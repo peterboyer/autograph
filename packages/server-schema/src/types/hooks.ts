@@ -1,30 +1,34 @@
 import { MaybePromise } from "./utils";
 import { Context } from "./context";
 import { Info } from "./info";
-import { QueryTransports, MutationTransports } from "./transports";
+import { MutationTransport, AdapterTransport } from "./transports";
 
 export interface Hooks<Source> {
   /**
    * query hooks
    */
-  "on-query": <Tr extends keyof QueryTransports>(
-    transport: Tr
-  ) => (query: Tr, context: Context, info: Info) => MaybePromise<void>;
-  "on-query-one": <Tr extends keyof QueryTransports>(
-    transport: Tr
-  ) => (query: Tr, context: Context, info: Info) => MaybePromise<void>;
-  "on-query-many": <Tr extends keyof QueryTransports>(
-    transport: Tr
-  ) => (query: Tr, context: Context, info: Info) => MaybePromise<void>;
-  "on-create": (
+  "on-query": (
+    query: AdapterTransport,
     context: Context,
     info: Info
-  ) => MaybePromise<
-    MutationTransports<Source>["internal-mutation"] | undefined
-  >;
+  ) => MaybePromise<void>;
+  "on-query-one": (
+    query: AdapterTransport,
+    context: Context,
+    info: Info
+  ) => MaybePromise<void>;
+  "on-query-many": (
+    query: AdapterTransport,
+    context: Context,
+    info: Info
+  ) => MaybePromise<void>;
   /**
    * mutation hooks
    */
+  "on-create": (
+    context: Context,
+    info: Info
+  ) => MaybePromise<MutationTransport<Source> | undefined>;
   "on-create-after-data": (
     source: Source,
     context: Context,
@@ -34,9 +38,7 @@ export interface Hooks<Source> {
     source: Source,
     context: Context,
     info: Info
-  ) => MaybePromise<
-    MutationTransports<Source>["internal-mutation"] | undefined
-  >;
+  ) => MaybePromise<MutationTransport<Source> | undefined>;
   "on-update-after-data": (
     source: Source,
     context: Context,
@@ -53,12 +55,10 @@ export interface Hooks<Source> {
     info: Info
   ) => MaybePromise<void>;
   "on-mutation": (
-    source: Source,
+    source: Source | undefined,
     context: Context,
     info: Info
-  ) => MaybePromise<
-    MutationTransports<Source>["internal-mutation"] | undefined
-  >;
+  ) => MaybePromise<MutationTransport<Source> | undefined>;
   "on-mutation-after-data": (
     source: Source,
     context: Context,

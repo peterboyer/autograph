@@ -1,5 +1,5 @@
 import Knex from "knex";
-import { Adapter } from "../../graph/ast-resolvers/ast-resolvers-options";
+import { Adapter } from "../../graph/resolvers-utils/ast-resolvers-options";
 
 import CursorStore from "./cursor/cursor-store";
 

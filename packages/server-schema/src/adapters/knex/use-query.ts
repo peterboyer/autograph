@@ -1,5 +1,5 @@
 import Knex from "knex";
-import { TQuery } from "../../graph/ast-resolvers/ast-resolvers-options";
+import { TQuery } from "../../graph/resolvers-utils/ast-resolvers-options";
 import { TOnQueryOptions } from "./on-query";
 import KnexQueryExecutor, { QueryMessage, op } from "./knex-query-executor";
 import identity from "lodash.identity";

@@ -1,6 +1,8 @@
 import { MaybePromise } from "../types/utils";
+import { Resolver } from "../types/resolver";
 import { Type, Scalar } from "../types/type";
 import { Typed, TypedRecord } from "../types/type-utils";
+import { Hooks } from "../types/hooks";
 import { Context } from "../types/context";
 import { Info } from "../types/info";
 
@@ -10,33 +12,28 @@ export type Field<Source> = {
   get?: Getter<Source>;
   setCreate?: Setter<undefined, Partial<Source>>;
   setUpdate?: Setter<Source>;
-  setCreateToAction?: Setter<Source, void>;
-  setUpdateToAction?: Setter<Source, void>;
+  setCreateAfterData?: Setter<Source, void>;
+  setUpdateAfterData?: Setter<Source, void>;
+  hooks: Partial<Hooks<Source>>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
 };
 
 export type Getter<Source> = {
-  args?: Record<string, Scalar>;
-  resolver?: GetResolver<Source>;
+  args: Record<string, Scalar>;
+  resolver: GetResolver<Source>;
 };
 
 export type Setter<Source, Return = Partial<Source>> = {
   type: Scalar;
-  stage: MutationStage;
-  resolver?: SetResolver<Source, any, Return>;
+  resolver: SetResolver<Source, any, Return>;
 };
 
 export type GetResolver<
   Source,
   T extends Type = any,
   A extends Record<string, Scalar> = any
-> = (
-  source: Source,
-  args: TypedRecord<A>,
-  context: Context,
-  info: Info
-) => MaybePromise<Typed<T>>;
+> = Resolver<Source, TypedRecord<A>, Typed<T>>;
 
 export type SetResolver<
   Source,

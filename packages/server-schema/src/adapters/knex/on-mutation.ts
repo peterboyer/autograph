@@ -2,7 +2,7 @@ import {
   Adapter,
   TQuery,
   TMutation,
-} from "../../graph/ast-resolvers/ast-resolvers-options";
+} from "../../graph/resolvers-utils/ast-resolvers-options";
 import { TOnQueryOptions } from "./on-query";
 
 export type TOnMutationOptions = {
