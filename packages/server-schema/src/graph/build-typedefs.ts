@@ -1,4 +1,4 @@
-import { Model } from "../model/model";
+import { ModelAny } from "../model/model";
 import { Graph } from "../types/graph";
 import {
   getRootType,
@@ -17,7 +17,7 @@ import { getDocs } from "./typedefs-utils/docs";
 
 const identity = <T>(a: T) => a;
 
-export default function buildTypeDefs(model: Model): Graph["typeDefs"] {
+export default function buildTypeDefs(model: ModelAny): Graph["typeDefs"] {
   const docs = getDocs(model);
 
   const root = [

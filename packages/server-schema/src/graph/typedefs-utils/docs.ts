@@ -1,6 +1,11 @@
-import { Model } from "../../model/model";
+import { ModelAny } from "../../model/model";
 
-export function getDocs({ name, limitDefault, limitMax, defaultDocs }: Model) {
+export function getDocs({
+  name,
+  limitDefault,
+  limitMax,
+  defaultDocs,
+}: ModelAny) {
   const enabled = defaultDocs || undefined;
   return {
     queryOne:

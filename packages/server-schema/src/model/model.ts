@@ -2,7 +2,7 @@ import { Type, Scalar } from "../types/type";
 import { asScalar } from "../types/type-utils";
 import { Node } from "../types/graph";
 import { Sources } from "../types/sources";
-import { QueryTransport } from "../types/transports";
+import { QueryTransport, AdapterTransport } from "../types/transports";
 import { Hooks } from "../types/hooks";
 import { Field, GetResolver } from "./field";
 import { Options, OptionsCallback } from "./field-options";

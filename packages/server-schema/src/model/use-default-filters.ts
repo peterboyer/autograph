@@ -1,6 +1,6 @@
 import { asScalar, asList } from "../types/type-utils";
 import { Field } from "./field";
-import { Filter } from "./filter";
+import { Filter, FilterResolver } from "./filter";
 
 const SCALAR_OPERATORS = ["eq", "ne", "gt", "gte", "lt", "lte"];
 const OBJECT_OPERATORS = ["eq", "ne", "in", "ni"];
@@ -30,21 +30,23 @@ export function useDefaultFilters(
       type = asList(type);
     }
 
+    const resolver: FilterResolver<typeof type, "query"> = (value, query) => {
+      if (!("id" in query || "cursor" in query)) {
+        query.filters = query.filters || [];
+        query.filters.push({
+          target,
+          operator,
+          value,
+        });
+      }
+      return query;
+    };
+
     filters[name] = {
       name,
       type,
       transport: "query",
-      resolver: (value, query) => {
-        if (!("id" in query || "cursor" in query)) {
-          query.filters = query.filters || [];
-          query.filters.push({
-            target,
-            operator,
-            value,
-          });
-        }
-        return query;
-      },
-    });
+      resolver,
+    };
   });
 }

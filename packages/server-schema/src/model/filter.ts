@@ -1,6 +1,6 @@
 import { Scalar } from "../types/type";
 import { Typed } from "../types/type-utils";
-import { QueryTransport } from "../types/transports";
+import { QueryTransport, AdapterTransport } from "../types/transports";
 import { Context } from "../types/context";
 import { Info } from "../types/info";
 
@@ -16,4 +16,9 @@ export type Filter = {
 export type FilterResolver<
   T extends Scalar = any,
   Tr extends Transport = any
-> = (value: Typed<T>, query: Tr, context: Context, info: Info) => void;
+> = (
+  value: Typed<T>,
+  query: Tr extends "query" ? QueryTransport : AdapterTransport,
+  context: Context,
+  info: Info
+) => void;
