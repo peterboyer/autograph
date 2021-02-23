@@ -18,24 +18,22 @@ export function mergeResolvers(
   resolversMaps: Graph["resolvers"][],
   node: Node = "root"
 ) {
-  const merged: Record<string, Resolver> = {};
-
-  for (const resolverMap of resolversMaps) {
-    Object.assign(merged, resolverMap[node]);
-  }
-
-  return merged;
+  return resolversMaps.reduce(
+    (acc, resolverMap) => Object.assign(acc, resolverMap[node]),
+    {} as Record<string, Resolver>
+  );
 }
 
 /**
  * Convenience function to wrap an object of resolvers (e.g. for requiring auth)
  * returning an identitically shaped object of wrapped resolvers.
  */
-export function wrapResolvers<T>(
-  resolvers: Record<any, T>,
-  wrapper: (resolver: T) => T
+export function wrapResolvers(
+  resolvers: Record<string, Resolver>,
+  wrapper: (resolver: Resolver) => Resolver
 ) {
-  return Object.entries(resolvers).reduce((acc, [key, resolver]) => {
-    return Object.assign(acc, { [key]: wrapper(resolver) });
-  }, {} as typeof resolvers);
+  return Object.entries(resolvers).reduce(
+    (acc, [key, resolver]) => Object.assign(acc, { [key]: wrapper(resolver) }),
+    {} as Record<string, Resolver>
+  );
 }

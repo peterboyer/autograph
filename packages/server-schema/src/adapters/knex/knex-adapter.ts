@@ -16,7 +16,7 @@ export class KnexAdapter implements Adapter {
   onQuery: Adapter["onQuery"];
   onMutation: Adapter["onMutation"];
 
-  constructor(knex: Knex, options: Options) {
+  constructor(knex: Knex, options: Options = {}) {
     const { tableNames, cursorStore = new MemoryCursorStore() } = options;
 
     const useQuery = getUseQuery(knex, { tableNames });
