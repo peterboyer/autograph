@@ -1,22 +1,7 @@
+// @ts-nocheck
+
 import { Model } from "./model/model";
 import { Types } from "./types/types";
-
-declare module "./types/sources" {
-  interface Sources {
-    User: {
-      id: string;
-      name: string;
-      surname: string | null;
-      birthdate: Date | null;
-    };
-    Place: {
-      id: string;
-      ref: string | null;
-      name: string;
-      position: string;
-    };
-  }
-}
 
 const User = new Model("User").field("id", Types.String.NonNull, ({ get }) => ({
   get: get.with({ foo: Types.Int })((source, args) => {

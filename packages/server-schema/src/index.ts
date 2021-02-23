@@ -1,5 +1,9 @@
+export { Autograph as default } from "./autograph";
+
+export { Autograph } from "./autograph";
 export { Model, ModelAny } from "./model/model";
 export { Types } from "./types/types";
+export { mergeTypeDefs, mergeResolvers } from "./graph/graph-utils";
 
 // export { Adapter } from "./types/adapter";
 // export { Context } from "./types/context";

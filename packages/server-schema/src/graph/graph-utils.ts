@@ -1,31 +1,6 @@
 import { Graph, Node } from "../types/graph";
 import { Resolver } from "../types/resolver";
 
-export function mapGraphs(graphs: Graph[]) {
-  const typeDefs = graphs.map((graph) => graph.typeDefs);
-  const resolvers = graphs.map((graph) => graph.resolvers);
-  return {
-    typeDefs: `
-      ${mergeTypeDefs(typeDefs)}
-      type Query {
-        ${mergeTypeDefs(typeDefs, "query")}
-      }
-      type Mutation {
-        ${mergeTypeDefs(typeDefs, "mutation")}
-      }
-    `,
-    resolvers: {
-      ...mergeResolvers(resolvers),
-      Query: {
-        ...mergeResolvers(resolvers, "query"),
-      },
-      Mutation: {
-        ...mergeResolvers(resolvers, "mutation"),
-      },
-    },
-  };
-}
-
 /**
  * Convenience function to return merge many schemas' typeDefs.
  */

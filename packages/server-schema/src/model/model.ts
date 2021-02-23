@@ -3,20 +3,24 @@ import { asScalar } from "../types/type-utils";
 import { Node } from "../types/graph";
 import { Sources } from "../types/sources";
 import { Hooks } from "../types/hooks";
+import { Resolver } from "../types/resolver";
 import { Field, GetResolver } from "./field";
 import { Options, OptionsCallback } from "./field-options";
 import { Filter, FilterResolver, Transport } from "./filter";
 import { useMappers } from "./use-mappers";
 import { useDefaultFilters } from "./use-default-filters";
 
-export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
+export class Model<
+  Name extends string,
+  Source extends Name extends keyof Sources ? Sources[Name] : any
+> {
   readonly name: Name;
 
   readonly fields: Record<string, Field<Source>>;
   readonly filters: Record<string, Filter>;
   readonly hooks: Partial<Hooks<Source>>;
   readonly typeDefs: Record<Node, string[]>;
-  readonly resolvers: Record<Node, GetResolver<any>[]>;
+  readonly resolvers: Record<Node, Resolver[]>;
 
   readonly queryOne: string | undefined;
   readonly queryMany: string | undefined;
@@ -193,4 +197,4 @@ export class Model<Name extends keyof Sources, Source extends Sources[Name]> {
 }
 
 // @ts-ignore
-export type ModelAny = Model<keyof Sources, { [key: string]: any }>;
+export type ModelAny = Model<keyof Sources, any>;

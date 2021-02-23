@@ -19,7 +19,7 @@ export function getRootResolver(model: ModelAny, adapter: Adapter) {
 
       if (type._is === "object") {
         const id = result;
-        const name = type.name as Exclude<keyof Sources, number | symbol>;
+        const name = type.name;
 
         const {
           items: [item],

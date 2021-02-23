@@ -17,7 +17,7 @@ import { getDocs } from "./typedefs-utils/docs";
 
 const identity = <T>(a: T) => a;
 
-export default function buildTypeDefs(model: ModelAny): Graph["typeDefs"] {
+export function buildTypeDefs(model: ModelAny): Graph["typeDefs"] {
   const docs = getDocs(model);
 
   const root = [

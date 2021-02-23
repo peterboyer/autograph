@@ -10,21 +10,27 @@ import {
   getMutationDeleteResolver,
 } from "./resolvers-utils/resolver-mutation";
 
-export default function buildResolvers(
+export function buildResolvers(
   model: ModelAny,
   adapter: Adapter
 ): Graph["resolvers"] {
-  const root = Object.assign({}, getRootResolver(model, adapter));
+  const root = Object.assign(
+    {},
+    getRootResolver(model, adapter),
+    ...model.resolvers["root"]
+  );
   const query = Object.assign(
     {},
     getQueryOneResolver(model, adapter),
-    getQueryManyResolver(model, adapter)
+    getQueryManyResolver(model, adapter),
+    ...model.resolvers["query"]
   );
   const mutation = Object.assign(
     {},
     getMutationCreateResolver(model, adapter),
     getMutationUpdateResolver(model, adapter),
-    getMutationDeleteResolver(model, adapter)
+    getMutationDeleteResolver(model, adapter),
+    ...model.resolvers["mutation"]
   );
 
   return {
