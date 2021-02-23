@@ -151,10 +151,7 @@ const getUseQuery = (knex: Knex, options: Options) => {
       const direction = queryOrder?.direction || "asc";
       const $operator = direction === "asc" ? ">=" : "<=";
       ops.push(
-        op(
-          (query) => query.where(`"${table}"."id"`, $operator, position),
-          "where"
-        )
+        op((query) => query.where(`${table}.id`, $operator, position), "where")
       );
     }
 

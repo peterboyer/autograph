@@ -1,4 +1,5 @@
 import { Type } from "../../types/type";
+import { asScalar } from "../../types/type-utils";
 import { Node } from "../../types/graph";
 import { ModelAny } from "../../model/model";
 import { Field } from "../../model/field";
@@ -67,7 +68,7 @@ export function getRootCreateInput({ name, fields, mutationCreate }: ModelAny) {
       ${mapFields(
         fields,
         ({ type, setCreate, setCreateAfterData }) =>
-          (setCreate || setCreateAfterData) && type
+          (setCreate || setCreateAfterData) && asScalar(type)
       )}
     }
   `;
@@ -80,7 +81,7 @@ export function getRootUpdateInput({ name, fields, mutationUpdate }: ModelAny) {
       ${mapFields(
         fields,
         ({ type, setUpdate, setUpdateAfterData }) =>
-          (setUpdate || setUpdateAfterData) && type,
+          (setUpdate || setUpdateAfterData) && asScalar(type),
         undefined,
         true
       )}

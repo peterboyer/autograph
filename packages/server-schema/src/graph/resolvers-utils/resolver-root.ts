@@ -1,7 +1,6 @@
 import { ModelAny } from "../../model/model";
 import { Resolver } from "../../types/resolver";
 import { Adapter } from "../../types/adapter";
-import { Sources } from "../../types/sources";
 
 export function getRootResolver(model: ModelAny, adapter: Adapter) {
   const acc: Record<string, Resolver> = {};
@@ -38,5 +37,7 @@ export function getRootResolver(model: ModelAny, adapter: Adapter) {
       return result;
     };
   });
-  return acc;
+  return {
+    [model.name]: acc,
+  };
 }

@@ -1,4 +1,4 @@
-import pick from "lodash.pick";
+import omit from "lodash.omit";
 import { Node } from "./types/graph";
 import { Resolver } from "./types/resolver";
 import { Adapter } from "./types/adapter";
@@ -71,7 +71,7 @@ export class Autograph {
         ...queryResolvers,
         ...(wrapper
           ? wrapResolvers(
-              pick(queryResolvers, wrapperExcludes?.query || []),
+              omit(queryResolvers, wrapperExcludes?.query || []),
               wrapper
             )
           : {}),
@@ -80,7 +80,7 @@ export class Autograph {
         ...mutationResolvers,
         ...(wrapper
           ? wrapResolvers(
-              pick(mutationResolvers, wrapperExcludes?.mutation || []),
+              omit(mutationResolvers, wrapperExcludes?.mutation || []),
               wrapper
             )
           : {}),
