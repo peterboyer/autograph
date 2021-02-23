@@ -1,4 +1,4 @@
-export { Model } from "./model/model";
+export { Model, ModelAny } from "./model/model";
 export { Types } from "./types/types";
 
 // export { Adapter } from "./types/adapter";

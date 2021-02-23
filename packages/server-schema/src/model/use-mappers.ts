@@ -21,6 +21,16 @@ export function useMappers<Source, T extends Type>(defaultType: T) {
     resolver,
   });
 
+  const setAfterData: typeof setMapper["afterData"] = (resolver) => ({
+    type: asScalar(defaultType),
+    resolver,
+  });
+  setAfterData.with = (type) => (resolver) => ({
+    type: asScalar(type),
+    resolver,
+  });
+  setMapper.afterData = setAfterData;
+
   const create: typeof setMapper["create"] = (resolver) => ({
     type: asScalar(defaultType),
     resolver: (...args) => resolver(args[0], args[2], args[3]),
@@ -30,17 +40,17 @@ export function useMappers<Source, T extends Type>(defaultType: T) {
     resolver: (...args) => resolver(args[0], args[2], args[3]),
   });
 
-  const createToAction: typeof setMapper["create"]["toAction"] = (
+  const createAfterData: typeof setMapper["create"]["afterData"] = (
     resolver
   ) => ({
     type: asScalar(defaultType),
     resolver,
   });
-  createToAction.with = (type) => (resolver) => ({
+  createAfterData.with = (type) => (resolver) => ({
     type: asScalar(type),
     resolver,
   });
-  create.toAction = createToAction;
+  create.afterData = createAfterData;
   setMapper.create = create;
 
   const update: typeof setMapper["update"] = (resolver) => ({
@@ -52,17 +62,17 @@ export function useMappers<Source, T extends Type>(defaultType: T) {
     resolver,
   });
 
-  const updateToAction: typeof setMapper["update"]["toAction"] = (
+  const updateAfterData: typeof setMapper["update"]["afterData"] = (
     resolver
   ) => ({
     type: asScalar(defaultType),
     resolver,
   });
-  updateToAction.with = (type) => (resolver) => ({
+  updateAfterData.with = (type) => (resolver) => ({
     type: asScalar(type),
     resolver,
   });
-  update.toAction = updateToAction;
+  update.afterData = updateAfterData;
   setMapper.update = update;
 
   return { get: getMapper, set: setMapper };

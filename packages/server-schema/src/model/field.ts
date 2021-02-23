@@ -24,7 +24,7 @@ export type Getter<Source> = {
   resolver: GetResolver<Source>;
 };
 
-export type Setter<Source, Return = Partial<Source>> = {
+export type Setter<Source, Return = Partial<Source> | void> = {
   type: Scalar;
   resolver: SetResolver<Source, any, Return>;
 };
@@ -36,7 +36,7 @@ export type GetResolver<
 > = Resolver<Source, TypedRecord<A>, Typed<T>>;
 
 export type SetResolver<
-  Source,
+  Source = any,
   T extends Scalar = any,
   Return = Partial<Source>
 > = (

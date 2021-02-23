@@ -51,17 +51,17 @@ export interface GetMapper<Source, T extends Type> {
   };
 }
 
-type WithoutSource<R extends SetResolver<any>> = (
+type WithoutSource<R extends SetResolver> = (
   value: Parameters<R>[0],
   context: Parameters<R>[2],
   info: Parameters<R>[3]
 ) => ReturnType<R>;
 
-type ToAction<Source, T extends Scalar> = {
-  (resolver: SetResolver<Source, T>): Setter<Source>;
+type AfterData<Source, T extends Scalar> = {
+  (resolver: SetResolver<Source, T, void>): Setter<Source, void>;
   with: <TT extends Scalar>(
     type: TT
-  ) => (resolver: SetResolver<Source, TT>) => Setter<Source>;
+  ) => (resolver: SetResolver<Source, TT, void>) => Setter<Source, void>;
 };
 
 export interface SetMapper<Source, T extends Type> {
@@ -73,6 +73,7 @@ export interface SetMapper<Source, T extends Type> {
   ) => (
     resolver: SetResolver<Source | undefined, TT, Partial<Source>>
   ) => Setter<Source | undefined, Partial<Source>>;
+  afterData: AfterData<Source, AsScalar<T>>;
 
   create: {
     (resolver: WithoutSource<SetResolver<Source, AsScalar<T>>>): Setter<
@@ -84,7 +85,7 @@ export interface SetMapper<Source, T extends Type> {
     ) => (
       resolver: WithoutSource<SetResolver<Source, TT>>
     ) => Setter<Source | undefined, Partial<Source>>;
-    toAction: ToAction<Source, AsScalar<T>>;
+    afterData: AfterData<Source, AsScalar<T>>;
   };
 
   update: {
@@ -92,6 +93,6 @@ export interface SetMapper<Source, T extends Type> {
     with: <TT extends Scalar>(
       type: TT
     ) => (resolver: SetResolver<Source, TT>) => Setter<Source>;
-    toAction: ToAction<Source, AsScalar<T>>;
+    afterData: AfterData<Source, AsScalar<T>>;
   };
 }

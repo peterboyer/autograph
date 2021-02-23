@@ -1,7 +1,7 @@
 import { MaybePromise } from "./utils";
 import { Context } from "./context";
 import { Info } from "./info";
-import { MutationTransport, AdapterTransport } from "./transports";
+import { AdapterTransport } from "./transports";
 
 export interface Hooks<Source> {
   /**
@@ -28,7 +28,7 @@ export interface Hooks<Source> {
   "on-create": (
     context: Context,
     info: Info
-  ) => MaybePromise<MutationTransport<Source> | undefined>;
+  ) => MaybePromise<Partial<Source> | void>;
   "on-create-after-data": (
     source: Source,
     context: Context,
@@ -38,7 +38,7 @@ export interface Hooks<Source> {
     source: Source,
     context: Context,
     info: Info
-  ) => MaybePromise<MutationTransport<Source> | undefined>;
+  ) => MaybePromise<Partial<Source> | void>;
   "on-update-after-data": (
     source: Source,
     context: Context,
@@ -58,7 +58,7 @@ export interface Hooks<Source> {
     source: Source | undefined,
     context: Context,
     info: Info
-  ) => MaybePromise<MutationTransport<Source> | undefined>;
+  ) => MaybePromise<Partial<Source> | void>;
   "on-mutation-after-data": (
     source: Source,
     context: Context,
