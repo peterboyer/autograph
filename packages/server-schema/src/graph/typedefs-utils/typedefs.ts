@@ -65,11 +65,11 @@ export function getRootCreateInput({ name, fields, mutationCreate }: ModelAny) {
   if (!mutationCreate) return;
   return `
     input ${name}CreateInput {
-      ${mapFields(
-        fields,
-        ({ type, setCreate, setCreateAfterData }) =>
-          (setCreate || setCreateAfterData) &&
-          asScalar((setCreate || setCreateAfterData)?.type || type)
+      ${mapFields(fields, ({ name, type, setCreate, setCreateAfterData }) =>
+        name === "id"
+          ? undefined
+          : (setCreate || setCreateAfterData) &&
+            asScalar((setCreate || setCreateAfterData)?.type || type)
       )}
     }
   `;
