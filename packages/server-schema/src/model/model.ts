@@ -104,39 +104,52 @@ export class Model<
       : ({} as Options<Source>);
     const key = alias || (name as Exclude<keyof Source, number | symbol>);
 
-    const setResolverDefault = (value: any) =>
-      Object.assign({} as Partial<Source>, { [key]: value });
+    const defaultGet = {
+      args: {},
+      resolver: (source: any) => source[key],
+    };
 
+    const defaultSet = {
+      type: asScalar(type),
+      resolver: (value: any) =>
+        Object.assign({} as Partial<Source>, { [key]: value }),
+    };
+
+    /**
+     * defaults of setCreate and setUpdate, known as setACTION
+     * (1) if setACTION === null (forced off), use undefined
+     * (2) if setACTION is specified in options, use setACTION
+     * (3) if setACTION is not specified, check "set" definition
+     * (4) if set === null (forced off), use undefined
+     * (5) if setAfterData or setACTIONAfterData is specified, use undefined
+     * (6) otherwise try set, or fallback to defaultSet handler
+     *
+     * In essence, if set isn't nulled, use default for ACTION. If specified,
+     * the setACTION given will be used instead. If setACTIONAfterData is
+     * specified then setACTION will not be used, unless setACTION is specified.
+     */
     this.fields[name] = {
       name,
       type,
-      get:
-        get === null
-          ? undefined
-          : get || {
-              args: {},
-              resolver: (source) => source[key],
-            },
+      get: get === null ? undefined : get || defaultGet,
       setCreate:
         setCreate === null
           ? undefined
-          : setCreate || set === null
-          ? undefined
-          : set || {
-              type: asScalar(type),
-              resolver: setResolverDefault,
-            } ||
-            undefined,
+          : setCreate ||
+            (set === null
+              ? undefined
+              : !(setAfterData || setCreateAfterData)
+              ? set || defaultSet
+              : undefined),
       setUpdate:
         setUpdate === null
           ? undefined
-          : setUpdate || set === null
-          ? undefined
-          : set || {
-              type: asScalar(type),
-              resolver: setResolverDefault,
-            } ||
-            undefined,
+          : setUpdate ||
+            (set === null
+              ? undefined
+              : !(setAfterData || setUpdateAfterData)
+              ? set || defaultSet
+              : undefined),
       setCreateAfterData: setCreateAfterData || setAfterData,
       setUpdateAfterData: setUpdateAfterData || setAfterData,
       hooks: hooks ?? {},
