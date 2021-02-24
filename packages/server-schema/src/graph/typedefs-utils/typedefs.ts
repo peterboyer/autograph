@@ -68,7 +68,8 @@ export function getRootCreateInput({ name, fields, mutationCreate }: ModelAny) {
       ${mapFields(
         fields,
         ({ type, setCreate, setCreateAfterData }) =>
-          (setCreate || setCreateAfterData) && asScalar(type)
+          (setCreate || setCreateAfterData) &&
+          asScalar((setCreate || setCreateAfterData)?.type || type)
       )}
     }
   `;
@@ -81,7 +82,8 @@ export function getRootUpdateInput({ name, fields, mutationUpdate }: ModelAny) {
       ${mapFields(
         fields,
         ({ type, setUpdate, setUpdateAfterData }) =>
-          (setUpdate || setUpdateAfterData) && asScalar(type),
+          (setUpdate || setUpdateAfterData) &&
+          asScalar((setUpdate || setUpdateAfterData)?.type || type),
         undefined,
         true
       )}
