@@ -29,6 +29,7 @@ export function buildTypeDefs(model: ModelAny): Graph["typeDefs"] {
     getOtherTypeDefs(model, "root"),
   ]
     .filter(identity)
+    .map((a) => a!.trim())
     .join("\n");
 
   const query = [
@@ -39,6 +40,7 @@ export function buildTypeDefs(model: ModelAny): Graph["typeDefs"] {
     getOtherTypeDefs(model, "query"),
   ]
     .filter(identity)
+    .map((a) => a!.trim())
     .join("\n");
 
   const mutation = [
@@ -51,6 +53,7 @@ export function buildTypeDefs(model: ModelAny): Graph["typeDefs"] {
     getOtherTypeDefs(model, "mutation"),
   ]
     .filter(identity)
+    .map((a) => a!.trim())
     .join("\n");
 
   return {
