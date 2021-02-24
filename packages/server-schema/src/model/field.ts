@@ -8,7 +8,7 @@ import { Info } from "../types/info";
 
 export type Field<Source> = {
   name: string;
-  type: Type;
+  type: { get: Type; set: Scalar };
   get?: Getter<Source>;
   setCreate?: Setter<undefined, Partial<Source>>;
   setUpdate?: Setter<Source>;
@@ -25,7 +25,6 @@ export type Getter<Source> = {
 };
 
 export type Setter<Source, Return = Partial<Source> | void> = {
-  type: Scalar;
   resolver: SetResolver<Source, any, Return>;
 };
 

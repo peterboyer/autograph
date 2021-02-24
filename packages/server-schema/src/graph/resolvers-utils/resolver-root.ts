@@ -16,9 +16,9 @@ export function getRootResolver(model: ModelAny, adapter: Adapter) {
       // pass-through complete objects/arrays that don't need resolution
       if (result && typeof result === "object") return result;
 
-      if (type._is === "object") {
+      if (type.get._is === "object") {
         const id = result;
-        const name = type.name;
+        const name = type.get.name;
 
         const {
           items: [item],
@@ -28,7 +28,7 @@ export function getRootResolver(model: ModelAny, adapter: Adapter) {
           context,
         });
 
-        if (!item && type.isNonNull) {
+        if (!item && type.get.isNonNull) {
           throw new Error("NOT_FOUND");
         }
 

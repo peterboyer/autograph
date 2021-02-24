@@ -21,9 +21,13 @@ export type Options<Source> = {
   defaultFilters?: boolean;
 };
 
-export type OptionsCallback<Source, T extends Type> = (mappers: {
-  get: GetMapper<Source, T>;
-  set: SetMapper<Source, T>;
+export type OptionsCallback<
+  Source,
+  GetType extends Type,
+  SetType extends Scalar
+> = (mappers: {
+  get: GetMapper<Source, GetType>;
+  set: SetMapper<Source, SetType>;
 }) => Options<Source>;
 
 /**
@@ -41,7 +45,7 @@ export interface GetMapper<Source, T extends Type> {
     args: {};
     resolver: GetResolver<Source, T, {}>;
   };
-  with<A extends Record<string, Scalar>>(
+  args<A extends Record<string, Scalar>>(
     args: A
   ): (
     resolver: GetResolver<Source, T, A>
@@ -59,40 +63,25 @@ type WithoutSource<R extends SetResolver> = (
 
 type AfterData<Source, T extends Scalar> = {
   (resolver: SetResolver<Source, T, void>): Setter<Source, void>;
-  with: <TT extends Scalar>(
-    type: TT
-  ) => (resolver: SetResolver<Source, TT, void>) => Setter<Source, void>;
 };
 
-export interface SetMapper<Source, T extends Type> {
-  (
-    resolver: SetResolver<Source | undefined, AsScalar<T>, Partial<Source>>
-  ): Setter<Source | undefined, Partial<Source>>;
-  with: <TT extends Scalar>(
-    type: TT
-  ) => (
-    resolver: SetResolver<Source | undefined, TT, Partial<Source>>
-  ) => Setter<Source | undefined, Partial<Source>>;
-  afterData: AfterData<Source, AsScalar<T>>;
+export interface SetMapper<Source, T extends Scalar> {
+  (resolver: SetResolver<Source | undefined, T, Partial<Source>>): Setter<
+    Source | undefined,
+    Partial<Source>
+  >;
+  afterData: AfterData<Source, T>;
 
   create: {
-    (resolver: WithoutSource<SetResolver<Source, AsScalar<T>>>): Setter<
+    (resolver: WithoutSource<SetResolver<Source, T>>): Setter<
       Source | undefined,
       Partial<Source>
     >;
-    with: <TT extends Scalar>(
-      type: TT
-    ) => (
-      resolver: WithoutSource<SetResolver<Source, TT>>
-    ) => Setter<Source | undefined, Partial<Source>>;
-    afterData: AfterData<Source, AsScalar<T>>;
+    afterData: AfterData<Source, T>;
   };
 
   update: {
-    (resolver: SetResolver<Source, AsScalar<T>>): Setter<Source>;
-    with: <TT extends Scalar>(
-      type: TT
-    ) => (resolver: SetResolver<Source, TT>) => Setter<Source>;
-    afterData: AfterData<Source, AsScalar<T>>;
+    (resolver: SetResolver<Source, T>): Setter<Source>;
+    afterData: AfterData<Source, T>;
   };
 }

@@ -13,9 +13,9 @@ export function useDefaultFilters(
   if (!target) return;
 
   const operators =
-    field.type._is === "scalar"
+    field.type.get._is === "scalar"
       ? SCALAR_OPERATORS
-      : field.type._is === "object"
+      : field.type.get._is === "object"
       ? OBJECT_OPERATORS
       : [];
 
@@ -25,7 +25,7 @@ export function useDefaultFilters(
     // skip if already defined
     if (filters[name]) return;
 
-    let type = asScalar(field.type);
+    let type = asScalar(field.type.get);
     if (["in", "ni"].includes(operator)) {
       type = asList(type);
     }

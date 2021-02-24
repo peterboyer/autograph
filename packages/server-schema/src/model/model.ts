@@ -1,5 +1,5 @@
 import { Type, Scalar } from "../types/type";
-import { asScalar } from "../types/type-utils";
+import { AsScalar, asScalar } from "../types/type-utils";
 import { Node } from "../types/graph";
 import { Sources } from "../types/sources";
 import { Hooks } from "../types/hooks";
@@ -76,12 +76,30 @@ export class Model<
     this.defaultDocs = defaultDocs;
   }
 
-  field<T extends Type>(
+  field<T extends Type | { get: Type; set: Scalar }>(
     name: string,
     type: T,
-    options?: Options<Source> | OptionsCallback<Source, T>
+    options?:
+      | Options<Source>
+      | OptionsCallback<
+          Source,
+          T extends { get: Type } ? T["get"] : T extends Type ? T : unknown,
+          T extends { set: Scalar }
+            ? T["set"]
+            : T extends Type
+            ? AsScalar<T>
+            : unknown
+        >
   ) {
-    const mappers = useMappers<Source, T>(type);
+    const mappers = useMappers<
+      Source,
+      T extends { get: Type } ? T["get"] : T extends Type ? T : unknown,
+      T extends { set: Scalar }
+        ? T["set"]
+        : T extends Type
+        ? AsScalar<T>
+        : unknown
+    >();
 
     const {
       alias,
@@ -110,7 +128,6 @@ export class Model<
     };
 
     const defaultSet = {
-      type: asScalar(type),
       resolver: (value: any) =>
         Object.assign({} as Partial<Source>, { [key]: value }),
     };
@@ -130,7 +147,13 @@ export class Model<
      */
     this.fields[name] = {
       name,
-      type,
+      type: {
+        get: "get" in type ? (type as { get: Type }).get : (type as Type),
+        set:
+          "set" in type
+            ? (type as { set: Scalar }).set
+            : asScalar(type as Type),
+      },
       get: get === null ? undefined : get || defaultGet,
       setCreate:
         setCreate === null
