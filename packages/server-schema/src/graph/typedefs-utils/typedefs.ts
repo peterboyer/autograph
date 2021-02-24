@@ -78,10 +78,13 @@ export function getRootUpdateInput({ name, fields, mutationUpdate }: ModelAny) {
   if (!mutationUpdate) return;
   return `
     input ${name}UpdateInput {
+      id: ID!
       ${mapFields(
         fields,
-        ({ type, setUpdate, setUpdateAfterData }) =>
-          (setUpdate || setUpdateAfterData) && type.set,
+        ({ name, type, setUpdate, setUpdateAfterData }) =>
+          name === "id"
+            ? undefined
+            : (setUpdate || setUpdateAfterData) && type.set,
         undefined,
         true
       )}
