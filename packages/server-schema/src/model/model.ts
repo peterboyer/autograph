@@ -194,16 +194,15 @@ export class Model<
    * @param type graph type to receive value
    * @param resolver
    */
-  filter<T extends Scalar, Tr extends Transport>(
+  filter<T extends Scalar>(
     name: string,
     type: T,
-    transport: Tr,
-    resolver: FilterResolver<T, Tr>
+    resolver: FilterResolver<T, "adapter">
   ) {
     this.filters[name] = {
       name,
       type,
-      transport,
+      transport: "adapter",
       resolver,
     };
 
