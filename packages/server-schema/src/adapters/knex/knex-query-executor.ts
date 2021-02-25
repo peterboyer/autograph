@@ -1,19 +1,5 @@
 import Knex from "knex";
-
-type Op = {
-  tag?: string;
-  func: (query: Knex.QueryBuilder, knex: Knex) => void;
-};
-
-export const op = (func: Op["func"], tag?: Op["tag"]): Op => ({
-  tag,
-  func,
-});
-
-export type QueryMessage = {
-  table: string;
-  ops: Op[];
-};
+import { QueryTransport } from "./transports";
 
 class KnexQueryExecutor {
   knex: Knex;
@@ -23,10 +9,10 @@ class KnexQueryExecutor {
   }
 
   async execute<T extends Record<string, any>>(
-    message: QueryMessage
+    transport: QueryTransport
   ): Promise<T[]> {
     const query = this.knex.queryBuilder();
-    message.ops.forEach(({ func }) => func(query, this.knex));
+    transport.ops.forEach(({ func }) => func(query, this.knex));
     return await query;
   }
 }

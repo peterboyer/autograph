@@ -1,42 +1,12 @@
-import { TResolver } from "../types/types-graphql";
-import {
-  TGraph,
-  TGraphNodeType,
-  TGraphTypeDefs,
-  TGraphResolvers,
-} from "../types/types-graph";
-
-export function mapGraphs(graphs: TGraph[]) {
-  const _typeDefs = graphs.map((graph) => graph.typeDefs);
-  const _resolvers = graphs.map((graph) => graph.resolvers);
-  return {
-    typeDefs: `
-      ${mergeTypeDefs(_typeDefs)}
-      type Query {
-        ${mergeTypeDefs(_typeDefs, "Query")}
-      }
-      type Mutation {
-        ${mergeTypeDefs(_typeDefs, "Mutation")}
-      }
-    `,
-    resolvers: {
-      ...mergeResolvers(_resolvers),
-      Query: {
-        ...mergeResolvers(_resolvers, "Query"),
-      },
-      Mutation: {
-        ...mergeResolvers(_resolvers, "Mutation"),
-      },
-    },
-  };
-}
+import { Graph, Node } from "../types/graph";
+import { Resolver } from "../types/resolver";
 
 /**
  * Convenience function to return merge many schemas' typeDefs.
  */
 export function mergeTypeDefs(
-  allTypeDefs: TGraphTypeDefs[],
-  node: TGraphNodeType = "Root"
+  allTypeDefs: Graph["typeDefs"][],
+  node: Node = "root"
 ) {
   return allTypeDefs.map((typeDefs) => typeDefs[node]).join("\n");
 }
@@ -45,27 +15,25 @@ export function mergeTypeDefs(
  * Convenience function to return merge many schemas' resolvers.
  */
 export function mergeResolvers(
-  resolversMaps: TGraphResolvers[],
-  node: TGraphNodeType = "Root"
+  resolversMaps: Graph["resolvers"][],
+  node: Node = "root"
 ) {
-  const merged: Record<string, TResolver> = {};
-
-  for (const resolverMap of resolversMaps) {
-    Object.assign(merged, resolverMap[node]);
-  }
-
-  return merged;
+  return resolversMaps.reduce(
+    (acc, resolverMap) => Object.assign(acc, resolverMap[node]),
+    {} as Record<string, Resolver>
+  );
 }
 
 /**
  * Convenience function to wrap an object of resolvers (e.g. for requiring auth)
  * returning an identitically shaped object of wrapped resolvers.
  */
-export function wrapResolvers<T>(
-  resolvers: Record<any, T>,
-  wrapper: (resolver: T) => T
+export function wrapResolvers(
+  resolvers: Record<string, Resolver>,
+  wrapper: (resolver: Resolver) => Resolver
 ) {
-  return Object.entries(resolvers).reduce((acc, [key, resolver]) => {
-    return Object.assign(acc, { [key]: wrapper(resolver) });
-  }, {} as typeof resolvers);
+  return Object.entries(resolvers).reduce(
+    (acc, [key, resolver]) => Object.assign(acc, { [key]: wrapper(resolver) }),
+    {} as Record<string, Resolver>
+  );
 }

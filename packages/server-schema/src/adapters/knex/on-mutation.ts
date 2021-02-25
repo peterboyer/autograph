@@ -1,36 +1,29 @@
-import {
-  Adapter,
-  TQuery,
-  TMutation,
-} from "../../graph/ast-resolvers/ast-resolvers-options";
-import { TOnQueryOptions } from "./on-query";
+import { Adapter } from "../../types/adapter";
+import { QueryTransport as KnexQueryTransport } from "./transports";
+import { UseQuery } from "./use-query";
+import { UseMutation } from "./use-mutation";
 
-export type TOnMutationOptions = {
-  useQuery: TOnQueryOptions["useQuery"];
-  useMutation: (mutation: TMutation) => Promise<string | undefined>;
+export type Options = {
+  useQuery: UseQuery;
+  useMutation: UseMutation;
 };
 
-const constructor = ({ useQuery, useMutation }: TOnMutationOptions) => {
-  const onMutation: Adapter["onMutation"] = async (mutation) => {
-    const id = await useMutation(mutation);
+export const onMutation = ({
+  useQuery,
+  useMutation,
+}: Options): Adapter<KnexQueryTransport>["onMutation"] => async (mutation) => {
+  const id = await useMutation(mutation);
 
-    if (id) {
-      const query_default: TQuery = {
-        name: mutation.name,
-        context: mutation.context,
-      };
+  if (id) {
+    const {
+      items: [item],
+    } = await useQuery({
+      name: mutation.name,
+      context: mutation.context,
+      id: id.toString(),
+    });
+    return item;
+  }
 
-      const query = { ...query_default, id };
-      const {
-        items: [item],
-      } = await useQuery(query);
-
-      return item;
-    }
-
-    return undefined;
-  };
-  return onMutation;
+  return undefined;
 };
-
-export default constructor;
