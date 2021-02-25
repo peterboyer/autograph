@@ -2,7 +2,7 @@ import { MaybePromise } from "../types/utils";
 import { Resolver } from "../types/resolver";
 import { Type, Scalar } from "../types/type";
 import { Typed, TypedRecord } from "../types/type-utils";
-import { Hooks } from "../types/hooks";
+import { FieldHooks } from "../types/hooks";
 import { Context } from "../types/context";
 import { Info } from "../types/info";
 
@@ -14,7 +14,7 @@ export type Field<Source> = {
   setUpdate?: Setter<Source>;
   setCreateAfterData?: Setter<Source, void>;
   setUpdateAfterData?: Setter<Source, void>;
-  hooks: Partial<Hooks<Source>>;
+  hooks: Partial<FieldHooks<Source>>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
 };

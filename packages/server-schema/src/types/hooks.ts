@@ -65,3 +65,8 @@ export interface Hooks<Source> {
     info: Info
   ) => MaybePromise<void>;
 }
+
+export type FieldHooks<Source> = Omit<
+  Hooks<Source>,
+  "on-query" | "on-query-one" | "on-query-many"
+>;

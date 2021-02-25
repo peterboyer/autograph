@@ -1,7 +1,7 @@
 import { MaybePromise } from "../types/utils";
 import { Type, Scalar } from "../types/type";
 import { Typed, AsScalar } from "../types/type-utils";
-import { Hooks } from "../types/hooks";
+import { FieldHooks } from "../types/hooks";
 import { Context } from "../types/context";
 import { Info } from "../types/info";
 import { Getter, Setter, GetResolver, SetResolver } from "./field";
@@ -15,7 +15,7 @@ export type Options<Source> = {
   setAfterData?: Setter<Source, void>;
   setCreateAfterData?: Setter<Source, void>;
   setUpdateAfterData?: Setter<Source, void>;
-  hooks?: Partial<Hooks<Source>>;
+  hooks?: Partial<FieldHooks<Source>>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
   defaultFilters?: boolean;
