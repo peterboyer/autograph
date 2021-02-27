@@ -1,6 +1,6 @@
 # ✍️ Autograph
 
-#### Easily build quality, type-safe GraphQL TypeDefs and Resolvers for your API.
+#### Easily generate TypeDefs and Resolvers for your GraphQL API.
 
 **Autograph is not an ORM**, but rather a utility to uniformly generate "boilerplate" functionality for Query (for fetching one or many items) and Mutation (for creating, updating, and deleting items) operations. Create Models to represent your data (such as Users or Posts), and define what Fields are to be exposed. Flexibly define custom `get` and `set ` Field as needed. Fields can even represent completely computed from other values and relationships. Models support a range of Hooks allowing for granular query manipulation and reactive updates on creates and updates.
 
@@ -202,13 +202,13 @@ User {
   password: String!
 }
 Query {
-	User(id: ID!) User!
-	UserMany(cursor: String order: String filters: UserFilters limit: Int): UserList!
+  User(id: ID!) User!
+  UserMany(cursor: String order: String filters: UserFilters limit: Int): UserList!
 }
 Mutation {
-	UserCreate(data: [UserCreateInput!]!): [User!]!
-	UserUpdate(data: [UserUpdateInput!]!): [User!]!
-	UserDelete(ids: [ID!]!): [ID!]!
+  UserCreate(data: [UserCreateInput!]!): [User!]!
+  UserUpdate(data: [UserUpdateInput!]!): [User!]!
+  UserDelete(ids: [ID!]!): [ID!]!
 }
 ```
 

@@ -2,7 +2,7 @@
   "name": "@armix/autograph",
   "version": "0.0.1",
   "author": "Peter Boyer <@ptboyer>",
-  "description": "Easy CRUD TypeDefs and Resolvers generated for GraphQL APIs.",
+  "description": "Generate CRUD TypeDefs and Resolvers for GraphQL APIs.",
   "repository": "https://github.com/armix-io/autograph",
   "license": "MIT",
   "engines": {
