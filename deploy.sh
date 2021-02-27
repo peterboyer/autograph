@@ -28,4 +28,5 @@ echo "* tagging ..."
 mv -f lib/package.json package.json
 git add package.json
 git commit -m "v${VERSION_NEXT}"
-git tag @armix/$PACKAGE_NAME@$VERSION_NEXT
+git tag v$VERSION_NEXT
+# git tag @armix/$PACKAGE_NAME@$VERSION_NEXT

@@ -20,7 +20,7 @@
     "watch-yalc": "yarn build-package && nodemon --delay 500ms --exec \"yarn dev-push\"",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch-ts\" \"yarn watch-yalc\"",
     "dev-push": "cd ./lib && yalc push --replace",
-    "deploy": "../../deploy.sh",
+    "release": "../../deploy.sh",
     "test": "jest"
   },
   "dependencies": {
