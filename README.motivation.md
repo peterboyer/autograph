@@ -1,4 +1,4 @@
-# @armix/server-schema
+# @armix/autograph
 
 ## Motivation
 

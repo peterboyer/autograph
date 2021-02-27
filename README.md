@@ -8,17 +8,13 @@ Autograph has out-of-the-box support for anything supported by Knex (Postgres, M
 
 **Follow along with "Get Started" to see how easy Autograph can be used for your next project!**
 
-
-
 ## Get Started
 
 ### 1. Install Autograph
 
 ```shell
-$ yarn add @armix/server-schema
+$ yarn add @armix/autograph
 ```
-
-
 
 ### 2. Define your Source
 
@@ -29,7 +25,7 @@ The Sources you define here should match whatever data shape is returned from yo
 ```typescript
 // autograph.ts
 
-declare module "@armix/server-schema/types/sources" {
+declare module "@armix/autograph/types/sources" {
   interface Sources {
     User: {
       id: number;
@@ -37,12 +33,10 @@ declare module "@armix/server-schema/types/sources" {
       email: string;
       password: string;
       updated_at: Date;
-    }
+    };
   }
 }
 ```
-
-
 
 ### 3. Define your Model
 
@@ -57,7 +51,7 @@ Learn more with the [Model API](#coming-soon) and [Field API](#coming-soon) docu
 ```typescript
 // user.ts
 
-import { Model, Types } from "@armix/server-schema";
+import { Model, Types } from "@armix/autograph";
 
 export const User = new Model("User")
   .field("id", Types.ID.NonNull)
@@ -69,7 +63,7 @@ export const User = new Model("User")
       // you can define custom behaviours for getters and setters
       if (!context.auth.user.isAdmin && source.id !== context.auth.user.id)
         throw new Error("NOT_AUTHORISED");
-      
+
       // and return anything (as long as it respects the field Type specified)
       return source.email;
     }),
@@ -79,7 +73,7 @@ export const User = new Model("User")
         // to enforce various behaviours
         if (!context.auth.user.isAdmin && source.id !== context.auth.user.id)
         	throw new Error("NOT_AUTHORISED");
-        
+
         // and optionally return data to be committed
         return {
           updated_at: new Date(),
@@ -91,22 +85,20 @@ export const User = new Model("User")
   .field("password", Types.String.NonNull, ({ set }) => ({
     // disable reading of this field
     get: null,
-    
+
     // only allow admins or the owning user to change this field
     set: set((value, source, context) => {
       if (!context.auth.user.isAdmin && source.id !== context.auth.user.id)
       	throw new Error("NOT_AUTHORISED");
-      
+
       // perform manipulations for the given value
       const passwordHash = bcrypt.hashSync(value);
-      
+
       // and return that instead
       return passwordHash;
     })
   }));
 ```
-
-
 
 ### 4. Define your Adapter
 
@@ -123,16 +115,14 @@ $ yarn add knex pg
 ```typescript
 // autograph.ts
 
-import { QueryTransport } from "@armix/server-schema/adapters/knex";
+import { QueryTransport } from "@armix/autograph/adapters/knex";
 
-declare module "@armix/server-schema/types/config" {
+declare module "@armix/autograph/types/config" {
   interface Config {
     AdapterTransport: QueryTransport;
   }
 }
 ```
-
-
 
 ### 5. Autograph your Models
 
@@ -144,8 +134,8 @@ You can also write your own Adapters if the included `KnexAdapter` doesn't suppo
 // build-autograph.ts
 
 import Knex from "knex";
-import Autograph from "@armix/server-schema";
-import { KnexAdapter } from "@armix/server-schema/adapters/knex"
+import Autograph from "@armix/autograph";
+import { KnexAdapter } from "@armix/autograph/adapters/knex";
 import { User } from "./user.ts";
 
 function buildAutograph() {
@@ -160,8 +150,6 @@ function buildAutograph() {
 }
 ```
 
-
-
 ### 6. Create your GraphQL Server
 
 Once you have Autographed your Models, you can feed the result into a framework like ApolloServer.
@@ -174,20 +162,20 @@ $ yarn add apollo-server graphql
 // build-server.ts
 
 import { ApolloServer } from "apollo-server";
-import { buildAutograph } from "./build-autograph"
+import { buildAutograph } from "./build-autograph";
 
 function buildServer() {
   const autograph = buildAutograph();
-  
+
   const apollo = new ApolloServer({
     ...autograph,
   });
-  
+
   return async () => {
     const port = process.env.PORT || 5000;
-  	const { url } = await apollo.listen({ port: 5000 });
-  	console.log(`🚀 Server ready at ${url}`);
-  }
+    const { url } = await apollo.listen({ port: 5000 });
+    console.log(`🚀 Server ready at ${url}`);
+  };
 }
 ```
 
@@ -200,13 +188,11 @@ const server = buildServer();
 server();
 ```
 
-
-
 ### 7. Done!
 
 Now that you have a working ApolloServer, using the output of your Autograph, you can inspect the generated TypeDefs schema via a GraphQL client, such as of that bundled with ApolloServer via http://localhost:5000/.
 
-You now have a painlessly assembled set of read and write Queries and Mutations to interact with. The generated TypeDefs and Resolvers are not  tied down to any particular framework per se, and are simply strings and functions that can be modified, removed, or even wrapped with granularly targeted custom logic.
+You now have a painlessly assembled set of read and write Queries and Mutations to interact with. The generated TypeDefs and Resolvers are not tied down to any particular framework per se, and are simply strings and functions that can be modified, removed, or even wrapped with granularly targeted custom logic.
 
 ```
 User {
@@ -226,27 +212,19 @@ Mutation {
 }
 ```
 
-
-
 ## Why?
 
 - Read [here](./README.motivation.md).
 
-
-
 ## Roadmap
 
 - Check out [issues](https://github.com/armix-io/armix-server/issues?q=is%3Aopen+is%3Aissue+label%3A%40armix%2Fserver-schema).
-
-
 
 ## Contributing
 
 ### 1. Fork
 
 Create a fork of this repo and git clone it locally.
-
-
 
 ### 2. Dependencies and development
 
@@ -261,23 +239,16 @@ Once in the project root, you can run these scripts with `yarn`:
 - `dev` — starts TypeScript `tsc` (watching `./src`) and `nodemon` (watching`./lib`, executing `yalc push`) to automatically publish changes to local subscribed projects, see [development with yalc](#development-with-yalc).
 - `build` — builds typescript `./src` into `./lib`.
 
-
-
 #### Development with `yalc`
 
 The `dev` script requires [yalc](https://github.com/whitecolor/yalc) to be [installed globally](https://github.com/whitecolor/yalc#installation).
 
 Once installed you need to run `yalc publish` in this package directory, and then run `yalc add @armix/server-graphql` in your target project to subscribe to future local changes. Back in this package directory, you can automatically build and push changes with `yarn develop`, or manually with `yalc push`.
 
-
-
 ### 3. Pull requests
 
 Once you are ready to contribute to the project (via completing an issue etc.), open a pull request and we'll test it out and merge it in!
 
-
-
 ## Maintainers
 
 - Peter Boyer • [Armix](https://armix.io) ([@ptboyer](https://github.com/ptboyer))
-

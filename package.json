@@ -1,9 +1,9 @@
 {
-  "name": "@armix/server-schema",
-  "version": "1.0.9",
+  "name": "@armix/autograph",
+  "version": "0.0.1",
   "author": "Peter Boyer <@ptboyer>",
-  "description": "Generate TypeDefs and Resolvers for your GraphQL backends.",
-  "repository": "https://github.com/armix-io/armix-server",
+  "description": "Easy CRUD TypeDefs and Resolvers generated for GraphQL APIs.",
+  "repository": "https://github.com/armix-io/autograph",
   "license": "MIT",
   "engines": {
     "node": ">=14"
