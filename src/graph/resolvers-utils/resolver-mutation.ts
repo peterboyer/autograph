@@ -2,6 +2,7 @@ import { ModelAny } from "../../model/model";
 import { Resolver } from "../../types/resolver";
 import { Adapter } from "../../types/adapter";
 import { MutationTransport } from "../../types/transports";
+import { AutographError } from "../../errors";
 import { useGetOne } from "./use-get-one";
 
 export type Operation = "create" | "update" | "delete";
@@ -57,17 +58,26 @@ export function getMutationResolver(
           onMutationAfterData &&
             (await onMutationAfterData(source, context, info));
 
+          const fieldErrors = {};
+
           // field hooks
           await Promise.all(
-            Object.values(fields).map(async ({ hooks }) => {
-              const onDeleteAfterData = hooks["on-delete-after-data"];
-              onDeleteAfterData &&
-                (await onDeleteAfterData(source, context, info));
-              const onMutationAfterData = hooks["on-mutation-after-data"];
-              onMutationAfterData &&
-                (await onMutationAfterData(source, context, info));
+            Object.values(fields).map(async ({ name, hooks }) => {
+              try {
+                const onDeleteAfterData = hooks["on-delete-after-data"];
+                onDeleteAfterData &&
+                  (await onDeleteAfterData(source, context, info));
+                const onMutationAfterData = hooks["on-mutation-after-data"];
+                onMutationAfterData &&
+                  (await onMutationAfterData(source, context, info));
+              } catch (e) {
+                Object.assign(fieldErrors, { [name]: e.toString() });
+              }
             })
           );
+
+          if (Object.keys(fieldErrors).length)
+            throw new AutographError("FIELD_ERRORS", fieldErrors);
         })
       );
 
@@ -119,24 +129,33 @@ export function getMutationResolver(
           onMutation && (await onMutation(source, context, info))
         );
 
+        const fieldErrors = {};
+
         // field hooks
         await Promise.all(
-          Object.values(fields).map(async ({ hooks }) => {
-            const onCreate = hooks["on-create"];
-            const onUpdate = hooks["on-update"];
-            const onMutation = hooks["on-mutation"];
-            Object.assign(
-              data,
-              operation === "create" &&
-                onCreate &&
-                (await onCreate(context, info)),
-              operation === "update" &&
-                onUpdate &&
-                (await onUpdate(source!, context, info)),
-              onMutation && (await onMutation(source, context, info))
-            );
+          Object.values(fields).map(async ({ name, hooks }) => {
+            try {
+              const onCreate = hooks["on-create"];
+              const onUpdate = hooks["on-update"];
+              const onMutation = hooks["on-mutation"];
+              Object.assign(
+                data,
+                operation === "create" &&
+                  onCreate &&
+                  (await onCreate(context, info)),
+                operation === "update" &&
+                  onUpdate &&
+                  (await onUpdate(source!, context, info)),
+                onMutation && (await onMutation(source, context, info))
+              );
+            } catch (e) {
+              Object.assign(fieldErrors, { [name]: e.toString() });
+            }
           })
         );
+
+        if (Object.keys(fieldErrors).length)
+          throw new AutographError("FIELD_ERRORS", fieldErrors);
 
         /**
          * postData
@@ -177,21 +196,30 @@ export function getMutationResolver(
             (await onUpdate(source!, context, info));
           onMutation && (await onMutation(source, context, info));
 
+          const fieldErrors = {};
+
           // field hooks
           await Promise.all(
-            Object.values(fields).map(async ({ hooks }) => {
-              const onCreate = hooks["on-create-after-data"];
-              const onUpdate = hooks["on-update-after-data"];
-              const onMutation = hooks["on-mutation-after-data"];
-              operation === "create" &&
-                onCreate &&
-                (await onCreate(source, context, info));
-              operation === "update" &&
-                onUpdate &&
-                (await onUpdate(source, context, info));
-              onMutation && (await onMutation(source, context, info));
+            Object.values(fields).map(async ({ name, hooks }) => {
+              try {
+                const onCreate = hooks["on-create-after-data"];
+                const onUpdate = hooks["on-update-after-data"];
+                const onMutation = hooks["on-mutation-after-data"];
+                operation === "create" &&
+                  onCreate &&
+                  (await onCreate(source, context, info));
+                operation === "update" &&
+                  onUpdate &&
+                  (await onUpdate(source, context, info));
+                onMutation && (await onMutation(source, context, info));
+              } catch (e) {
+                Object.assign(fieldErrors, { [name]: e.toString() });
+              }
             })
           );
+
+          if (Object.keys(fieldErrors).length)
+            throw new AutographError("FIELD_ERRORS", fieldErrors);
         };
 
         return {

@@ -1,5 +1,7 @@
 export { Autograph as default } from "./autograph";
-export { Autograph } from "./autograph";
+
+export * from "./autograph";
+export * from "./errors";
 
 export * from "./adapters";
 export * from "./auth";
