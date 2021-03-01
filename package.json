@@ -1,0 +1,53 @@
+{
+  "name": "@armix/autograph",
+  "version": "0.0.1",
+  "author": "Peter Boyer <@ptboyer>",
+  "description": "Generate CRUD TypeDefs and Resolvers for GraphQL APIs.",
+  "repository": "https://github.com/armix-io/autograph",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14"
+  },
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "clean": "rm -rf ./lib",
+    "build": "yarn clean && yarn build-ts && yarn build-package",
+    "build-ts": "tsc",
+    "build-package": "cp package.json README.md ./lib",
+    "watch-ts": "yarn build-ts -w",
+    "watch-yalc": "yarn build-package && nodemon --delay 500ms --exec \"yarn dev-push\"",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch-ts\" \"yarn watch-yalc\"",
+    "dev-push": "cd ./lib && yalc push --replace",
+    "release": "./deploy.sh",
+    "test": "jest"
+  },
+  "dependencies": {
+    "lodash.clonedeep": "^4.5.0",
+    "lodash.omit": "^4.5.0",
+    "lodash.pick": "^4.4.0"
+  },
+  "peerDependencies": {
+    "graphql": "*"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.15",
+    "@types/lodash.clonedeep": "^4.5.6",
+    "@types/lodash.omit": "^4.5.6",
+    "@types/lodash.pick": "^4.4.6",
+    "@typescript-eslint/eslint-plugin": "^3.9.0",
+    "@typescript-eslint/parser": "^3.9.0",
+    "apollo-server": "^2.19.0",
+    "apollo-server-testing": "^2.19.0",
+    "concurrently": "^5.3.0",
+    "eslint": "^7.6.0",
+    "graphql": "^14.0.0",
+    "jest": "^26.6.3",
+    "knex": "^0.21.12",
+    "nodemon": "^2.0.4",
+    "ts-jest": "^26.4.4",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.0.2"
+  }
+}

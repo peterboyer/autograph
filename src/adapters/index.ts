@@ -1,0 +1,1 @@
+export { KnexAdapter } from "./knex";
