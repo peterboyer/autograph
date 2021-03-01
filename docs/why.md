@@ -1,6 +1,4 @@
-# @armix/autograph
-
-## Motivation
+# Why?
 
 I wanted a solution for generating functional boilerplate from plain models
 definitions and their relationships. Some solutions generated CRUD resolvers

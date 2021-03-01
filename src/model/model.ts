@@ -70,7 +70,7 @@ export class Model<
           onMutationAfterData?: ModelHooks<Source>["onMutationAfterData"];
           onFieldGet?: ModelHooks<Source>["onGet"];
           onFieldSet?: ModelHooks<Source>["onSet"];
-          onFieldAccess?: ModelHooks<Source>["onAccess"];
+          onFieldUse?: ModelHooks<Source>["onUse"];
         }
     >
   ) {
@@ -103,7 +103,7 @@ export class Model<
       onMutationAfterData,
       onFieldGet: onGet,
       onFieldSet: onSet,
-      onFieldAccess: onAccess,
+      onFieldUse: onUse,
     } = options || {};
 
     this.hooks = {
@@ -120,7 +120,7 @@ export class Model<
       onMutationAfterData,
       onGet,
       onSet,
-      onAccess,
+      onUse,
     };
 
     this.queryOne = queryOne === true ? `${name}` : queryOne || undefined;
@@ -161,7 +161,7 @@ export class Model<
       validate,
       onGet,
       onSet,
-      onAccess,
+      onUse,
       onModelCreate: onCreate,
       onModelCreateAfterData: onCreateAfterData,
       onModelUpdate: onUpdate,
@@ -242,7 +242,7 @@ export class Model<
       hooks: {
         onGet,
         onSet,
-        onAccess,
+        onUse,
         onCreate,
         onCreateAfterData,
         onUpdate,
