@@ -6,6 +6,7 @@ import {
   getRootCreateInput,
   getRootUpdateInput,
   getRootFiltersInput,
+  getRootOrderEnum,
   getQueryOneResolver,
   getQueryManyResolver,
   getMutationCreateResolver,
@@ -26,6 +27,7 @@ export function buildTypeDefs(model: ModelAny): Graph["typeDefs"] {
     getRootCreateInput(model),
     getRootUpdateInput(model),
     getRootFiltersInput(model),
+    getRootOrderEnum(model),
     getOtherTypeDefs(model, "root"),
   ]
     .filter(identity)

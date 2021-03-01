@@ -100,6 +100,20 @@ export function getRootFiltersInput({ name, filters }: ModelAny) {
   `;
 }
 
+export function getRootOrderEnum({ name, fields, queryMany }: ModelAny) {
+  if (!queryMany) return;
+  return `
+    enum ${name}Order {
+      ${Object.values(fields)
+        .filter((field) => field.orderTarget)
+        .map(({ name }) => {
+          return `"""Order by \`${name}\` in ascending order."""\n${name}_asc,"""Order by \`${name}\` in descending order."""\n\n${name}_desc,`;
+        })
+        .join("\n")}
+    }
+  `;
+}
+
 export function getQueryOneResolver({ name, queryOne }: ModelAny) {
   if (!queryOne) return;
   return `
@@ -112,7 +126,7 @@ export function getQueryManyResolver({ name, queryMany }: ModelAny) {
   return `
     ${queryMany}(
       cursor: String
-      order: String
+      order: ${name}Order
       filters: ${name}Filters
       limit: Int
     ): ${name}List!
