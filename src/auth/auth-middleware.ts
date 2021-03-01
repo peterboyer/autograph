@@ -86,7 +86,14 @@ export class AuthMiddleware<User, UserToken> {
   }
 
   async onToken(token: UserToken) {
-    return await this.options.resolveUser(token);
+    const user = await this.options.resolveUser(token);
+
+    if (!user) {
+      this.options.onResolveError && (await this.options.onResolveError());
+      return;
+    }
+
+    return user;
   }
 
   async resolve(req: http.RequestOptions) {
