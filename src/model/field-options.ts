@@ -22,7 +22,7 @@ export type Options<Source, SetType extends Scalar> = {
 } & {
   onGet?: FieldHooks<Source>["onGet"];
   onSet?: FieldHooks<Source>["onSet"];
-  onAccess?: FieldHooks<Source>["onAccess"];
+  onUse?: FieldHooks<Source>["onUse"];
   onModelCreate?: FieldHooks<Source>["onCreate"];
   onModelCreateAfterData?: FieldHooks<Source>["onCreateAfterData"];
   onModelUpdate?: FieldHooks<Source>["onUpdate"];

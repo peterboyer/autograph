@@ -70,7 +70,7 @@ export interface Hooks<Source> {
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  onAccess: (
+  onUse: (
     source: Source | undefined,
     context: Context,
     info: Info
