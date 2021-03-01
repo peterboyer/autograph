@@ -20,8 +20,8 @@ export type Options<Source, SetType extends Scalar> = {
   defaultFilters?: boolean;
   validate?: Validator<Source, SetType> | Validator<Source, SetType>[];
 } & {
-  onRead?: FieldHooks<Source>["onRead"];
-  onWrite?: FieldHooks<Source>["onWrite"];
+  onGet?: FieldHooks<Source>["onGet"];
+  onSet?: FieldHooks<Source>["onSet"];
   onAccess?: FieldHooks<Source>["onAccess"];
   onModelCreate?: FieldHooks<Source>["onCreate"];
   onModelCreateAfterData?: FieldHooks<Source>["onCreateAfterData"];

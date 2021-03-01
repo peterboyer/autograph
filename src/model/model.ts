@@ -68,8 +68,8 @@ export class Model<
           onDeleteAfterData?: ModelHooks<Source>["onDeleteAfterData"];
           onMutation?: ModelHooks<Source>["onMutation"];
           onMutationAfterData?: ModelHooks<Source>["onMutationAfterData"];
-          onFieldRead?: ModelHooks<Source>["onRead"];
-          onFieldWrite?: ModelHooks<Source>["onWrite"];
+          onFieldGet?: ModelHooks<Source>["onGet"];
+          onFieldSet?: ModelHooks<Source>["onSet"];
           onFieldAccess?: ModelHooks<Source>["onAccess"];
         }
     >
@@ -101,8 +101,8 @@ export class Model<
       onDeleteAfterData,
       onMutation,
       onMutationAfterData,
-      onFieldRead: onRead,
-      onFieldWrite: onWrite,
+      onFieldGet: onGet,
+      onFieldSet: onSet,
       onFieldAccess: onAccess,
     } = options || {};
 
@@ -118,8 +118,8 @@ export class Model<
       onDeleteAfterData,
       onMutation,
       onMutationAfterData,
-      onRead,
-      onWrite,
+      onGet,
+      onSet,
       onAccess,
     };
 
@@ -159,8 +159,8 @@ export class Model<
       filterTarget,
       defaultFilters = true,
       validate,
-      onRead,
-      onWrite,
+      onGet,
+      onSet,
       onAccess,
       onModelCreate: onCreate,
       onModelCreateAfterData: onCreateAfterData,
@@ -240,8 +240,8 @@ export class Model<
           }
         : validate,
       hooks: {
-        onRead,
-        onWrite,
+        onGet,
+        onSet,
         onAccess,
         onCreate,
         onCreateAfterData,

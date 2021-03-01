@@ -6,10 +6,8 @@ export class AutographError extends Error {
       const nextData = { ...data };
       Object.entries(nextData).forEach(([key, value]) => {
         if (value instanceof AutographError) {
-          nextData[key] = {
-            code: value.message,
-            data: value.data,
-          };
+          nextData[key] = value.message;
+          if (value.data) nextData[key + ".data"] = value.data;
         }
       });
       this.data = nextData;

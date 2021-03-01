@@ -64,8 +64,8 @@ export interface Hooks<Source> {
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  onRead: (source: Source, context: Context, info: Info) => MaybePromise<void>;
-  onWrite: (
+  onGet: (source: Source, context: Context, info: Info) => MaybePromise<void>;
+  onSet: (
     source: Source | undefined,
     context: Context,
     info: Info

@@ -109,13 +109,13 @@ export function getMutationResolver(
 
               // access WRITE
               const hookArgs = [source, context, info] as const;
-              const onModelWrite = model.hooks.onWrite;
+              const onModelSet = model.hooks.onSet;
               const onModelAccess = model.hooks.onAccess;
-              const onWrite = field.hooks.onWrite;
+              const onSet = field.hooks.onSet;
               const onAccess = field.hooks.onAccess;
-              onModelWrite && (await onModelWrite(...hookArgs));
+              onModelSet && (await onModelSet(...hookArgs));
               onModelAccess && (await onModelAccess(...hookArgs));
-              onWrite && (await onWrite(...hookArgs));
+              onSet && (await onSet(...hookArgs));
               onAccess && (await onAccess(...hookArgs));
 
               // validate
