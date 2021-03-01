@@ -7,13 +7,14 @@ import { Context } from "../types/context";
 import { Info } from "../types/info";
 
 export type Field<Source> = {
+  key: string;
   name: string;
   type: { get: Type; set: Scalar };
   get?: Getter<Source>;
-  setCreate?: Setter<undefined, Partial<Source>>;
+  setCreate?: Setter<Source, undefined>;
   setUpdate?: Setter<Source>;
-  setCreateAfterData?: Setter<Source, void>;
-  setUpdateAfterData?: Setter<Source, void>;
+  setCreateAfterData?: Setter<Source, Source, void>;
+  setUpdateAfterData?: Setter<Source, Source, void>;
   hooks: Partial<FieldHooks<Source>>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
@@ -25,8 +26,8 @@ export type Getter<Source> = {
   resolver: GetResolver<Source>;
 };
 
-export type Setter<Source, Return = Partial<Source> | void> = {
-  resolver: SetResolver<Source, any, Return>;
+export type Setter<S, Source = S, Return = Partial<S> | any> = {
+  resolver: SetResolver<S, Source, any, Return>;
 };
 
 export type GetResolver<
@@ -36,9 +37,10 @@ export type GetResolver<
 > = Resolver<Source, TypedRecord<A>, Typed<T>>;
 
 export type SetResolver<
-  Source = any,
+  S = any,
+  Source = S,
   T extends Scalar = any,
-  Return = Partial<Source>
+  Return = Partial<S> | Typed<T>
 > = (
   value: Typed<T>,
   source: Source,

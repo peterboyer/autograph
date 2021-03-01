@@ -56,8 +56,22 @@ export class Model<
         mutationCreate?: string | boolean;
         mutationUpdate?: string | boolean;
         mutationDelete?: string | boolean;
-      } & Pick<Model<any, any>, "limitDefault" | "limitMax" | "defaultDocs"> &
-        Partial<ModelHooks<Source>>
+      } & Pick<Model<any, any>, "limitDefault" | "limitMax" | "defaultDocs"> & {
+          onQuery?: ModelHooks<Source>["onQuery"];
+          onQueryOne?: ModelHooks<Source>["onQueryOne"];
+          onQueryMany?: ModelHooks<Source>["onQueryMany"];
+          onCreate?: ModelHooks<Source>["onCreate"];
+          onCreateAfterData?: ModelHooks<Source>["onCreateAfterData"];
+          onUpdate?: ModelHooks<Source>["onUpdate"];
+          onUpdateAfterData?: ModelHooks<Source>["onUpdateAfterData"];
+          onDelete?: ModelHooks<Source>["onDelete"];
+          onDeleteAfterData?: ModelHooks<Source>["onDeleteAfterData"];
+          onMutation?: ModelHooks<Source>["onMutation"];
+          onMutationAfterData?: ModelHooks<Source>["onMutationAfterData"];
+          onFieldRead?: ModelHooks<Source>["onRead"];
+          onFieldWrite?: ModelHooks<Source>["onWrite"];
+          onFieldAccess?: ModelHooks<Source>["onAccess"];
+        }
     >
   ) {
     this.name = name;
@@ -87,6 +101,9 @@ export class Model<
       onDeleteAfterData,
       onMutation,
       onMutationAfterData,
+      onFieldRead: onRead,
+      onFieldWrite: onWrite,
+      onFieldAccess: onAccess,
     } = options || {};
 
     this.hooks = {
@@ -101,6 +118,9 @@ export class Model<
       onDeleteAfterData,
       onMutation,
       onMutationAfterData,
+      onRead,
+      onWrite,
+      onAccess,
     };
 
     this.queryOne = queryOne === true ? `${name}` : queryOne || undefined;
@@ -142,20 +162,20 @@ export class Model<
       onRead,
       onWrite,
       onAccess,
-      onModelCreate,
-      onModelCreateAfterData,
-      onModelUpdate,
-      onModelUpdateAfterData,
-      onModelDelete,
-      onModelDeleteAfterData,
-      onModelMutation,
-      onModelMutationAfterData,
-      ...opts
+      onModelCreate: onCreate,
+      onModelCreateAfterData: onCreateAfterData,
+      onModelUpdate: onUpdate,
+      onModelUpdateAfterData: onUpdateAfterData,
+      onModelDelete: onDelete,
+      onModelDeleteAfterData: onDeleteAfterData,
+      onModelMutation: onMutation,
+      onModelMutationAfterData: onMutationAfterData,
     } = options
       ? typeof options === "function"
         ? options(mappers)
         : options
-      : ({} as Options<Source, ResolveSet<T>>);
+      : ({} as NonNullable<typeof options>);
+
     const key = alias || (name as Exclude<keyof Source, number | symbol>);
 
     const defaultGet = {
@@ -164,8 +184,7 @@ export class Model<
     };
 
     const defaultSet = {
-      resolver: (value: any) =>
-        Object.assign({} as Partial<Source>, { [key]: value }),
+      resolver: (value: any) => value,
     };
 
     /**
@@ -182,6 +201,7 @@ export class Model<
      * specified then setACTION will not be used, unless setACTION is specified.
      */
     this.fields[name] = {
+      key,
       name,
       type: {
         get: "get" in type ? (type as { get: Type }).get : (type as Type),
@@ -223,18 +243,17 @@ export class Model<
         onRead,
         onWrite,
         onAccess,
-        onCreate: onModelCreate,
-        onCreateAfterData: onModelCreateAfterData,
-        onUpdate: onModelUpdate,
-        onUpdateAfterData: onModelUpdateAfterData,
-        onDelete: onModelDelete,
-        onDeleteAfterData: onModelDeleteAfterData,
-        onMutation: onModelMutation,
-        onMutationAfterData: onModelMutationAfterData,
+        onCreate,
+        onCreateAfterData,
+        onUpdate,
+        onUpdateAfterData,
+        onDelete,
+        onDeleteAfterData,
+        onMutation,
+        onMutationAfterData,
       },
       orderTarget: orderTarget ?? get === undefined ? key : undefined,
       filterTarget: filterTarget ?? get === undefined ? key : undefined,
-      ...opts,
     };
 
     if (defaultFilters) {

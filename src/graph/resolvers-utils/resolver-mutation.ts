@@ -35,16 +35,16 @@ export function getMutationResolver(
 
           // hook
           const onDelete = hooks.onDelete;
-          onDelete && (await onDelete(source, context, info));
           const onMutation = hooks.onMutation;
+          onDelete && (await onDelete(source, context, info));
           onMutation && (await onMutation(source, context, info));
 
           // field hooks
           await Promise.all(
             Object.values(fields).map(async ({ hooks }) => {
               const onDelete = hooks.onDelete;
-              onDelete && (await onDelete(source, context, info));
               const onMutation = hooks.onMutation;
+              onDelete && (await onDelete(source, context, info));
               onMutation && (await onMutation(source, context, info));
             })
           );
@@ -53,8 +53,8 @@ export function getMutationResolver(
 
           // hook
           const onDeleteAfterData = hooks.onDeleteAfterData;
-          onDeleteAfterData && (await onDeleteAfterData(source, context, info));
           const onMutationAfterData = hooks.onMutationAfterData;
+          onDeleteAfterData && (await onDeleteAfterData(source, context, info));
           onMutationAfterData &&
             (await onMutationAfterData(source, context, info));
 
@@ -65,9 +65,9 @@ export function getMutationResolver(
             Object.values(fields).map(async ({ name, hooks }) => {
               try {
                 const onDeleteAfterData = hooks.onDeleteAfterData;
+                const onMutationAfterData = hooks.onMutationAfterData;
                 onDeleteAfterData &&
                   (await onDeleteAfterData(source, context, info));
-                const onMutationAfterData = hooks.onMutationAfterData;
                 onMutationAfterData &&
                   (await onMutationAfterData(source, context, info));
               } catch (e) {
@@ -108,30 +108,39 @@ export function getMutationResolver(
               const field = fields[name];
 
               // access WRITE
+              const hookArgs = [source, context, info] as const;
+              const onModelWrite = model.hooks.onWrite;
+              const onModelAccess = model.hooks.onAccess;
               const onWrite = field.hooks.onWrite;
               const onAccess = field.hooks.onAccess;
-              const hookArgs = [source, context, info] as const;
+              onModelWrite && (await onModelWrite(...hookArgs));
+              onModelAccess && (await onModelAccess(...hookArgs));
               onWrite && (await onWrite(...hookArgs));
               onAccess && (await onAccess(...hookArgs));
 
               // validate
               const onValidate = field.validate;
-              const validation =
-                onValidate && (await onValidate(value, ...hookArgs));
               if (onValidate) {
+                const validation = await onValidate(value, ...hookArgs);
                 if (validation === false) throw "INVALID";
                 else if (typeof validation === "string") throw validation;
               }
 
               const { setCreate, setUpdate } = field;
-              Object.assign(
-                data,
+
+              // result could be partial of source, or actual next value
+              const result =
                 operation === "create" && setCreate
                   ? await setCreate.resolver(value, undefined, context, info)
-                  : undefined,
-                operation === "update" && setUpdate
+                  : operation === "update" && setUpdate
                   ? await setUpdate.resolver(value, source!, context, info)
-                  : undefined
+                  : undefined;
+
+              Object.assign(
+                data,
+                result && typeof result === "object"
+                  ? result
+                  : { [field.key]: result }
               );
             } catch (e) {
               Object.assign(fieldErrors, { [name]: e });

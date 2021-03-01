@@ -64,14 +64,7 @@ export interface Hooks<Source> {
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  /**
-   * field hooks
-   */
-  onRead: (
-    source: Source | undefined,
-    context: Context,
-    info: Info
-  ) => MaybePromise<void>;
+  onRead: (source: Source, context: Context, info: Info) => MaybePromise<void>;
   onWrite: (
     source: Source | undefined,
     context: Context,
@@ -87,10 +80,7 @@ export interface Hooks<Source> {
 /**
  * exclude field only fields
  */
-export type ModelHooks<Source> = Omit<
-  Hooks<Source>,
-  "onRead" | "onWrite" | "onAccess"
->;
+export type ModelHooks<Source> = Hooks<Source>;
 
 /**
  * exclude model only fields

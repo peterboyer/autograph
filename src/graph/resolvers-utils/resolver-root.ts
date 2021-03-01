@@ -13,9 +13,13 @@ export function getRootResolver(model: ModelAny, adapter: Adapter) {
       const [source, , context, info] = resolverArgs;
 
       // access READ
+      const onModelRead = model.hooks.onRead;
+      const onModelAccess = model.hooks.onAccess;
       const onRead = field.hooks.onRead;
       const onAccess = field.hooks.onAccess;
       const hookArgs = [source, context, info] as const;
+      onModelRead && (await onModelRead(...hookArgs));
+      onModelAccess && (await onModelAccess(...hookArgs));
       onRead && (await onRead(...hookArgs));
       onAccess && (await onAccess(...hookArgs));
 

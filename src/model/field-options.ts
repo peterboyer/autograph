@@ -9,12 +9,12 @@ import { Getter, Setter, GetResolver, SetResolver, Validator } from "./field";
 export type Options<Source, SetType extends Scalar> = {
   alias?: Exclude<keyof Source, number | symbol>;
   get?: Getter<Source> | null;
-  set?: Setter<Source | undefined, Partial<Source>> | null;
-  setCreate?: Setter<undefined, Partial<Source>> | null;
+  set?: Setter<Source, Source | undefined> | null;
+  setCreate?: Setter<Source, undefined> | null;
   setUpdate?: Setter<Source> | null;
-  setAfterData?: Setter<Source, void>;
-  setCreateAfterData?: Setter<Source, void>;
-  setUpdateAfterData?: Setter<Source, void>;
+  setAfterData?: Setter<Source, Source, void>;
+  setCreateAfterData?: Setter<Source, Source, void>;
+  setUpdateAfterData?: Setter<Source, Source, void>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
   defaultFilters?: boolean;
@@ -74,26 +74,28 @@ type WithoutSource<R extends SetResolver> = (
 ) => ReturnType<R>;
 
 type AfterData<Source, T extends Scalar> = {
-  (resolver: SetResolver<Source, T, void>): Setter<Source, void>;
+  (resolver: SetResolver<Source, Source, T, void>): Setter<
+    Source,
+    Source,
+    void
+  >;
 };
 
 export interface SetMapper<Source, T extends Scalar> {
-  (resolver: SetResolver<Source | undefined, T, Partial<Source>>): Setter<
-    Source | undefined,
-    Partial<Source>
+  (resolver: SetResolver<Source, Source | undefined, T>): Setter<
+    Source | undefined
   >;
   afterData: AfterData<Source, T>;
 
   create: {
     (resolver: WithoutSource<SetResolver<Source, T>>): Setter<
-      Source | undefined,
-      Partial<Source>
+      Source | undefined
     >;
     afterData: AfterData<Source, T>;
   };
 
   update: {
-    (resolver: SetResolver<Source, T>): Setter<Source>;
+    (resolver: SetResolver<Source, Source, T>): Setter<Source> | Typed<T>;
     afterData: AfterData<Source, T>;
   };
 }
