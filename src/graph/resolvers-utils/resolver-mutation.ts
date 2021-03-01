@@ -95,6 +95,8 @@ export function getMutationResolver(
           operation === "update" ? (itemPartial.id as string) : undefined;
         const source = id ? await getItem(id) : undefined;
 
+        const fieldErrors = {};
+
         /**
          * preData
          * go through all fields of itemPartial and resolve those fields
@@ -102,19 +104,32 @@ export function getMutationResolver(
         const data: Record<string, any> = {};
         await Promise.all(
           Object.entries(itemPartial).map(async ([name, value]) => {
-            const field = fields[name];
-            const { setCreate, setUpdate } = field;
-            Object.assign(
-              data,
-              operation === "create" && setCreate
-                ? await setCreate.resolver(value, undefined, context, info)
-                : undefined,
-              operation === "update" && setUpdate
-                ? await setUpdate.resolver(value, source!, context, info)
-                : undefined
-            );
+            try {
+              const field = fields[name];
+
+              // access WRITE
+              const onAccessField = field.hooks["on-access"];
+              const hookArgs = [source, context, info] as const;
+              onAccessField && onAccessField(...hookArgs);
+
+              const { setCreate, setUpdate } = field;
+              Object.assign(
+                data,
+                operation === "create" && setCreate
+                  ? await setCreate.resolver(value, undefined, context, info)
+                  : undefined,
+                operation === "update" && setUpdate
+                  ? await setUpdate.resolver(value, source!, context, info)
+                  : undefined
+              );
+            } catch (e) {
+              Object.assign(fieldErrors, { [name]: e });
+            }
           })
         );
+
+        if (Object.keys(fieldErrors).length)
+          throw new AutographError("FIELD_ERRORS", fieldErrors);
 
         // model hooks
         const onCreate = hooks["on-create"];
@@ -128,8 +143,6 @@ export function getMutationResolver(
             (await onUpdate(source!, context, info)),
           onMutation && (await onMutation(source, context, info))
         );
-
-        const fieldErrors = {};
 
         // field hooks
         await Promise.all(
@@ -161,28 +174,37 @@ export function getMutationResolver(
          * postData
          */
         const callback = async (source: Record<string, any>) => {
+          const fieldErrors = {};
+
           await Promise.all(
             Object.entries(itemPartial).map(async ([name, value]) => {
-              const field = fields[name];
-              const { setCreateAfterData, setUpdateAfterData } = field;
-              operation === "create" &&
-                setCreateAfterData &&
-                (await setCreateAfterData.resolver(
-                  value,
-                  source,
-                  context,
-                  info
-                ));
-              operation === "update" &&
-                setUpdateAfterData &&
-                (await setUpdateAfterData.resolver(
-                  value,
-                  source,
-                  context,
-                  info
-                ));
+              try {
+                const field = fields[name];
+                const { setCreateAfterData, setUpdateAfterData } = field;
+                operation === "create" &&
+                  setCreateAfterData &&
+                  (await setCreateAfterData.resolver(
+                    value,
+                    source,
+                    context,
+                    info
+                  ));
+                operation === "update" &&
+                  setUpdateAfterData &&
+                  (await setUpdateAfterData.resolver(
+                    value,
+                    source,
+                    context,
+                    info
+                  ));
+              } catch (e) {
+                Object.assign(fieldErrors, { [name]: e });
+              }
             })
           );
+
+          if (Object.keys(fieldErrors).length)
+            throw new AutographError("FIELD_ERRORS", fieldErrors);
 
           // model hooks
           const onCreate = hooks["on-create-after-data"];
@@ -195,8 +217,6 @@ export function getMutationResolver(
             onUpdate &&
             (await onUpdate(source!, context, info));
           onMutation && (await onMutation(source, context, info));
-
-          const fieldErrors = {};
 
           // field hooks
           await Promise.all(
@@ -241,8 +261,9 @@ export function getMutationResolver(
         });
 
         if (!source)
-          throw new TypeError(
-            `[adapter.onMutation(${operation})] expected result, got undefined`
+          throw new AutographError(
+            "MUTATION_ERROR",
+            `(${operation}) expected result, got undefined`
           );
 
         await callback(source);

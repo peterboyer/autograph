@@ -2,11 +2,11 @@ import { Type, Scalar } from "../types/type";
 import { AsScalar, asScalar } from "../types/type-utils";
 import { Node } from "../types/graph";
 import { Sources } from "../types/sources";
-import { Hooks } from "../types/hooks";
+import { ModelHooks } from "../types/hooks";
 import { Resolver } from "../types/resolver";
 import { Field, GetResolver } from "./field";
 import { Options, OptionsCallback } from "./field-options";
-import { Filter, FilterResolver, Transport } from "./filter";
+import { Filter, FilterResolver } from "./filter";
 import { useMappers } from "./use-mappers";
 import { useDefaultFilters } from "./use-default-filters";
 
@@ -18,7 +18,7 @@ export class Model<
 
   readonly fields: Record<string, Field<Source>>;
   readonly filters: Record<string, Filter>;
-  readonly hooks: Partial<Hooks<Source>>;
+  readonly hooks: Partial<ModelHooks<Source>>;
   readonly typeDefs: Record<Node, string[]>;
   readonly resolvers: Record<Node, Resolver[]>;
 
@@ -209,7 +209,7 @@ export class Model<
     return this;
   }
 
-  hook<E extends keyof Hooks<Source>, H extends Hooks<Source>[E]>(
+  hook<E extends keyof ModelHooks<Source>, H extends ModelHooks<Source>[E]>(
     event: E,
     handler: H
   ) {

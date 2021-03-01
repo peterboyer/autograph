@@ -10,9 +10,15 @@ export function getRootResolver(model: ModelAny, adapter: Adapter) {
 
     const { name, type } = field;
     acc[name] = async (...resolverArgs) => {
+      const [source, , context, info] = resolverArgs;
+
+      // access READ
+      const onAccessField = field.hooks["on-access"];
+      const hookArgs = [source, context, info] as const;
+      onAccessField && onAccessField(...hookArgs);
+
       const result = await get.resolver(...resolverArgs);
 
-      const [, , context] = resolverArgs;
       // pass-through complete objects/arrays that don't need resolution
       if (result && typeof result === "object") return result;
 

@@ -64,7 +64,23 @@ export interface Hooks<Source> {
     context: Context,
     info: Info
   ) => MaybePromise<void>;
+  // field hooks
+  "on-access": (
+    source: Source | undefined,
+    context: Context,
+    info: Info
+  ) => MaybePromise<void>;
+  "on-validate": (
+    source: Source,
+    context: Context,
+    info: Info
+  ) => MaybePromise<void>;
 }
+
+export type ModelHooks<Source> = Omit<
+  Hooks<Source>,
+  "on-access" | "on-validate"
+>;
 
 export type FieldHooks<Source> = Omit<
   Hooks<Source>,
