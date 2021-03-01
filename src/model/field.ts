@@ -17,6 +17,7 @@ export type Field<Source> = {
   hooks: Partial<FieldHooks<Source>>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
+  validate?: Validator<Source>;
 };
 
 export type Getter<Source> = {
@@ -46,3 +47,10 @@ export type SetResolver<
 ) => MaybePromise<Return>;
 
 export type MutationStage = "data" | "action";
+
+export type Validator<Source, T extends Scalar = any> = (
+  value: Typed<T>,
+  source: Source | undefined,
+  context: Context,
+  info: Info
+) => MaybePromise<void | boolean | string>;

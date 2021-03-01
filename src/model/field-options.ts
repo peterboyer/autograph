@@ -4,9 +4,9 @@ import { Typed } from "../types/type-utils";
 import { FieldHooks } from "../types/hooks";
 import { Context } from "../types/context";
 import { Info } from "../types/info";
-import { Getter, Setter, GetResolver, SetResolver } from "./field";
+import { Getter, Setter, GetResolver, SetResolver, Validator } from "./field";
 
-export type Options<Source> = {
+export type Options<Source, SetType extends Scalar> = {
   alias?: Exclude<keyof Source, number | symbol>;
   get?: Getter<Source> | null;
   set?: Setter<Source | undefined, Partial<Source>> | null;
@@ -15,10 +15,22 @@ export type Options<Source> = {
   setAfterData?: Setter<Source, void>;
   setCreateAfterData?: Setter<Source, void>;
   setUpdateAfterData?: Setter<Source, void>;
-  hooks?: Partial<FieldHooks<Source>>;
   orderTarget?: Exclude<keyof Source, number | symbol>;
   filterTarget?: Exclude<keyof Source, number | symbol>;
   defaultFilters?: boolean;
+  validate?: Validator<Source, SetType> | Validator<Source, SetType>[];
+} & {
+  onRead?: FieldHooks<Source>["onRead"];
+  onWrite?: FieldHooks<Source>["onWrite"];
+  onAccess?: FieldHooks<Source>["onAccess"];
+  onModelCreate?: FieldHooks<Source>["onCreate"];
+  onModelCreateAfterData?: FieldHooks<Source>["onCreateAfterData"];
+  onModelUpdate?: FieldHooks<Source>["onUpdate"];
+  onModelUpdateAfterData?: FieldHooks<Source>["onUpdateAfterData"];
+  onModelDelete?: FieldHooks<Source>["onDelete"];
+  onModelDeleteAfterData?: FieldHooks<Source>["onDeleteAfterData"];
+  onModelMutation?: FieldHooks<Source>["onMutation"];
+  onModelMutationAfterData?: FieldHooks<Source>["onMutationAfterData"];
 };
 
 export type OptionsCallback<
@@ -28,7 +40,7 @@ export type OptionsCallback<
 > = (mappers: {
   get: GetMapper<Source, GetType>;
   set: SetMapper<Source, SetType>;
-}) => Options<Source>;
+}) => Options<Source, SetType>;
 
 /**
  * MAPPERS

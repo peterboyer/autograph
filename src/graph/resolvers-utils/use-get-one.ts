@@ -17,7 +17,7 @@ export const useGetOne = (model: ModelAny, adapter: Adapter) => async (
     id,
   };
 
-  const queryHook = hooks["on-query-one"] || hooks["on-query"];
+  const queryHook = hooks.onQueryOne || hooks.onQuery;
   const queryModifier: QueryModifier = (query) => {
     queryHook && queryHook(query, context, info);
   };

@@ -7,17 +7,17 @@ export interface Hooks<Source> {
   /**
    * query hooks
    */
-  "on-query": (
+  onQuery: (
     query: AdapterTransport,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  "on-query-one": (
+  onQueryOne: (
     query: AdapterTransport,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  "on-query-many": (
+  onQueryMany: (
     query: AdapterTransport,
     context: Context,
     info: Info
@@ -25,64 +25,78 @@ export interface Hooks<Source> {
   /**
    * mutation hooks
    */
-  "on-create": (
+  onCreate: (
     context: Context,
     info: Info
   ) => MaybePromise<Partial<Source> | void>;
-  "on-create-after-data": (
+  onCreateAfterData: (
     source: Source,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  "on-update": (
+  onUpdate: (
     source: Source,
     context: Context,
     info: Info
   ) => MaybePromise<Partial<Source> | void>;
-  "on-update-after-data": (
+  onUpdateAfterData: (
     source: Source,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  "on-delete": (
+  onDelete: (
     source: Source,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  "on-delete-after-data": (
+  onDeleteAfterData: (
     source: Source,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  "on-mutation": (
+  onMutation: (
     source: Source | undefined,
     context: Context,
     info: Info
   ) => MaybePromise<Partial<Source> | void>;
-  "on-mutation-after-data": (
+  onMutationAfterData: (
     source: Source,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  // field hooks
-  "on-access": (
+  /**
+   * field hooks
+   */
+  onRead: (
     source: Source | undefined,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
-  "on-validate": (
-    source: Source,
+  onWrite: (
+    source: Source | undefined,
+    context: Context,
+    info: Info
+  ) => MaybePromise<void>;
+  onAccess: (
+    source: Source | undefined,
     context: Context,
     info: Info
   ) => MaybePromise<void>;
 }
 
+/**
+ * exclude field only fields
+ */
 export type ModelHooks<Source> = Omit<
   Hooks<Source>,
-  "on-access" | "on-validate"
+  "onRead" | "onWrite" | "onAccess"
 >;
 
+/**
+ * exclude model only fields
+ *
+ */
 export type FieldHooks<Source> = Omit<
   Hooks<Source>,
-  "on-query" | "on-query-one" | "on-query-many"
+  "onQuery" | "onQueryOne" | "onQueryMany"
 >;

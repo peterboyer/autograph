@@ -34,17 +34,17 @@ export function getMutationResolver(
           const source = await getItem(id);
 
           // hook
-          const onDelete = hooks["on-delete"];
+          const onDelete = hooks.onDelete;
           onDelete && (await onDelete(source, context, info));
-          const onMutation = hooks["on-mutation"];
+          const onMutation = hooks.onMutation;
           onMutation && (await onMutation(source, context, info));
 
           // field hooks
           await Promise.all(
             Object.values(fields).map(async ({ hooks }) => {
-              const onDelete = hooks["on-delete"];
+              const onDelete = hooks.onDelete;
               onDelete && (await onDelete(source, context, info));
-              const onMutation = hooks["on-mutation"];
+              const onMutation = hooks.onMutation;
               onMutation && (await onMutation(source, context, info));
             })
           );
@@ -52,9 +52,9 @@ export function getMutationResolver(
           await adapter.onMutation({ ...mutation, id });
 
           // hook
-          const onDeleteAfterData = hooks["on-delete-after-data"];
+          const onDeleteAfterData = hooks.onDeleteAfterData;
           onDeleteAfterData && (await onDeleteAfterData(source, context, info));
-          const onMutationAfterData = hooks["on-mutation-after-data"];
+          const onMutationAfterData = hooks.onMutationAfterData;
           onMutationAfterData &&
             (await onMutationAfterData(source, context, info));
 
@@ -64,10 +64,10 @@ export function getMutationResolver(
           await Promise.all(
             Object.values(fields).map(async ({ name, hooks }) => {
               try {
-                const onDeleteAfterData = hooks["on-delete-after-data"];
+                const onDeleteAfterData = hooks.onDeleteAfterData;
                 onDeleteAfterData &&
                   (await onDeleteAfterData(source, context, info));
-                const onMutationAfterData = hooks["on-mutation-after-data"];
+                const onMutationAfterData = hooks.onMutationAfterData;
                 onMutationAfterData &&
                   (await onMutationAfterData(source, context, info));
               } catch (e) {
@@ -108,9 +108,20 @@ export function getMutationResolver(
               const field = fields[name];
 
               // access WRITE
-              const onAccessField = field.hooks["on-access"];
+              const onWrite = field.hooks.onWrite;
+              const onAccess = field.hooks.onAccess;
               const hookArgs = [source, context, info] as const;
-              onAccessField && onAccessField(...hookArgs);
+              onWrite && (await onWrite(...hookArgs));
+              onAccess && (await onAccess(...hookArgs));
+
+              // validate
+              const onValidate = field.validate;
+              const validation =
+                onValidate && (await onValidate(value, ...hookArgs));
+              if (onValidate) {
+                if (validation === false) throw "INVALID";
+                else if (typeof validation === "string") throw validation;
+              }
 
               const { setCreate, setUpdate } = field;
               Object.assign(
@@ -132,9 +143,9 @@ export function getMutationResolver(
           throw new AutographError("FIELD_ERRORS", fieldErrors);
 
         // model hooks
-        const onCreate = hooks["on-create"];
-        const onUpdate = hooks["on-update"];
-        const onMutation = hooks["on-mutation"];
+        const onCreate = hooks.onCreate;
+        const onUpdate = hooks.onUpdate;
+        const onMutation = hooks.onMutation;
         Object.assign(
           data,
           operation === "create" && onCreate && (await onCreate(context, info)),
@@ -148,9 +159,9 @@ export function getMutationResolver(
         await Promise.all(
           Object.values(fields).map(async ({ name, hooks }) => {
             try {
-              const onCreate = hooks["on-create"];
-              const onUpdate = hooks["on-update"];
-              const onMutation = hooks["on-mutation"];
+              const onCreate = hooks.onCreate;
+              const onUpdate = hooks.onUpdate;
+              const onMutation = hooks.onMutation;
               Object.assign(
                 data,
                 operation === "create" &&
@@ -207,9 +218,9 @@ export function getMutationResolver(
             throw new AutographError("FIELD_ERRORS", fieldErrors);
 
           // model hooks
-          const onCreate = hooks["on-create-after-data"];
-          const onUpdate = hooks["on-update-after-data"];
-          const onMutation = hooks["on-mutation-after-data"];
+          const onCreate = hooks.onCreateAfterData;
+          const onUpdate = hooks.onUpdateAfterData;
+          const onMutation = hooks.onMutationAfterData;
           operation === "create" &&
             onCreate &&
             (await onCreate(source, context, info));
@@ -222,9 +233,9 @@ export function getMutationResolver(
           await Promise.all(
             Object.values(fields).map(async ({ name, hooks }) => {
               try {
-                const onCreate = hooks["on-create-after-data"];
-                const onUpdate = hooks["on-update-after-data"];
-                const onMutation = hooks["on-mutation-after-data"];
+                const onCreate = hooks.onCreateAfterData;
+                const onUpdate = hooks.onUpdateAfterData;
+                const onMutation = hooks.onMutationAfterData;
                 operation === "create" &&
                   onCreate &&
                   (await onCreate(source, context, info));

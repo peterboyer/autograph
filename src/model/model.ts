@@ -10,6 +10,22 @@ import { Filter, FilterResolver } from "./filter";
 import { useMappers } from "./use-mappers";
 import { useDefaultFilters } from "./use-default-filters";
 
+type ResolveGet<T extends Type | { get: Type; set: Scalar }> = T extends {
+  get: Type;
+}
+  ? T["get"]
+  : T extends Type
+  ? T
+  : unknown;
+
+type ResolveSet<T extends Type | { get: Type; set: Scalar }> = T extends {
+  set: Scalar;
+}
+  ? T["set"]
+  : T extends Type
+  ? AsScalar<T>
+  : unknown;
+
 export class Model<
   Name extends string,
   Source extends Name extends keyof Sources ? Sources[Name] : any
@@ -40,14 +56,14 @@ export class Model<
         mutationCreate?: string | boolean;
         mutationUpdate?: string | boolean;
         mutationDelete?: string | boolean;
-      } & Pick<Model<any, any>, "limitDefault" | "limitMax" | "defaultDocs">
+      } & Pick<Model<any, any>, "limitDefault" | "limitMax" | "defaultDocs"> &
+        Partial<ModelHooks<Source>>
     >
   ) {
     this.name = name;
 
     this.fields = {};
     this.filters = {};
-    this.hooks = {};
     this.typeDefs = { root: [], query: [], mutation: [] };
     this.resolvers = { root: [], query: [], mutation: [] };
 
@@ -60,7 +76,32 @@ export class Model<
       limitDefault = 20,
       limitMax = 50,
       defaultDocs = true,
+      onQuery,
+      onQueryOne,
+      onQueryMany,
+      onCreate,
+      onCreateAfterData,
+      onUpdate,
+      onUpdateAfterData,
+      onDelete,
+      onDeleteAfterData,
+      onMutation,
+      onMutationAfterData,
     } = options || {};
+
+    this.hooks = {
+      onQuery,
+      onQueryOne,
+      onQueryMany,
+      onCreate,
+      onCreateAfterData,
+      onUpdate,
+      onUpdateAfterData,
+      onDelete,
+      onDeleteAfterData,
+      onMutation,
+      onMutationAfterData,
+    };
 
     this.queryOne = queryOne === true ? `${name}` : queryOne || undefined;
     this.queryMany =
@@ -80,26 +121,10 @@ export class Model<
     name: string,
     type: T,
     options?:
-      | Options<Source>
-      | OptionsCallback<
-          Source,
-          T extends { get: Type } ? T["get"] : T extends Type ? T : unknown,
-          T extends { set: Scalar }
-            ? T["set"]
-            : T extends Type
-            ? AsScalar<T>
-            : unknown
-        >
+      | Options<Source, ResolveSet<T>>
+      | OptionsCallback<Source, ResolveGet<T>, ResolveSet<T>>
   ) {
-    const mappers = useMappers<
-      Source,
-      T extends { get: Type } ? T["get"] : T extends Type ? T : unknown,
-      T extends { set: Scalar }
-        ? T["set"]
-        : T extends Type
-        ? AsScalar<T>
-        : unknown
-    >();
+    const mappers = useMappers<Source, ResolveGet<T>, ResolveSet<T>>();
 
     const {
       alias,
@@ -110,16 +135,27 @@ export class Model<
       setAfterData,
       setCreateAfterData,
       setUpdateAfterData,
-      hooks,
       orderTarget,
       filterTarget,
       defaultFilters = true,
+      validate,
+      onRead,
+      onWrite,
+      onAccess,
+      onModelCreate,
+      onModelCreateAfterData,
+      onModelUpdate,
+      onModelUpdateAfterData,
+      onModelDelete,
+      onModelDeleteAfterData,
+      onModelMutation,
+      onModelMutationAfterData,
       ...opts
     } = options
       ? typeof options === "function"
         ? options(mappers)
         : options
-      : ({} as Options<Source>);
+      : ({} as Options<Source, ResolveSet<T>>);
     const key = alias || (name as Exclude<keyof Source, number | symbol>);
 
     const defaultGet = {
@@ -175,7 +211,27 @@ export class Model<
               : undefined),
       setCreateAfterData: setCreateAfterData || setAfterData,
       setUpdateAfterData: setUpdateAfterData || setAfterData,
-      hooks: hooks ?? {},
+      validate: Array.isArray(validate)
+        ? async (...args) => {
+            for (const func of validate) {
+              const result = await func(...args);
+              if (result) return result;
+            }
+          }
+        : validate,
+      hooks: {
+        onRead,
+        onWrite,
+        onAccess,
+        onCreate: onModelCreate,
+        onCreateAfterData: onModelCreateAfterData,
+        onUpdate: onModelUpdate,
+        onUpdateAfterData: onModelUpdateAfterData,
+        onDelete: onModelDelete,
+        onDeleteAfterData: onModelDeleteAfterData,
+        onMutation: onModelMutation,
+        onMutationAfterData: onModelMutationAfterData,
+      },
       orderTarget: orderTarget ?? get === undefined ? key : undefined,
       filterTarget: filterTarget ?? get === undefined ? key : undefined,
       ...opts,

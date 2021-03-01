@@ -57,7 +57,7 @@ export function getQueryManyResolver(model: ModelAny, adapter: Adapter) {
       });
     }
 
-    const queryHook = hooks["on-query-many"] || hooks["on-query"];
+    const queryHook = hooks.onQueryMany || hooks.onQuery;
     const queryModifier: QueryModifier = (query) => {
       if (args.filters)
         Object.entries(args.filters).forEach(([filterName, value]) => {
