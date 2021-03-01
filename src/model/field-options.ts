@@ -1,6 +1,6 @@
 import { MaybePromise } from "../types/utils";
 import { Type, Scalar } from "../types/type";
-import { Typed, AsScalar } from "../types/type-utils";
+import { Typed } from "../types/type-utils";
 import { FieldHooks } from "../types/hooks";
 import { Context } from "../types/context";
 import { Info } from "../types/info";

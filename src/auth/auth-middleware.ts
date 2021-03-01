@@ -1,6 +1,6 @@
 import http from "http";
 
-export type TOptions<User, UserToken> = {
+export type Options<User, UserToken> = {
   resolveHeader?: (req: http.RequestOptions) => string | undefined;
   resolveToken: (raw: string) => Promise<UserToken | undefined>;
   resolveUser: (token: UserToken) => Promise<User | undefined>;
@@ -12,16 +12,16 @@ export type TOptions<User, UserToken> = {
 
 export class AuthMiddleware<User, UserToken> {
   options: {
-    resolveHeader: NonNullable<TOptions<User, UserToken>["resolveHeader"]>;
-    resolveToken: TOptions<User, UserToken>["resolveToken"];
-    resolveUser: TOptions<User, UserToken>["resolveUser"];
-    predicate: TOptions<User, UserToken>["predicate"];
-    onSuccess: TOptions<User, UserToken>["onSuccess"];
-    onResolveError: TOptions<User, UserToken>["onResolveError"];
-    onPredicateError: TOptions<User, UserToken>["onPredicateError"];
+    resolveHeader: NonNullable<Options<User, UserToken>["resolveHeader"]>;
+    resolveToken: Options<User, UserToken>["resolveToken"];
+    resolveUser: Options<User, UserToken>["resolveUser"];
+    predicate: Options<User, UserToken>["predicate"];
+    onSuccess: Options<User, UserToken>["onSuccess"];
+    onResolveError: Options<User, UserToken>["onResolveError"];
+    onPredicateError: Options<User, UserToken>["onPredicateError"];
   };
 
-  constructor(options: TOptions<User, UserToken>) {
+  constructor(options: Options<User, UserToken>) {
     this.options = {
       resolveHeader:
         options.resolveHeader ||

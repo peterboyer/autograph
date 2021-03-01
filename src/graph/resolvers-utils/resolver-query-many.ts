@@ -33,8 +33,9 @@ export function getQueryManyResolver(model: ModelAny, adapter: Adapter) {
     };
 
     if (args.order) {
-      const [, orderFieldName, orderDirection] =
-        args.order.match(/^([\w\d]+)(?::(asc|desc))?$/) || [];
+      const [, orderFieldName, orderDirection] = (args.order.match(
+        /^([\w\d]+)_(asc|desc)$/
+      ) || []) as (string | undefined)[];
       if (!orderFieldName || !orderDirection)
         throw new Error("INVALID_QUERY_ORDER");
 

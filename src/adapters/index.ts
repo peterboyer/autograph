@@ -1,1 +1,1 @@
-export * as knex from "./knex";
+export { KnexAdapter } from "./knex";

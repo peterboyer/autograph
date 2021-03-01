@@ -1,2 +1,2 @@
-export { KnexAdapter } from "./knex-adapter";
-export { Op, op, QueryTransport, MutationTransport } from "./transports";
+export * from "./knex-adapter";
+export * from "./transports";
