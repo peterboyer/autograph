@@ -21,7 +21,7 @@ jq ".version=\"$VERSION_NEXT\"" package.json > lib/package.json
 
 echo "* publishing ..."
 cd lib
-yarn publish --new-version $VERSION_NEXT --no-git-tag-version
+yarn publish --new-version $VERSION_NEXT --no-git-tag-version --access public
 cd ..
 
 echo "* tagging ..."
