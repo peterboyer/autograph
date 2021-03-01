@@ -2,7 +2,20 @@ export class AutographError extends Error {
   data: any;
   constructor(code: string, data?: any) {
     super(code);
-    this.data = data;
+    if (data && typeof data === "object") {
+      const nextData = { ...data };
+      Object.entries(nextData).forEach(([key, value]) => {
+        if (value instanceof AutographError) {
+          nextData[key] = {
+            code: value.message,
+            data: value.data,
+          };
+        }
+      });
+      this.data = nextData;
+    } else {
+      this.data = data;
+    }
   }
 }
 

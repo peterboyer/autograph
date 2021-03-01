@@ -71,7 +71,7 @@ export function getMutationResolver(
                 onMutationAfterData &&
                   (await onMutationAfterData(source, context, info));
               } catch (e) {
-                Object.assign(fieldErrors, { [name]: e.toString() });
+                Object.assign(fieldErrors, { [name]: e });
               }
             })
           );
@@ -149,7 +149,7 @@ export function getMutationResolver(
                 onMutation && (await onMutation(source, context, info))
               );
             } catch (e) {
-              Object.assign(fieldErrors, { [name]: e.toString() });
+              Object.assign(fieldErrors, { [name]: e });
             }
           })
         );
@@ -213,7 +213,7 @@ export function getMutationResolver(
                   (await onUpdate(source, context, info));
                 onMutation && (await onMutation(source, context, info));
               } catch (e) {
-                Object.assign(fieldErrors, { [name]: e.toString() });
+                Object.assign(fieldErrors, { [name]: e });
               }
             })
           );
