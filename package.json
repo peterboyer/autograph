@@ -15,7 +15,7 @@
     "clean": "rm -rf ./lib",
     "build": "yarn clean && yarn build-ts && yarn build-package",
     "build-ts": "tsc",
-    "build-package": "cp package.json README.md ./lib",
+    "build-package": "mkdir -p ./lib && cp package.json README.md ./lib",
     "watch-ts": "yarn build-ts -w",
     "watch-yalc": "yarn build-package && nodemon --delay 500ms --exec \"yarn dev-push\"",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch-ts\" \"yarn watch-yalc\"",
