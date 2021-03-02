@@ -1,30 +1,22 @@
 import http from "http";
+import { Optional } from "../types/utils";
+import { AutographError } from "../errors";
 
-export type Options<User, UserToken> = {
-  resolveHeader?: (req: http.RequestOptions) => string | undefined;
-  resolveToken: (raw: string) => Promise<UserToken | undefined>;
-  resolveUser: (token: UserToken) => Promise<User | undefined>;
-  predicate?: (token: UserToken) => Promise<boolean> | boolean;
-  onSuccess?: (token: UserToken) => Promise<void>;
-  onResolveError?: () => Promise<void>;
-  onPredicateError?: (token: UserToken) => Promise<void>;
-};
-
-export class AuthMiddleware<User, UserToken> {
+export class AuthMiddleware<User, UserID = any> {
   options: {
-    resolveHeader: NonNullable<Options<User, UserToken>["resolveHeader"]>;
-    resolveToken: Options<User, UserToken>["resolveToken"];
-    resolveUser: Options<User, UserToken>["resolveUser"];
-    predicate: Options<User, UserToken>["predicate"];
-    onSuccess: Options<User, UserToken>["onSuccess"];
-    onResolveError: Options<User, UserToken>["onResolveError"];
-    onPredicateError: Options<User, UserToken>["onPredicateError"];
+    devToken?: boolean;
+    getHeader: (req: http.RequestOptions) => string | undefined;
+    getUserIdFromToken: (token: string) => Promise<UserID | undefined>;
+    getUserIdFromDevToken: (id: string) => UserID | undefined;
+    getUser: (userId: UserID) => Promise<User>;
   };
 
-  constructor(options: Options<User, UserToken>) {
+  constructor(
+    options: Optional<AuthMiddleware<User, UserID>["options"], "getHeader">
+  ) {
     this.options = {
-      resolveHeader:
-        options.resolveHeader ||
+      getHeader:
+        options.getHeader ||
         ((req) => {
           const header = req?.headers?.authorization;
           if (!header) return;
@@ -32,28 +24,15 @@ export class AuthMiddleware<User, UserToken> {
           if (typeof header === "number") return;
           return header;
         }),
-      resolveToken: options.resolveToken,
-      resolveUser: options.resolveUser,
-      predicate: options.predicate,
-      onSuccess: options.onSuccess,
-      onResolveError:
-        options.onResolveError ||
-        (() => {
-          throw new Error("AUTH_RESOLVE_ERROR");
-        }),
-      onPredicateError:
-        options.onPredicateError ||
-        (() => {
-          throw new Error("AUTH_PREDICATE_ERROR");
-        }),
+      ...options,
     };
   }
 
-  onRequest(req: http.RequestOptions): string | undefined {
-    const header = this.options.resolveHeader(req);
+  getTokenFromRequest(req: http.RequestOptions) {
+    const header = this.options.getHeader(req);
 
     if (!header) return;
-    const headerMatch = header.match(/^Bearer (.*)$/);
+    const headerMatch = header.match(/^Bearer (.+)$/);
 
     if (!headerMatch) return;
     const [, raw] = headerMatch;
@@ -61,48 +40,35 @@ export class AuthMiddleware<User, UserToken> {
     return raw;
   }
 
-  async onRaw(raw?: string): Promise<UserToken | undefined> {
-    if (!raw) {
-      return;
+  getUserIdFromToken(token: string) {
+    const devtoken = token.match(/^devtoken:(\d+)$/);
+    if (devtoken) {
+      return this.options.getUserIdFromDevToken(devtoken[1]);
     }
-
-    const token = await this.options.resolveToken(raw);
-
-    if (!token) {
-      this.options.onResolveError && (await this.options.onResolveError());
-      return;
-    }
-
-    if (this.options.predicate) {
-      if (!(await this.options.predicate(token))) {
-        this.options.onPredicateError &&
-          (await this.options.onPredicateError(token));
-      }
-    }
-
-    this.options.onSuccess && (await this.options.onSuccess(token));
-
-    return token;
+    return this.options.getUserIdFromToken(token);
   }
 
-  async onToken(token: UserToken) {
-    const user = await this.options.resolveUser(token);
-
-    if (!user) {
-      this.options.onResolveError && (await this.options.onResolveError());
+  async getUserFromToken(token: string | undefined) {
+    if (!token) {
       return;
+    }
+
+    const userId = await this.getUserIdFromToken(token);
+    if (!userId) {
+      throw new AutographError("TOKEN_INVALID");
+    }
+
+    const user = await this.options.getUser(userId);
+    if (!user) {
+      throw new AutographError("TOKEN_INVALID_USER");
     }
 
     return user;
   }
 
   async resolve(req: http.RequestOptions) {
-    const raw = this.onRequest(req);
-    const token = (await this.onRaw(raw)) || undefined;
-    const user = (token && (await this.onToken(token))) || undefined;
-
-    return { user, token };
+    const token = this.getTokenFromRequest(req);
+    const user = await this.getUserFromToken(token);
+    return user;
   }
 }
-
-export default AuthMiddleware;
