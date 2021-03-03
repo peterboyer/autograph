@@ -1,6 +1,6 @@
 {
   "name": "@armix/autograph",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Peter Boyer <@ptboyer>",
   "description": "Generate CRUD TypeDefs and Resolvers for GraphQL APIs.",
   "repository": "https://github.com/armix-io/autograph",
