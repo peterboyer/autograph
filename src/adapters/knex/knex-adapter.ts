@@ -4,8 +4,8 @@ import { CursorStore } from "../../types/cursor";
 import { MemoryCursorStore } from "../../cursors";
 import { onQuery } from "./on-query";
 import { onMutation } from "./on-mutation";
-import getUseQuery from "./use-query";
-import getUseMutation from "./use-mutation";
+import { getUseQuery } from "./use-query";
+import { getUseMutation } from "./use-mutation";
 
 type Options = {
   tableNames?: Map<string, string>;

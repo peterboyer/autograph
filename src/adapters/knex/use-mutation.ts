@@ -10,7 +10,7 @@ export interface UseMutation {
   (mutation: GraphMutationTransport): Promise<number | undefined>;
 }
 
-const constructor = (knex: Knex, options: Options) => {
+export const getUseMutation = (knex: Knex, options: Options) => {
   const tableNames = options.tableNames || new Map<string, string>();
   const knexMutationExecutor = new KnexMutationExecutor(knex);
 
@@ -41,5 +41,3 @@ const constructor = (knex: Knex, options: Options) => {
 
   return useMutation;
 };
-
-export default constructor;
