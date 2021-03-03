@@ -3,7 +3,7 @@ import cloneDeep from "lodash.clonedeep";
 import { QueryTransport as GraphQueryTransport } from "../../types/transports";
 import { QueryModifier } from "../../types/adapter";
 import { QueryTransport, op } from "./transports";
-import KnexQueryExecutor from "./knex-query-executor";
+import { KnexQueryExecutor } from "./knex-query-executor";
 
 export type Options = {
   tableNames?: Map<string, string>;
@@ -32,7 +32,7 @@ export interface UseQuery {
   }>;
 }
 
-const getUseQuery = (knex: Knex, options: Options) => {
+export const getUseQuery = (knex: Knex, options: Options) => {
   const tableNames = options.tableNames ?? new Map<string, string>();
   const knexQueryExecutor = new KnexQueryExecutor(knex);
 
@@ -200,5 +200,3 @@ const getUseQuery = (knex: Knex, options: Options) => {
 
   return useQuery;
 };
-
-export default getUseQuery;

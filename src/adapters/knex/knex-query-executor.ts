@@ -1,7 +1,7 @@
 import Knex from "knex";
 import { QueryTransport } from "./transports";
 
-class KnexQueryExecutor {
+export class KnexQueryExecutor {
   knex: Knex;
 
   constructor(knex: Knex) {
@@ -16,5 +16,3 @@ class KnexQueryExecutor {
     return await query;
   }
 }
-
-export default KnexQueryExecutor;

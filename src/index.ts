@@ -8,4 +8,5 @@ export * from "./auth";
 export * from "./cursors";
 export * from "./graph";
 export * from "./model";
+export * from "./plugins";
 export * from "./types";
