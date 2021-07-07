@@ -8,14 +8,14 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "clean": "rm -rf ./lib",
+    "clean": "rm -rf ./dist",
     "build": "yarn clean && yarn build-ts && yarn build-package",
     "build-ts": "tsc",
-    "build-package": "mkdir -p ./lib && cp package.json README.md ./lib",
+    "build-package": "mkdir -p ./dist && cp package.json README.md ./dist",
     "watch-ts": "yarn build-ts -w",
     "watch-yalc": "yarn build-package && nodemon --delay 500ms --exec \"yarn dev-push\"",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ts,yalc\" -c \"cyan.bold,magenta.bold\" \"yarn watch-ts\" \"yarn watch-yalc\"",
-    "dev-push": "cd ./lib && yalc push --replace",
+    "dev-push": "cd ./dist && yalc push --replace",
     "release": "./deploy.sh",
     "test": "jest"
   },
