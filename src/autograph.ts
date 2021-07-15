@@ -1,113 +1,36 @@
-import omit from "lodash.omit";
-import { Node, Sources, Resolver, Adapter } from "./types";
-import {
-  NodeType,
-  NodeRootQuery,
-  NodeResolver,
-  NodeResolverOptions,
-  NodeRootResolver,
-} from "./graph";
-import { ModelAny } from "./model";
-import { buildTypeDefs } from "./graph/build-typedefs";
-import { buildResolvers, BuildResolversOptions } from "./graph/build-resolvers";
-import {
-  mergeTypeDefs,
-  mergeResolvers,
-  wrapResolvers,
-} from "./graph/graph-utils";
+import { source } from "common-tags";
+import { buildSchema as graphqlBuildSchema, GraphQLSchema } from "graphql";
+import { Resolver } from "./resolver/resolver";
 
-type Options = {
-  models: ModelAny[];
-  adapter: Adapter;
-  typeDefs?: Partial<Record<Node, string>>;
-  resolvers?: Partial<Record<Node, Record<string, any>>>;
-  wrapper?: (resolver: Resolver) => Resolver;
-  wrapperExcludes?: Partial<Record<Exclude<Node, "root">, string[]>>;
-  newIdsFn: BuildResolversOptions["newIdsFn"];
-  getNodeIdFn: BuildResolversOptions["getNodeIdFn"];
-  getNodeInfoFn: NodeResolverOptions["getNodeInfoFn"];
-};
-
-export { Options as AutographOptions };
+type Schema = GraphQLSchema;
+type RootValue = { Query: Record<string, any>; Mutation: Record<string, any> };
 
 export class Autograph {
-  typeDefs: string;
-  resolvers: Record<"Node" | "Query" | "Mutation", Record<string, Resolver>>;
+  #resolvers: Resolver[];
 
-  constructor(options: Options) {
-    const {
-      models,
-      adapter,
-      typeDefs,
-      resolvers,
-      wrapper,
-      wrapperExcludes,
-      newIdsFn,
-      getNodeIdFn,
-      getNodeInfoFn,
-    } = options;
+  constructor() {
+    this.#resolvers = [];
+  }
 
-    const node = NodeResolver({
-      models,
-      adapter,
-      getNodeInfoFn,
-    });
+  use(source: Resolver): this {
+    this.#resolvers.push(source);
+    return this;
+  }
 
-    const modelsTypeDefs = models.map((model) => buildTypeDefs(model));
-    const modelsResolvers = models.map((model) =>
-      buildResolvers(model, adapter, { newIdsFn, getNodeIdFn })
-    );
-
-    this.typeDefs = `
-      ${NodeType}
-      ${typeDefs?.root || ""}
-      ${mergeTypeDefs(modelsTypeDefs)}
+  buildSchema(): Schema {
+    const schema = graphqlBuildSchema(source`
       type Query {
-        ${NodeRootQuery}
-        ${typeDefs?.query || ""}
-        ${mergeTypeDefs(modelsTypeDefs, "query")}
+        foo: String
       }
-      type Mutation {
-        ${typeDefs?.mutation || ""}
-        ${mergeTypeDefs(modelsTypeDefs, "mutation")}
-      }
-    `;
+    `);
+    return schema;
+  }
 
-    const rootResolvers = {
-      ...(resolvers?.root || {}),
-      ...mergeResolvers(modelsResolvers),
+  buildRootValue(): RootValue {
+    const rootValue = {
+      Query: {},
+      Mutation: {},
     };
-    const queryResolvers = {
-      ...({ node } as Record<string, Resolver>),
-      ...(resolvers?.query || {}),
-      ...mergeResolvers(modelsResolvers, "query"),
-    };
-    const mutationResolvers = {
-      ...(resolvers?.mutation || {}),
-      ...mergeResolvers(modelsResolvers, "mutation"),
-    };
-
-    this.resolvers = {
-      ...rootResolvers,
-      Node: NodeRootResolver,
-      Query: {
-        ...queryResolvers,
-        ...(wrapper
-          ? wrapResolvers(
-              omit(queryResolvers, wrapperExcludes?.query || []),
-              wrapper
-            )
-          : {}),
-      },
-      Mutation: {
-        ...mutationResolvers,
-        ...(wrapper
-          ? wrapResolvers(
-              omit(mutationResolvers, wrapperExcludes?.mutation || []),
-              wrapper
-            )
-          : {}),
-      },
-    };
+    return rootValue;
   }
 }

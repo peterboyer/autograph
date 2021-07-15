@@ -1,6 +1,6 @@
 // @ts-nocheck
 import test from "tape";
-import { Types, Scalar, Complex } from "./type";
+import { Types, Scalar, Complex } from "../../src/types/type";
 
 test("types", (t) => {
   t.test("scalar type", (t) => {
