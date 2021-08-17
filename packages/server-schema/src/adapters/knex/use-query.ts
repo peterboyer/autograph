@@ -120,20 +120,21 @@ const constructor = ({
       countMessage.ops.filter(({ tag }) => tag !== "trx");
       countMessage.ops.push(
         op(
-          (query, knex) =>
+          (query) =>
             query
               .clear("select")
               .clear("limit")
               .clear("order")
-              .select(knex.raw("count(*)")),
+              .select(`${table}.id`)
+              .groupBy(`${table}.id`),
           "count"
         )
       );
       useQueryResolver(countMessage);
-      const [row] = await knexQueryExecutor.execute<{ count: string }>(
+      const rows = await knexQueryExecutor.execute<{ count: string }>(
         countMessage
       );
-      return row ? parseInt(row.count) : 0;
+      return rows.length;
     })();
 
     /**
