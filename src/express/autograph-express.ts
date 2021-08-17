@@ -21,16 +21,17 @@ export class AutographExpress {
     this.#express = express();
     this.#port = port;
 
-    const schema = this.#autograph.buildSchema();
-    const rootValue = this.#autograph.buildRootValue();
+    const { schema, rootValue } = this.#autograph.build();
 
     const app = this.#express;
+
     app.use(
       "/graphql",
       graphqlHTTP({
         schema,
         rootValue,
         pretty: true,
+        graphiql: true,
       })
     );
   }

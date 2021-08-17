@@ -47,10 +47,13 @@ export const toScalar = <TYPE extends Type>(type: TYPE) => {
   type LIST = TYPE["__list"];
   type NONNULL = TYPE["__nonnull"];
 
-  return new Type<SUBTYPE, VALUETYPE, LIST, NONNULL>(
-    type.__name,
-    type.__subtype,
-    type.__list,
-    type.__nonnull
-  );
+  return new Type<
+    SUBTYPE,
+    VALUETYPE,
+    { LIST: LIST; NONNULL: NONNULL; DEFAULT: VALUETYPE }
+  >(type.__name, type.__subtype, {
+    LIST: type.__list,
+    NONNULL: type.__nonnull,
+    DEFAULT: type.__default,
+  });
 };

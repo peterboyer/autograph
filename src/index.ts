@@ -1,3 +1,4 @@
 export * from "./autograph";
-export * from "./types";
-export * from "./resolver";
+export * from "./type";
+export * from "./middleware";
+export * from "./service";

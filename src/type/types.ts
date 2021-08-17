@@ -1,6 +1,6 @@
 import { Type, Scalar, Object } from "./type";
 
-export { Type, Scalar, Object };
+export { Type, Scalar as Scalar, Object as Object };
 
 export const ID = new Scalar<string>("ID");
 
