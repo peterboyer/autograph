@@ -47,7 +47,8 @@ export function ResolverMutation(
           const source = await getItemOrThrow(id);
 
           // hook
-          ast.hooks.preDelete && (await ast.hooks.preDelete(source, context));
+          ast.hooks.preDelete &&
+            (await ast.hooks.preDelete(source, context, { operation }));
 
           // field hooks
           await Promise.all(
@@ -60,7 +61,8 @@ export function ResolverMutation(
           await options.adapter.onMutation(mutation);
 
           // hook
-          ast.hooks.postDelete && (await ast.hooks.postDelete(source, context));
+          ast.hooks.postDelete &&
+            (await ast.hooks.postDelete(source, context, { operation }));
 
           // field hooks
           await Promise.all(
@@ -205,9 +207,10 @@ export function ResolverMutation(
         };
 
         // hook
-        if (preSource)
-          ast.hooks.preUpsert &&
-            (await ast.hooks.preUpsert(preSource, preData, context));
+        ast.hooks.preUpsert &&
+          (await ast.hooks.preUpsert(preSource, preData, context, {
+            operation,
+          }));
 
         /**
          * postSource --- to be used as source for postMutation
@@ -237,7 +240,8 @@ export function ResolverMutation(
         ast.hooks.postUpsert &&
           (await ast.hooks.postUpsert(
             postSource as NonNullable<typeof postSource>,
-            context
+            context,
+            { operation }
           ));
 
         // field hooks

@@ -73,6 +73,10 @@ export type TField = {
   default?: any;
 };
 
+export type THooksMeta = {
+  operation: "create" | "update" | "delete";
+};
+
 /**
  * HOOKS
  */
@@ -81,17 +85,30 @@ export type THooks<Source = Record<string, any>, Context = any> = {
     | ((
         source: Source | undefined,
         data: Partial<Source>,
-        context: Context
+        context: Context,
+        meta: THooksMeta
       ) => Promise<void> | void)
     | null;
   postUpsert:
-    | ((source: Source, context: Context) => Promise<void> | void)
+    | ((
+        source: Source,
+        context: Context,
+        meta: THooksMeta
+      ) => Promise<void> | void)
     | null;
   preDelete:
-    | ((source: Source, context: Context) => Promise<void> | void)
+    | ((
+        source: Source,
+        context: Context,
+        meta: THooksMeta
+      ) => Promise<void> | void)
     | null;
   postDelete:
-    | ((source: Source, context: Context) => Promise<void> | void)
+    | ((
+        source: Source,
+        context: Context,
+        meta: THooksMeta
+      ) => Promise<void> | void)
     | null;
 };
 
