@@ -65,7 +65,7 @@ export function ResolverQueryMany(ast: TAST, options: TOptions) {
       });
     }
 
-    const queryResolver = ast.query.one || ast.query.default || undefined;
+    const queryResolver = ast.query.many || ast.query.default || undefined;
     const queryResolverWrapped = (query: Record<string, any>) => {
       if (filtersArg) {
         Object.entries(filtersArg).forEach(([filterName, value]) => {
