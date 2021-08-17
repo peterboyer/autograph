@@ -133,7 +133,7 @@ const constructor = ({
       const [row] = await knexQueryExecutor.execute<{ count: string }>(
         countMessage
       );
-      return parseInt(row.count);
+      return row ? parseInt(row.count) : 0;
     })();
 
     /**
